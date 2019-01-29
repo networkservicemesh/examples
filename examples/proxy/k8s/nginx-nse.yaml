@@ -1,0 +1,43 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        networkservicemesh.io/app: "nginx-nse"
+        networkservicemesh.io/impl: "web-service"
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: networkservicemesh.io/app
+                    operator: In
+                    values:
+                      - "nginx-nse"
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: sidecar-nse
+          image: networkservicemesh/proxy-sidecar-nse:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ADVERTISE_NSE_NAME
+              value: "web-service"
+            - name: ADVERTISE_NSE_LABELS
+              value: "app=nginx-nse"
+            - name: TRACER_ENABLED
+              value: "true"
+            - name: IP_ADDRESS
+              value: "10.60.1.0/24"
+          resources:
+            limits:
+              nsm.ligato.io/socket: 1
+        - name: nginx
+          image: networkservicemesh/proxy-nginx
+          imagePullPolicy: IfNotPresent
+metadata:
+  name: nginx-nse
+  namespace: default

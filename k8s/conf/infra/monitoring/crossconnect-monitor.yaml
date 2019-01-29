@@ -1,0 +1,16 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+spec:
+  template:
+    metadata:
+      labels:
+        app: nsmd-ds
+    spec:
+      containers:
+        - name: crossconnect-monitor
+          image: networkservicemesh/crossconnect-monitor:latest
+          imagePullPolicy: IfNotPresent
+metadata:
+  name: crossconnect-monitor
+  namespace: default

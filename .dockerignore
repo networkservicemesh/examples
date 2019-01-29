@@ -1,0 +1,7 @@
+# Ignore all
+*
+
+# ... except these
+!examples
+!go.mod
+!go.sum
