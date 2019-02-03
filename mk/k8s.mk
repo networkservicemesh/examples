@@ -24,16 +24,16 @@ DEPLOY_INFRA = infra
 ifeq ($(CLUSTER_RULES_PREFIX),)
 CLUSTER_RULES_PREFIX := vagrant
 endif
-include .vagrant.mk
+include mk/vagrant.mk
 
 # .null.mk allows you to skip the vagrant machinery with:
 # export CLUSTER_RULES_PREFIX=null
 # before running make
-include .null.mk
+include mk/null.mk
 
 # Pull in docker targets
 CONTAINER_BUILD_PREFIX = docker
-include .docker.mk
+include mk/docker.mk
 
 .PHONY: k8s-infra-deploy
 k8s-infra-deploy: $(addsuffix -config,$(addprefix k8s-,$(DEPLOY_INFRA)))
@@ -50,10 +50,6 @@ k8s-%-deploy:  k8s-start k8s-config k8s-%-delete k8s-%-load-images
 k8s-%-delete:
 	@echo "Deleting ${K8S_CONF_DIR}/$*/*.yaml"
 	@kubectl delete -R -f ${K8S_CONF_DIR}/$* > /dev/null 2>&1 || echo "$* does not exist and thus cannot be deleted"
-
-# .PHONY: k8s-%-load-images
-# k8s-%-load-images:  k8s-start $(CLUSTER_RULES_PREFIX)-%-load-images
-# 	@echo "Delegated to $(CLUSTER_RULES_PREFIX)-$*-load-images"
 
 .PHONY: k8s-%-config
 k8s-%-config:  k8s-start

@@ -1,9 +1,8 @@
-# Copyright 2019 VMware, Inc.
-# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2018 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at:
+#  You may obtain a copy of the License at:
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
@@ -15,33 +14,18 @@
 
 ORG=networkservicemesh
 
-# Setup proxies for docker build
-ifeq ($(HTTP_PROXY),)
-HTTPBUILD=
-else
-HTTPBUILD=--build-arg HTTP_PROXY=$(HTTP_PROXY)
-endif
-ifeq ($(HTTPS_PROXY),)
-HTTPSBUILD=
-else
-HTTPSBUILD=--build-arg HTTPS_PROXY=$(HTTPS_PROXY)
-endif
+.PHONY: docker-%-kill
+docker-%-kill:
+	@echo "Killing $*... $$(cat /tmp/container.$* | cut -c1-12)"
+	@docker container ls | grep $$(cat /tmp/container.$* | cut -c1-12) > /dev/null && xargs docker kill < /tmp/container.$* || echo "$* already killed"
 
-DOCKERBUILD=docker build ${HTTPBUILD} ${HTTPSBUILD}
+.PHONY: docker-%-logs
+docker-%-logs:
+	@echo "Showing nsmd logs..."
+	@xargs docker logs < /tmp/container.$*
 
-define generate-docker-targets
-.PHONY: docker-$1-$2-build
-docker-$1-$2-build:
-	@${DOCKERBUILD} -t ${ORG}/$1-$2 -f examples/$1/$2/Dockerfile .
-	@if [ "x${COMMIT}" != "x" ] ; then \
-		docker tag ${ORG}/$1-$2 ${ORG}/$1-$2:${COMMIT} ;\
-	fi
-
-.PHONY: docker-%-save
-docker-$1-$2-save: docker-$1-$2-build
-	@echo "Saving $1-$2"
-	@mkdir -p scripts/vagrant/images/
-	@docker save -o scripts/vagrant/images/$1-$2.tar ${ORG}/$1-$2
-endef
-
-$(foreach container,$(CONTAINERS),$(eval $(call generate-docker-targets,$(NAME),$(container))))
+.PHONY: docker-push-%
+docker-%-push: docker-login docker-%-build
+	docker tag ${ORG}/$*:${COMMIT} ${ORG}/$*:${TAG}
+	docker tag ${ORG}/$*:${COMMIT} ${ORG}/$*:${BUILD_TAG}
+	docker push ${ORG}/$*

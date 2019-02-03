@@ -22,9 +22,9 @@ SHELL:=/bin/bash
 default: all
 
 # Pull in k8s targets
-include .k8s.mk
-include .skydive.mk
-include .jaeger.mk
+include mk/k8s.mk
+include mk/skydive.mk
+include mk/jaeger.mk
 
 GOPATH?=$(shell go env GOPATH 2>/dev/null)
 GOCMD=go

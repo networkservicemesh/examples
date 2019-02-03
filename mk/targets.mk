@@ -1,6 +1,6 @@
 PREFIX = k8s
 
-include $(TOP)/mk/docker.mk
+include $(TOP)/mk/docker-targets.mk
 
 .PHONY: ${PREFIX}-${NAME}-build
 ${PREFIX}-${NAME}-build: $(addsuffix -build,$(addprefix ${CONTAINER_BUILD_PREFIX}-$(NAME)-,$(CONTAINERS)))
