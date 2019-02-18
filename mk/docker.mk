@@ -29,3 +29,6 @@ docker-%-push: docker-login docker-%-build
 	docker tag ${ORG}/$*:${COMMIT} ${ORG}/$*:${TAG}
 	docker tag ${ORG}/$*:${COMMIT} ${ORG}/$*:${BUILD_TAG}
 	docker push ${ORG}/$*
+
+.PHONY: docker-build
+docker-build: $(addsuffix -build,$(addprefix k8s-,$(EXAMPLE_NAMES)))

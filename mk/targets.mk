@@ -4,6 +4,7 @@ include $(TOP)/mk/docker-targets.mk
 
 define BUILD
 .PHONY: $(PREFIX)-$(NAME)-build
+EXAMPLE_NAMES+=${NAME}
 $(PREFIX)-$(NAME)-build: $(addsuffix -build,$(addprefix ${CONTAINER_BUILD_PREFIX}-$(NAME)-,$(CONTAINERS)))
 endef
 $(eval $(BUILD))

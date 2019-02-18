@@ -49,8 +49,9 @@ export GOPATH \
 
 
 include examples/examples.mk
+include mk/docker.mk
 
-.PHONY: all
+.PHONY: all check verify
 all: check verify docker-build
 
 .PHONY: check
