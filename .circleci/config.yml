@@ -12,6 +12,7 @@ jobs:
             ./.circleci/install-shellcheck.sh
       - run: yamllint -c .yamllint.yml $(git ls-files '*.yaml' '*.yml')
       - run: go version
+      - run: "! go fmt ./... 2>&1 | read"
       - run: make vet check
       - run: go install k8s.io/code-generator/cmd/deepcopy-gen
       - run: go install github.com/golang/protobuf/protoc-gen-go
@@ -44,7 +45,7 @@ jobs:
           command: |
             export COMMIT="${CIRCLE_SHA1:8:8}"
             export TAG="${COMMIT}"
-            make docker-build
+            make docker-build list-examples
 workflows:
   version: 2
   build-and-test:

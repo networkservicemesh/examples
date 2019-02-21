@@ -44,7 +44,8 @@ export GOPATH \
        GOGENERATE \
        GOINSTALL \
        GOTEST \
-       GOVET
+       GOVET \
+       EXAMPLE_NAMES
 
 
 
@@ -52,11 +53,15 @@ include examples/examples.mk
 include mk/docker.mk
 
 .PHONY: all check verify
-all: check verify docker-build
+all: check verify docker-build list-examples
 
 .PHONY: check
 check:
 	@shellcheck `find . -name "*.sh" -not -path "*vendor/*"`
+
+.PHONY: list-examples
+list-examples:
+	@echo "Built the following examples: ${EXAMPLE_NAMES}"
 
 .PHONY: format deps generate install test test-race vet
 #

@@ -32,4 +32,3 @@ docker-%-push: docker-login docker-%-build
 
 .PHONY: docker-build
 docker-build: $(addsuffix -build,$(addprefix k8s-,$(EXAMPLE_NAMES)))
-	@echo "Built the following examples: ${EXAMPLE_NAMES}"
