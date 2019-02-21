@@ -70,8 +70,7 @@ workflows:
 
   merge-build-and-test:
     jobs:
-      - sanity-check:
-          type: approval
+      - sanity-check
       - build-with-merge:
           requires:
             - sanity-check

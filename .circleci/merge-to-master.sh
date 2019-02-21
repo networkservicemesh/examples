@@ -11,7 +11,7 @@ if [ -z "$PR_NUMBER" ]; then
     exit
 fi
 
-(set -x && git pull --ff-only origin "refs/pull/$PR_NUMBER/merge") || err=$?
+(set -x && git pull origin "refs/pull/$PR_NUMBER/merge") || err=$?
 
 if [ "$err" -ne "0" ]; then
     echo
