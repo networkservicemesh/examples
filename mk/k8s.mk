@@ -14,7 +14,7 @@
 
 K8S_CONF_DIR = k8s/conf
 
-CLUSTER_CONFIG = cluster
+CLUSTER_CONFIG = cluster crd
 DEPLOY_INFRA = infra
 
 # All of the rules that use vagrant are intentionally written in such a way
