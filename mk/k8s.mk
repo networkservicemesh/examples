@@ -51,7 +51,7 @@ k8s-%-delete:
 	@kubectl delete -R -f ${K8S_CONF_DIR}/$* > /dev/null 2>&1 || echo "$* does not exist and thus cannot be deleted"
 
 .PHONY: k8s-%-config
-k8s-%-config:  k8s-start
+k8s-%-config:
 	@kubectl apply -R -f ${K8S_CONF_DIR}/$*
 
 .PHONY: k8s-%-deconfig
