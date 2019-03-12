@@ -33,7 +33,6 @@ include mk/null.mk
 
 # Pull in docker targets
 CONTAINER_BUILD_PREFIX = docker
-include mk/docker.mk
 
 .PHONY: k8s-infra-deploy
 k8s-infra-deploy: $(addsuffix -config,$(addprefix k8s-,$(DEPLOY_INFRA)))
