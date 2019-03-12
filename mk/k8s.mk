@@ -56,7 +56,7 @@ k8s-%-config:
 
 .PHONY: k8s-%-deconfig
 k8s-%-deconfig:
-	@kubectl delete -R -f ${K8S_CONF_DIR}/$*
+	@kubectl delete -R -f ${K8S_CONF_DIR}/$* || true
 
 .PHONY: k8s-config
 k8s-config: $(addsuffix -config,$(addprefix k8s-,$(CLUSTER_CONFIG)))
