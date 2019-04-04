@@ -65,7 +65,7 @@ k8s-%-deconfig:
 
 .PHONY: k8s-config
 k8s-config: $(addsuffix -config,$(addprefix k8s-,$(CLUSTER_CONFIG)))
-	@kubectl label --overwrite --all=true nodes app=nsmd-ds
+	@kubectl label --overwrite --all=true nodes app=nsmgr-daemonset
 
 .PHONY: k8s-deconfig
 k8s-deconfig: $(addsuffix -deconfig,$(addprefix k8s-,$(CLUSTER_CONFIG)))
