@@ -25,7 +25,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
 	"github.com/networkservicemesh/networkservicemesh/sdk/client"
@@ -96,10 +95,6 @@ func nsmDirector(req *http.Request) {
 	req.URL.Host = ipv4Addr.String()
 	req.URL.Path = "/"
 	req.Host = req.URL.Host
-
-	// TODO: NsmClient has a bug that it does return the connection before it is actually UP
-	// Sleep for half a second, to give it time to finish the connection setup
-	time.Sleep(500 * time.Millisecond)
 
 	go func() {
 		<-req.Context().Done()
