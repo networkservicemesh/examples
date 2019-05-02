@@ -21,64 +21,16 @@ SHELL:=/bin/bash
 .PHONY: default
 default: all
 
-# Pull in k8s targets
-include mk/k8s.mk
-include mk/skydive.mk
-include mk/jaeger.mk
-
-GOPATH?=$(shell go env GOPATH 2>/dev/null)
-GOCMD=go
-GOFMT=${GOCMD} fmt
-GOGET=${GOCMD} get
-GOGENERATE=${GOCMD} generate
-GOINSTALL=${GOCMD} install
-GOTEST=${GOCMD} test
-GOVET=${GOCMD} vet --all
-
-# Export some of the above variables so they persist for the shell scripts
-# which are run from the Makefiles
-export GOPATH \
-       GOCMD \
-       GOFMT \
-       GOGET \
-       GOGENERATE \
-       GOINSTALL \
-       GOTEST \
-       GOVET
-
-
+NSM_PATH?=${TOP}/../networkservicemesh
+CLUSTER_RULES_PREFIX?=vagrant
+PREFIX?=k8s
+CONTAINER_BUILD_PREFIX?=docker
 
 include examples/examples.mk
-include mk/docker.mk
 
-.PHONY: all check verify
-all: check verify docker-build
+.PHONY: build-all
+build-all: $(addsuffix -build,$(addprefix ${PREFIX}-,$(EXAMPLE_NAMES)))
+	@echo "Built the following examples: ${EXAMPLE_NAMES}"
 
-.PHONY: check
-check:
-	@shellcheck `find . -name "*.sh" -not -path "*vendor/*"`
-
-.PHONY: format deps generate install test test-race vet
-#
-# The following targets are meant to be run when working with the code locally.
-#
-format:
-	@${GOFMT} ./...
-
-deps:
-	@${GOGET} -u github.com/golang/protobuf/protoc-gen-go
-
-generate:
-	@${GOGENERATE} ./...
-
-install:
-	@${GOINSTALL} ./...
-
-test:
-	@${GOTEST} ./... -cover
-
-test-race:
-	@${GOTEST} -race ./... -cover
-
-vet:
-	@${GOVET} ./...
+%:
+	@cd ${NSM_PATH} && make $*
