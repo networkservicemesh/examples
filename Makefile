@@ -28,5 +28,9 @@ CONTAINER_BUILD_PREFIX?=docker
 
 include examples/examples.mk
 
+.PHONY: build-all
+build-all: $(addsuffix -build,$(addprefix ${PREFIX}-,$(EXAMPLE_NAMES)))
+	@echo "Built the following examples: ${EXAMPLE_NAMES}"
+
 %:
 	@cd ${NSM_PATH} && make $*
