@@ -40,8 +40,8 @@ docker-$1-$2-build:
 .PHONY: docker-%-save
 docker-$1-$2-save: docker-$1-$2-build
 	@echo "Saving $1-$2"
-	@mkdir -p scripts/vagrant/images/
-	@docker save -o scripts/vagrant/images/$1-$2.tar ${ORG}/$1-$2
+	@mkdir -p ${NSM_PATH}/scripts/vagrant/images/
+	@docker save -o ${NSM_PATH}/scripts/vagrant/images/$1-$2.tar ${ORG}/$1-$2
 endef
 
 $(foreach container,$(CONTAINERS),$(eval $(call generate-docker-targets,$(NAME),$(container))))

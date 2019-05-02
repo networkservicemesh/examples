@@ -1,4 +1,3 @@
-PREFIX = k8s
 
 include $(TOP)/mk/docker-targets.mk
 
