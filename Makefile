@@ -32,5 +32,9 @@ include examples/examples.mk
 build-all: $(addsuffix -build,$(addprefix ${PREFIX}-,$(EXAMPLE_NAMES)))
 	@echo "Built the following examples: ${EXAMPLE_NAMES}"
 
+.PHONY: save-all
+save-all: $(addsuffix -save,$(addprefix ${PREFIX}-,$(EXAMPLE_NAMES)))
+	@echo "Saved the following examples: ${EXAMPLE_NAMES}"
+
 %:
 	@cd ${NSM_PATH} && make $*
