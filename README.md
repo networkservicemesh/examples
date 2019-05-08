@@ -1,5 +1,7 @@
 # Network Service Mesh Examples
 
+[![CircleCI Build Status](https://circleci.com/gh/networkservicemesh/examples/tree/master.svg?style=svg)](https://circleci.com/gh/networkservicemesh/examples/tree/master)
+
 This repository contains examples and use-cases for Network Service Mesh. It is an independent way to deploy both NSM and a selection of examples, implemented as an overlay over the original `netowrkservicemesh` reporsitory.
 
 ## Quick Start
