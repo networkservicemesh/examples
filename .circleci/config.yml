@@ -55,7 +55,7 @@ jobs:
       - run:
           name: Install kind
           command: |
-            GO111MODULE=off go get -u sigs.k8s.io/kind
+            GO111MODULE="on" go get -u sigs.k8s.io/kind@master
             kind version
       - checkout
       - run:

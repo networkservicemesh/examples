@@ -73,8 +73,8 @@ github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/reflect2 v1.0.1/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
 github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f/go.mod h1:ZdcZmHo+o7JKHSa8/e818NopupXU1YMK5fe1lsApnBw=
-github.com/networkservicemesh/networkservicemesh v0.0.0-20190430181101-d3d8131bc31c h1:b6IuM9FFtXZlgYLtaEB4ews12MupQn4tWhOc5p83Gjo=
-github.com/networkservicemesh/networkservicemesh v0.0.0-20190430181101-d3d8131bc31c/go.mod h1:heennOsq62KBpo72RCzgHqzAuPuX71NOMd3JBD4ynCI=
+github.com/networkservicemesh/networkservicemesh v0.0.0-20190510081159-3e9d8178ddf9 h1:rewWcvpUwSIJ3pByDw8IHojXrnZLDbWFNDAbhG857Gk=
+github.com/networkservicemesh/networkservicemesh v0.0.0-20190510081159-3e9d8178ddf9/go.mod h1:heennOsq62KBpo72RCzgHqzAuPuX71NOMd3JBD4ynCI=
 github.com/onsi/ginkgo v1.6.0 h1:Ix8l273rp3QzYgXSR+c8d1fTG7UPgYkOSELPhiY/YGw=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/gomega v0.0.0-20190113212917-5533ce8a0da3/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1CpauHY=
