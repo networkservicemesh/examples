@@ -1,0 +1,22 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  selector:
+    matchLabels:
+      networkservicemesh.io/app: "simple-client"
+  replicas: 4
+  template:
+    metadata:
+      labels:
+        networkservicemesh.io/app: "simple-client"
+    spec:
+      containers:
+        - name: alpine-img
+          image: alpine:latest
+          command: ['tail', '-f', '/dev/null']
+metadata:
+  name: "simple-client"
+  namespace: default
+  annotations:
+    ns.networkservicemesh.io: web-service
