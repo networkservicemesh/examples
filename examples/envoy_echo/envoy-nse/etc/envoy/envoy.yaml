@@ -1,3 +1,4 @@
+---
 admin:
   access_log_path: /dev/null
   address:
@@ -24,6 +25,6 @@ static_resources:
         address: 0.0.0.0
         port_value: 8080
     filter_chains:
-    - filters:
-      - name: envoy.echo
-        config:
+      - filters:
+          - name: envoy.echo
+            config:
