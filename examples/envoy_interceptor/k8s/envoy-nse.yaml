@@ -1,0 +1,37 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  selector:
+    matchLabels:
+      networkservicemesh.io/app: "envoy-nse"
+  template:
+    metadata:
+      labels:
+        networkservicemesh.io/app: "envoy-nse"
+        networkservicemesh.io/impl: "echo-service"
+    spec:
+      containers:
+        - name: envoy-nse
+          image: networkservicemesh/envoy_interceptor-envoy-nse:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ADVERTISE_NSE_NAME
+              value: "web-service"
+            - name: ADVERTISE_NSE_LABELS
+              value: "app=envoy-nse"
+            - name: TRACER_ENABLED
+              value: "true"
+            - name: IP_ADDRESS
+              value: "10.60.1.0/24"
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+            privileged: true
+          resources:
+            limits:
+              networkservicemesh.io/socket: 1
+metadata:
+  name: envoy-nse
+  namespace: default
