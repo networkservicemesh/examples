@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: envoy-nse
-          image: networkservicemesh/envoy_echo-envoy-nse:latest
+          image: networkservicemesh/envoy_interceptor-envoy-nse:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: ADVERTISE_NSE_NAME

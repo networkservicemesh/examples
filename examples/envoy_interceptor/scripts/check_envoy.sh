@@ -14,6 +14,7 @@ function call_wget() {
             lastSegment=$(echo "${ip}" | cut -d . -f 4 | cut -d / -f 1)
             nextOp=$((lastSegment + 1))
             targetIp="10.60.1.${nextOp}"
+            port=$((1234 + nextOp))
         fi
 
         if [ -n "${targetIp}" ]; then
@@ -25,11 +26,11 @@ function call_wget() {
                 exit 1
             fi
 
-            if kubectl exec -it "${nsc}" -- /bin/sh -c "echo LONG STRING | nc -w 2 ${targetIp} 8080"; then
-                echo "${i}. Simple client accessing Envoy NS 'web-service' successful"
+            if kubectl exec -it "${nsc}" -- /bin/sh -c "echo LONG STRING | nc -w 2 ${targetIp} ${port}" >/dev/null 2>&1; then
+                echo "${i}. Simple client accessing Envoy NS 'web-service' on ${targetIp}:${port} successful"
                 exit 0
             else
-                echo "${i}. Simple client accessing Envoy NS 'web-service' unsuccessful"
+                echo "${i}. Simple client accessing Envoy NS 'web-service' on ${targetIp}:${port} unsuccessful"
                 kubectl get pod "${nsc}" -o wide
                 exit 1
             fi

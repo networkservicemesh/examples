@@ -7,7 +7,7 @@ WORKDIR /root/networkservicemesh/
 RUN go mod download
 
 ADD [".","/root/networkservicemesh"]
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags '-extldflags "-static"' -o /go/bin/nse ./examples/envoy_echo/envoy-nse/cmd/...
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags '-extldflags "-static"' -o /go/bin/nse ./examples/envoy_interceptor/envoy-nse/cmd/...
 
 FROM envoyproxy/envoy-alpine:v1.10.0
 
@@ -26,8 +26,8 @@ RUN apk --no-cache add \
     supervisor
 
 # copy the config files for envoy, and the startup files for supervisord
-COPY ./examples/envoy_echo/envoy-nse/etc/ /etc/
-COPY ./examples/envoy_echo/envoy-nse/usr/ /usr/
+COPY ./examples/envoy_interceptor/envoy-nse/etc/ /etc/
+COPY ./examples/envoy_interceptor/envoy-nse/usr/ /usr/
 
 COPY --from=build /go/bin/nse /usr/bin/nse
 
