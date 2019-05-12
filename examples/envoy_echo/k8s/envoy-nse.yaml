@@ -24,6 +24,11 @@ spec:
               value: "true"
             - name: IP_ADDRESS
               value: "10.60.1.0/24"
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+            privileged: true
           resources:
             limits:
               networkservicemesh.io/socket: 1

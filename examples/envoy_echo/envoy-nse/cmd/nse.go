@@ -27,6 +27,7 @@ func main() {
 	c := tools.NewOSSignalChannel()
 
 	composite := endpoint.NewCompositeEndpoint(
+		NewIptablesEndpoint(nil),
 		endpoint.NewMonitorEndpoint(nil),
 		endpoint.NewIpamEndpoint(nil),
 		endpoint.NewConnectionEndpoint(nil))
