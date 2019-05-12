@@ -94,6 +94,17 @@ jobs:
           name: Proxy check
           command: |
             make k8s-proxy-check
+            make k8s-proxy-delete
+      - run:
+          name: Envoy interceptor deploy
+          command: |
+            make k8s-envoy_interceptor-load-images k8s-envoy_interceptor-deploy
+            kubectl wait -n default --timeout=150s --for condition=Ready --all pods
+      - run:
+          name: Envoy interceptor check
+          command: |
+            make k8s-envoy_interceptor-check
+            make k8s-envoy_interceptor-delete
       - run:
           name: Dump cluster state
           command: |
