@@ -67,15 +67,10 @@ jobs:
           command: |
             make kind-start
             echo 'export KUBECONFIG="$(kind get kubeconfig-path --name="nsm")"' >> $BASH_ENV
-            echo 'export CLUSTER_RULES_PREFIX=kind' >> $BASH_ENV
       - run:
           name: Wait for kind to settle
           command: |
             kubectl wait -n kube-system --timeout=150s --for condition=Ready --all pods
-      - run:
-          name: Build NSM images
-          command: |
-            COMMIT="${CIRCLE_SHA1:8:8}" TAG="${COMMIT}" make k8s-save -j2
       - run:
           name: Build example images
           command: |
@@ -83,7 +78,7 @@ jobs:
       - run:
           name: NSM infra deploy
           command: |
-            make k8s-infra-deploy
+            CLUSTER_RULES_PREFIX=null make k8s-infra-deploy
             kubectl wait -n nsm-system --timeout=150s --for condition=Ready --all pods
       - run:
           name: Proxy deploy
@@ -111,6 +106,8 @@ jobs:
             kubectl get nodes --all-namespaces
             kubectl get pods -o wide --all-namespaces
             kubectl describe pods --all-namespaces
+    environment:
+      CLUSTER_RULES_PREFIX: "kind"
 workflows:
   version: 2
   build-and-test:
