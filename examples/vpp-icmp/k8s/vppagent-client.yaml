@@ -17,10 +17,10 @@ spec:
           image: networkservicemesh/vpp-icmp-vppagent-client:latest
           imagePullPolicy: IfNotPresent
           env:
-            - name: OUTGOING_NSC_LABELS
-              value: "app=icmp"
             - name: OUTGOING_NSC_NAME
               value: "icmp-responder"
+            - name: OUTGOING_NSC_LABELS
+              value: "app=icmp"
           resources:
             limits:
               networkservicemesh.io/socket: 1
