@@ -2,24 +2,26 @@
 apiVersion: apps/v1
 kind: Deployment
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
-      networkservicemesh.io/app: "icmp-responder-nse"
+      networkservicemesh.io/app: "icmp-responder"
+      networkservicemesh.io/impl: "simple-endpoint"
   template:
     metadata:
       labels:
-        networkservicemesh.io/app: "icmp-responder-nse"
+        networkservicemesh.io/app: "icmp-responder"
+        networkservicemesh.io/impl: "simple-endpoint"
     spec:
       containers:
-        - name: sidecar-nse
+        - name: sidecar-endpoint
           image: networkservicemesh/proxy-sidecar-nse:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: ADVERTISE_NSE_NAME
-              value: "icmp"
+              value: "icmp-responder"
             - name: ADVERTISE_NSE_LABELS
-              value: "app=icmp-responder-nse"
+              value: "app=simple-endpoint"
             - name: TRACER_ENABLED
               value: "true"
             - name: IP_ADDRESS
@@ -31,5 +33,4 @@ spec:
           image: alpine:latest
           command: ['tail', '-f', '/dev/null']
 metadata:
-  name: nginx-nse
-  namespace: default
+  name: simple-endpoint

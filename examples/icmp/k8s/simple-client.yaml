@@ -19,4 +19,4 @@ metadata:
   name: "simple-client"
   namespace: default
   annotations:
-    ns.networkservicemesh.io: icmp
+    ns.networkservicemesh.io: icmp-responder?app=simple-endpoint
