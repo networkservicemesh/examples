@@ -1,0 +1,53 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  selector:
+    matchLabels:
+      networkservicemesh.io/app: "acl-filter"
+      networkservicemesh.io/impl: "secure-intranet"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        networkservicemesh.io/app: "acl-filter"
+        networkservicemesh.io/impl: "secure-intranet"
+    spec:
+      containers:
+        - name: acl-filter
+          image: networkservicemesh/secure-intranet-vppagent-endpoint:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ADVERTISE_NSE_NAME
+              value: "secure-intranet"
+            - name: ADVERTISE_NSE_LABELS
+              value: "app=acl-filter"
+            - name: OUTGOING_NSC_NAME
+              value: "secure-intranet"
+            - name: OUTGOING_NSC_LABELS
+              value: "app=acl-filter"
+            - name: TRACER_ENABLED
+              value: "true"
+          resources:
+            limits:
+              networkservicemesh.io/socket: 1
+          volumeMounts:
+            - mountPath: /etc/vppagent-acl-filter/config.yaml
+              subPath: config.yaml
+              name: vppagent-acl-filter-config-volume
+      volumes:
+        - name: vppagent-acl-filter-config-volume
+          configMap:
+            name: vppagent-acl-filter-config-file
+metadata:
+  name: vppagent-acl-filter-nse
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vppagent-acl-filter-config-file
+data:
+  config.yaml: |
+    aclRules:
+      "Allow ICMP": "action=reflect,icmptype=8"
+      "Allow TCP 80": "action=reflect,tcplowport=80,tcpupport=80"

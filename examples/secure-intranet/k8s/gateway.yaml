@@ -1,0 +1,36 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      networkservicemesh.io/app: "gateway"
+      networkservicemesh.io/impl: "secure-intranet"
+  template:
+    metadata:
+      labels:
+        networkservicemesh.io/app: "gateway"
+        networkservicemesh.io/impl: "secure-intranet"
+    spec:
+      containers:
+        - name: gateway
+          image: networkservicemesh/proxy-sidecar-nse:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ADVERTISE_NSE_NAME
+              value: "secure-intranet"
+            - name: ADVERTISE_NSE_LABELS
+              value: "app=gateway"
+            - name: TRACER_ENABLED
+              value: "true"
+            - name: IP_ADDRESS
+              value: "10.60.1.0/24"
+          resources:
+            limits:
+              networkservicemesh.io/socket: 1
+        - name: nginx
+          image: networkservicemesh/nginx
+          imagePullPolicy: IfNotPresent
+metadata:
+  name: gateway
