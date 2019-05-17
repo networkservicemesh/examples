@@ -1,0 +1,28 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  selector:
+    matchLabels:
+      networkservicemesh.io/app: "vppagent-client"
+  replicas: 4
+  template:
+    metadata:
+      labels:
+        networkservicemesh.io/app: "vppagent-client"
+    spec:
+      hostPID: true
+      containers:
+        - name: vppagent-client
+          image: networkservicemesh/vpp-icmp-vppagent-client:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: OUTGOING_NSC_NAME
+              value: "icmp-responder"
+            - name: OUTGOING_NSC_LABELS
+              value: "app=icmp"
+          resources:
+            limits:
+              networkservicemesh.io/socket: 1
+metadata:
+  name: vppagent-client

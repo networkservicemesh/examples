@@ -1,0 +1,41 @@
+---
+apiVersion: networkservicemesh.io/v1
+kind: NetworkService
+metadata:
+  name: secure-intranet
+spec:
+  payload: IP
+  matches:
+    - match:
+      sourceSelector:
+        app: acl-filter
+      route:
+        - destination:
+          destinationSelector:
+            app: passthrough-1
+    - match:
+      sourceSelector:
+        app: passthrough-1
+      route:
+        - destination:
+          destinationSelector:
+            app: passthrough-2
+    - match:
+      sourceSelector:
+        app: passthrough-2
+      route:
+        - destination:
+          destinationSelector:
+            app: passthrough-3
+    - match:
+      sourceSelector:
+        app: passthrough-3
+      route:
+        - destination:
+          destinationSelector:
+            app: gateway
+    - match:
+      route:
+        - destination:
+          destinationSelector:
+            app: acl-filter

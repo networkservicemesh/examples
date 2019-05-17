@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 jobs:
   sanity-check:
     working_directory: ~/project/examples
@@ -34,6 +34,11 @@ jobs:
             export TAG="${COMMIT}"
             make build-all
   test:
+    parameters:
+      example:
+        type: string
+      description:
+        type: string
     machine:
       enabled: true
       docker_layer_caching: true
@@ -72,34 +77,24 @@ jobs:
           command: |
             kubectl wait -n kube-system --timeout=150s --for condition=Ready --all pods
       - run:
-          name: Build example images
+          name: Build << parameters.example >> images
           command: |
-            make save-all
+            make k8s-<< parameters.example >>-save
       - run:
           name: NSM infra deploy
           command: |
             CLUSTER_RULES_PREFIX=null make k8s-infra-deploy
             kubectl wait -n nsm-system --timeout=150s --for condition=Ready --all pods
       - run:
-          name: Proxy deploy
+          name: << parameters.description >> deploy
           command: |
-            make k8s-proxy-load-images k8s-proxy-deploy
+            make k8s-<< parameters.example >>-load-images k8s-<< parameters.example >>-deploy
             kubectl wait -n default --timeout=150s --for condition=Ready --all pods
       - run:
-          name: Proxy check
+          name: << parameters.description >> check
           command: |
-            make k8s-proxy-check
-            make k8s-proxy-delete
-      - run:
-          name: Envoy interceptor deploy
-          command: |
-            make k8s-envoy_interceptor-load-images k8s-envoy_interceptor-deploy
-            kubectl wait -n default --timeout=150s --for condition=Ready --all pods
-      - run:
-          name: Envoy interceptor check
-          command: |
-            make k8s-envoy_interceptor-check
-            make k8s-envoy_interceptor-delete
+            make k8s-<< parameters.example >>-check
+            make k8s-<< parameters.example >>-delete
       - run:
           name: Dump cluster state
           command: |
@@ -108,6 +103,7 @@ jobs:
             kubectl describe pods --all-namespaces
     environment:
       CLUSTER_RULES_PREFIX: "kind"
+
 workflows:
   version: 2
   build-and-test:
@@ -117,8 +113,38 @@ workflows:
           requires:
             - sanity-check
       - test:
+          name: "Test Envoy"
+          example: "envoy_interceptor"
+          description: "Envoy interceptor"
           requires:
             - sanity-check
+      - test:
+          name: "Test ICMP"
+          example: "icmp"
+          description: "Simple ICMP"
+          requires:
+            - sanity-check
+      - test:
+          name: "Test Proxy"
+          example: "proxy"
+          description: "Proxy"
+          requires:
+            - sanity-check
+            - "Test Envoy"
+      - test:
+          name: "Test VPP ICMP"
+          example: "vpp-icmp"
+          description: "VPP ICMP"
+          requires:
+            - sanity-check
+            - "Test ICMP"
+      - test:
+          name: "Test Secure Intranet"
+          example: "secure-intranet"
+          description: "Secure Intranet"
+          requires:
+            - sanity-check
+            - "Test VPP ICMP"
   nightly-test:
     triggers:
       - schedule:
@@ -128,4 +154,29 @@ workflows:
               only:
                 - master
     jobs:
-      - test
+      - test:
+          name: "Test Envoy"
+          example: "envoy_interceptor"
+          description: "Envoy interceptor"
+      - test:
+          name: "Test ICMP"
+          example: "icmp"
+          description: "Simple ICMP"
+      - test:
+          name: "Test Proxy"
+          example: "proxy"
+          description: "Proxy"
+          requires:
+            - "Test Envoy"
+      - test:
+          name: "Test VPP ICMP"
+          example: "vpp-icmp"
+          description: "VPP ICMP"
+          requires:
+            - "Test ICMP"
+      - test:
+          name: "Test Secure Intranet"
+          example: "secure-intranet"
+          description: "Secure Intranet"
+          requires:
+            - "Test VPP ICMP"

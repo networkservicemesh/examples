@@ -27,7 +27,7 @@ else
 HTTPSBUILD=--build-arg HTTPS_PROXY=$(HTTPS_PROXY)
 endif
 
-DOCKERBUILD=docker build ${HTTPBUILD} ${HTTPSBUILD}
+DOCKERBUILD=docker build --network="host" --build-arg VPP_AGENT=${VPP_AGENT}  ${HTTPBUILD} ${HTTPSBUILD}
 
 define generate-docker-targets
 .PHONY: docker-$1-$2-build
