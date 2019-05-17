@@ -22,7 +22,7 @@ $(eval $(LOAD_IMAGES))
 
 define DEPLOY
 .PHONY: $(PREFIX)-$(NAME)-deploy
-$(PREFIX)-$(NAME)-deploy: $(PREFIX)-$(NAME)-delete $(addsuffix -deploy,$(addprefix $(PREFIX)-$(NAME)-,$(PODS)))
+$(PREFIX)-$(NAME)-deploy: $(PREFIX)-$(NAME)-delete $(addsuffix -deploy,$(addprefix $(PREFIX)-$(NAME)-,$(NETWORK_SERVICES))) $(addsuffix -deploy,$(addprefix $(PREFIX)-$(NAME)-,$(PODS)))
 
 .PHONY: $(PREFIX)-$(NAME)-%-deploy
 $(PREFIX)-$(NAME)-%-deploy:
