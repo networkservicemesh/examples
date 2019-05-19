@@ -130,21 +130,18 @@ workflows:
           description: "Proxy"
           requires:
             - sanity-check
-            - "Test Envoy"
       - test:
           name: "Test VPP ICMP"
           example: "vpp-icmp"
           description: "VPP ICMP"
           requires:
             - sanity-check
-            - "Test ICMP"
       - test:
           name: "Test Secure Intranet"
           example: "secure-intranet"
           description: "Secure Intranet"
           requires:
             - sanity-check
-            - "Test VPP ICMP"
   nightly-test:
     triggers:
       - schedule:
@@ -166,17 +163,11 @@ workflows:
           name: "Test Proxy"
           example: "proxy"
           description: "Proxy"
-          requires:
-            - "Test Envoy"
       - test:
           name: "Test VPP ICMP"
           example: "vpp-icmp"
           description: "VPP ICMP"
-          requires:
-            - "Test ICMP"
       - test:
           name: "Test Secure Intranet"
           example: "secure-intranet"
           description: "Secure Intranet"
-          requires:
-            - "Test VPP ICMP"
