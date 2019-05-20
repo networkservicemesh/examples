@@ -97,6 +97,7 @@ jobs:
             make k8s-<< parameters.example >>-delete
       - run:
           name: Dump cluster state
+          when: always
           command: |
             kubectl get nodes --all-namespaces
             kubectl get pods -o wide --all-namespaces
