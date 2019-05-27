@@ -83,7 +83,7 @@ jobs:
       - run:
           name: NSM infra deploy
           command: |
-            CLUSTER_RULES_PREFIX=null make k8s-infra-deploy
+            CLUSTER_RULES_PREFIX=null make k8s-admission-webhook-deploy k8s-nsmgr-deploy k8s-vppagent-dataplane-deploy
             kubectl wait -n nsm-system --timeout=150s --for condition=Ready --all pods
       - run:
           name: << parameters.description >> deploy
