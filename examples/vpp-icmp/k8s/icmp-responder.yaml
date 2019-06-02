@@ -1,0 +1,15 @@
+---
+apiVersion: networkservicemesh.io/v1alpha1
+kind: NetworkService
+metadata:
+  name: icmp-responder
+spec:
+  payload: IP
+  matches:
+    - match:
+      sourceSelector:
+        app: vppagent-endpoint
+      route:
+        - destination:
+          destinationSelector:
+            app: icmp-responder

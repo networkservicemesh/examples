@@ -6,6 +6,7 @@ spec:
   selector:
     matchLabels:
       networkservicemesh.io/app: "proxy-nsc"
+      networkservicemesh.io/impl: "web-service"
   template:
     metadata:
       labels:

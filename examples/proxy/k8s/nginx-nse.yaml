@@ -12,16 +12,6 @@ spec:
         networkservicemesh.io/app: "nginx-nse"
         networkservicemesh.io/impl: "web-service"
     spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: networkservicemesh.io/app
-                    operator: In
-                    values:
-                      - "nginx-nse"
-              topologyKey: "kubernetes.io/hostname"
       containers:
         - name: sidecar-nse
           image: networkservicemesh/proxy-sidecar-nse:latest

@@ -6,6 +6,7 @@ define include-example
   NAME = $1
   CONTAINERS =
   AUX_CONTAINERS =
+  NETWORK_SERVICES =
   PODS =
   CHECK =
 
