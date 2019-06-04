@@ -17,9 +17,14 @@ package main
 
 import (
 	"context"
+	"os"
+	"path"
 	"time"
 
 	"github.com/ligato/vpp-agent/api/configurator"
+	vpp "github.com/ligato/vpp-agent/api/models/vpp"
+	interfaces "github.com/ligato/vpp-agent/api/models/vpp/interfaces"
+	l2 "github.com/ligato/vpp-agent/api/models/vpp/l2"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/apis/crossconnect"
@@ -48,16 +53,57 @@ func (vxc *vppAgentXConnComposite) crossConnecVppInterfaces(ctx context.Context,
 	defer conn.Close()
 	client := configurator.NewConfiguratorClient(conn)
 
-	conversionParameters := &converter.CrossConnectConversionParameters{
-		BaseDir: baseDir,
-	}
-	dataChange, err := converter.NewCrossConnectConverter(crossConnect, conversionParameters).ToDataRequest(nil, connect)
+	src := crossConnect.GetLocalSource()
+	srcName := "SRC-" + crossConnect.GetId()
+	dst := crossConnect.GetLocalDestination()
+	dstName := "DST-" + crossConnect.GetId()
 
-	if err != nil {
-		logrus.Error(err)
+	SocketDir := path.Dir(path.Join(baseDir, src.GetMechanism().GetSocketFilename()))
+	if err := os.MkdirAll(SocketDir, os.ModePerm); err != nil {
 		return nil, nil, err
 	}
-	logrus.Infof("Sending DataChange to vppagent: %v", dataChange)
+
+	dataChange := &configurator.Config{
+		VppConfig: &vpp.ConfigData{
+			Interfaces: []*interfaces.Interface{
+				&interfaces.Interface{
+					Name:    srcName,
+					Type:    interfaces.Interface_MEMIF,
+					Enabled: true,
+					Link: &interfaces.Interface_Memif{
+						Memif: &interfaces.MemifLink{
+							Master:         true,
+							SocketFilename: path.Join(baseDir, src.GetMechanism().GetSocketFilename()),
+						},
+					},
+				},
+				&interfaces.Interface{
+					Name:    dstName,
+					Type:    interfaces.Interface_MEMIF,
+					Enabled: true,
+					Link: &interfaces.Interface_Memif{
+						Memif: &interfaces.MemifLink{
+							Master:         false,
+							SocketFilename: path.Join(baseDir, dst.GetMechanism().GetSocketFilename()),
+						},
+					},
+				},
+			},
+			XconnectPairs: []*l2.XConnectPair{
+				&l2.XConnectPair{
+					ReceiveInterface:  srcName,
+					TransmitInterface: dstName,
+				},
+				&l2.XConnectPair{
+					ReceiveInterface:  dstName,
+					TransmitInterface: srcName,
+				},
+			},
+		},
+	}
+
+	logrus.Infof("Sending DataChange to vppagent: %+v", dataChange)
+
 	if connect {
 		_, err = client.Update(ctx, &configurator.UpdateRequest{
 			Update: dataChange,
