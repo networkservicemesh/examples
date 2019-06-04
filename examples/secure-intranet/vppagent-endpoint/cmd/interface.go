@@ -1,4 +1,4 @@
-// Copyright 2018 VMware, Inc.
+// Copyright 2019 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,189 +17,75 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"os"
+	"path"
 
-	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/ligato/vpp-agent/api/configurator"
+	vpp "github.com/ligato/vpp-agent/api/models/vpp"
+	interfaces "github.com/ligato/vpp-agent/api/models/vpp/interfaces"
+	l2 "github.com/ligato/vpp-agent/api/models/vpp/l2"
+
 	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/apis/crossconnect"
-	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/apis/local/connection"
-	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/apis/local/networkservice"
-	"github.com/networkservicemesh/networkservicemesh/sdk/common"
-	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
 	"github.com/sirupsen/logrus"
 )
 
-const (
-	defaultVPPAgentEndpoint = "localhost:9113"
-)
+func (vxc *vppAgentXConnComposite) crossConnecVppInterfaces(ctx context.Context, crossConnect *crossconnect.CrossConnect, connect bool, baseDir string) (*crossconnect.CrossConnect, *configurator.Config, error) {
 
-type crossConnectStruct struct {
-	crossConnect  *crossconnect.CrossConnect
-	ingressIfName string
-}
+	src := crossConnect.GetLocalSource()
+	srcName := "SRC-" + crossConnect.GetId()
+	dst := crossConnect.GetLocalDestination()
+	dstName := "DST-" + crossConnect.GetId()
 
-type vppAgentXConnComposite struct {
-	endpoint.BaseCompositeEndpoint
-	vppAgentEndpoint string
-	crossConnects    map[string]crossConnectStruct
-	workspace        string
-}
-
-func (vxc *vppAgentXConnComposite) Request(ctx context.Context, request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
-
-	if vxc.GetNext() == nil {
-		logrus.Fatal("Should have Next set")
+	SocketDir := path.Dir(path.Join(baseDir, src.GetMechanism().GetSocketFilename()))
+	if err := os.MkdirAll(SocketDir, os.ModePerm); err != nil {
+		return nil, nil, err
 	}
 
-	incoming, err := vxc.GetNext().Request(ctx, request)
-	if err != nil {
-		logrus.Error(err)
-		return nil, err
-	}
-
-	opaque := vxc.GetNext().GetOpaque(incoming)
-	if opaque == nil {
-		err := fmt.Errorf("Backend: Unable to find the outgoing connection")
-		logrus.Errorf("%v", err)
-		return nil, err
-	}
-	outgoing := opaque.(*connection.Connection)
-
-	incoming.Context = outgoing.GetContext()
-
-	crossConnectRequest := &crossconnect.CrossConnect{
-		Id:      incoming.GetId(),
-		Payload: "IP",
-		Source: &crossconnect.CrossConnect_LocalSource{
-			LocalSource: incoming,
+	dataChange := &configurator.Config{
+		VppConfig: &vpp.ConfigData{
+			Interfaces: []*interfaces.Interface{
+				&interfaces.Interface{
+					Name:    srcName,
+					Type:    interfaces.Interface_MEMIF,
+					Enabled: true,
+					Link: &interfaces.Interface_Memif{
+						Memif: &interfaces.MemifLink{
+							Master:         true,
+							SocketFilename: path.Join(baseDir, src.GetMechanism().GetSocketFilename()),
+						},
+					},
+				},
+				&interfaces.Interface{
+					Name:    dstName,
+					Type:    interfaces.Interface_MEMIF,
+					Enabled: true,
+					Link: &interfaces.Interface_Memif{
+						Memif: &interfaces.MemifLink{
+							Master:         false,
+							SocketFilename: path.Join(baseDir, dst.GetMechanism().GetSocketFilename()),
+						},
+					},
+				},
+			},
+			XconnectPairs: []*l2.XConnectPair{
+				&l2.XConnectPair{
+					ReceiveInterface:  srcName,
+					TransmitInterface: dstName,
+				},
+				&l2.XConnectPair{
+					ReceiveInterface:  dstName,
+					TransmitInterface: srcName,
+				},
+			},
 		},
-		Destination: &crossconnect.CrossConnect_LocalDestination{
-			LocalDestination: outgoing,
-		},
 	}
 
-	crossConnect, dataChange, err := vxc.crossConnecVppInterfaces(ctx, crossConnectRequest, true, vxc.workspace)
+	logrus.Infof("Sending DataChange to vppagent: %+v", dataChange)
+
+	err := sendDataChangeToVppAgent(dataChange, connect)
 	if err != nil {
 		logrus.Error(err)
-		return nil, err
+		return crossConnect, dataChange, err
 	}
-
-	// The Crossconnect converter generates and puts the Source Interface name here
-	ingressIfName := dataChange.VppConfig.XconnectPairs[0].ReceiveInterface
-
-	// Store for cleanup
-	vxc.crossConnects[incoming.GetId()] = crossConnectStruct{
-		crossConnect:  crossConnect,
-		ingressIfName: ingressIfName,
-	}
-	return incoming, nil
-}
-
-func (vxc *vppAgentXConnComposite) Close(ctx context.Context, conn *connection.Connection) (*empty.Empty, error) {
-	// remove from connections
-	crossConnect, ok := vxc.crossConnects[conn.GetId()]
-	if ok {
-		_, _, err := vxc.crossConnecVppInterfaces(ctx, crossConnect.crossConnect, false, vxc.workspace)
-		if err != nil {
-			logrus.Error(err)
-			return &empty.Empty{}, err
-		}
-	}
-
-	if vxc.GetNext() != nil {
-		vxc.GetNext().Close(ctx, conn)
-	}
-
-	return &empty.Empty{}, nil
-}
-
-// GetOpaque will return the corresponding outgoing connection
-func (vxc *vppAgentXConnComposite) GetOpaque(incoming interface{}) interface{} {
-
-	incomingConnection := incoming.(*connection.Connection)
-	if crossConnect, ok := vxc.crossConnects[incomingConnection.GetId()]; ok {
-		return crossConnect.ingressIfName
-	}
-	logrus.Errorf("GetOpaque outgoing not found for %v", incomingConnection)
-	return nil
-}
-
-// NewVppAgentComposite creates a new VPP Agent composite
-func newVppAgentXConnComposite(configuration *common.NSConfiguration) *vppAgentXConnComposite {
-	// ensure the env variables are processed
-	if configuration == nil {
-		configuration = &common.NSConfiguration{}
-	}
-	configuration.CompleteNSConfiguration()
-
-	logrus.Infof("newVppAgentComposite")
-
-	newVppAgentXConnComposite := &vppAgentXConnComposite{
-		vppAgentEndpoint: defaultVPPAgentEndpoint,
-		crossConnects:    make(map[string]crossConnectStruct),
-		workspace:        configuration.Workspace,
-	}
-	newVppAgentXConnComposite.reset()
-
-	return newVppAgentXConnComposite
-}
-
-type vppAgentAclComposite struct {
-	endpoint.BaseCompositeEndpoint
-	vppAgentEndpoint string
-	aclRules         map[string]string
-}
-
-func (vac *vppAgentAclComposite) Request(ctx context.Context, request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
-
-	if vac.GetNext() == nil {
-		logrus.Fatal("Should have Next set")
-	}
-
-	incoming, err := vac.GetNext().Request(ctx, request)
-	if err != nil {
-		logrus.Error(err)
-		return nil, err
-	}
-
-	opaque := vac.GetNext().GetOpaque(incoming)
-	if opaque == nil {
-		err := fmt.Errorf("Backend: Unable to find the ingressIfName")
-		logrus.Errorf("%v", err)
-		return nil, err
-	}
-	ingressIfName := opaque.(string)
-
-	err = vac.applyAclOnVppInterface(ctx, "IngressACL", ingressIfName, vac.aclRules)
-	if err != nil {
-		logrus.Error(err)
-		return nil, err
-	}
-
-	return incoming, nil
-}
-
-func (vac *vppAgentAclComposite) Close(ctx context.Context, conn *connection.Connection) (*empty.Empty, error) {
-	if vac.GetNext() != nil {
-		return vac.GetNext().Close(ctx, conn)
-	}
-	return &empty.Empty{}, nil
-}
-
-// NewVppAgentComposite creates a new VPP Agent composite
-func newVppAgentAclComposite(configuration *common.NSConfiguration) *vppAgentAclComposite {
-	// ensure the env variables are processed
-	if configuration == nil {
-		configuration = &common.NSConfiguration{}
-	}
-	configuration.CompleteNSConfiguration()
-
-	logrus.Infof("newVppAgentComposite")
-
-	newVppAgentAclComposite := &vppAgentAclComposite{
-		vppAgentEndpoint: defaultVPPAgentEndpoint,
-	}
-
-	newVppAgentAclComposite.aclRules = getAclRulesConfig()
-
-	return newVppAgentAclComposite
+	return crossConnect, dataChange, nil
 }

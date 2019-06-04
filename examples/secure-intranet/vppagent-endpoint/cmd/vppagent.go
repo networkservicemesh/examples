@@ -1,4 +1,4 @@
-// Copyright 2018 VMware, Inc.
+// Copyright 2019 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,63 +22,23 @@ import (
 	"github.com/ligato/vpp-agent/api/configurator"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
-	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/apis/crossconnect"
-	"github.com/networkservicemesh/networkservicemesh/dataplane/vppagent/pkg/converter"
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
-func (vxc *vppAgentXConnComposite) crossConnecVppInterfaces(ctx context.Context, crossConnect *crossconnect.CrossConnect, connect bool, baseDir string) (*crossconnect.CrossConnect, *configurator.Config, error) {
+const (
+	defaultVPPAgentEndpoint = "localhost:9113"
+)
+
+func resetVppAgent() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
-	tools.WaitForPortAvailable(ctx, "tcp", vxc.vppAgentEndpoint, 100*time.Millisecond)
-	tracer := opentracing.GlobalTracer()
-	conn, err := grpc.Dial(vxc.vppAgentEndpoint, grpc.WithInsecure(),
-		grpc.WithUnaryInterceptor(
-			otgrpc.OpenTracingClientInterceptor(tracer, otgrpc.LogPayloads())),
-		grpc.WithStreamInterceptor(
-			otgrpc.OpenTracingStreamClientInterceptor(tracer)))
-
-	if err != nil {
-		logrus.Errorf("can't dial grpc server: %v", err)
-		return nil, nil, err
+	if err := tools.WaitForPortAvailable(ctx, "tcp", defaultVPPAgentEndpoint, 100*time.Millisecond); err != nil {
+		return err
 	}
-	defer conn.Close()
-	client := configurator.NewConfiguratorClient(conn)
-
-	conversionParameters := &converter.CrossConnectConversionParameters{
-		BaseDir: baseDir,
-	}
-	dataChange, err := converter.NewCrossConnectConverter(crossConnect, conversionParameters).ToDataRequest(nil, connect)
-
-	if err != nil {
-		logrus.Error(err)
-		return nil, nil, err
-	}
-	logrus.Infof("Sending DataChange to vppagent: %v", dataChange)
-	if connect {
-		_, err = client.Update(ctx, &configurator.UpdateRequest{
-			Update: dataChange,
-		})
-	} else {
-		_, err = client.Delete(ctx, &configurator.DeleteRequest{
-			Delete: dataChange,
-		})
-	}
-	if err != nil {
-		logrus.Error(err)
-		return crossConnect, dataChange, err
-	}
-	return crossConnect, dataChange, nil
-}
-
-func (vxc *vppAgentXConnComposite) reset() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
-	defer cancel()
-	tools.WaitForPortAvailable(ctx, "tcp", vxc.vppAgentEndpoint, 100*time.Millisecond)
-	conn, err := grpc.Dial(vxc.vppAgentEndpoint, grpc.WithInsecure())
+	conn, err := grpc.Dial(defaultVPPAgentEndpoint, grpc.WithInsecure())
 	if err != nil {
 		logrus.Errorf("can't dial grpc server: %v", err)
 		return err
@@ -97,18 +57,16 @@ func (vxc *vppAgentXConnComposite) reset() error {
 	return nil
 }
 
-func (vac *vppAgentAclComposite) applyAclOnVppInterface(ctx context.Context, aclname, ifname string, rules map[string]string) error {
-
-	if len(rules) == 0 {
-		logrus.Info("No ACL rules speccified, skipping")
-		return nil
-	}
+// SendDataChangeToVppAgent send the udpate to the VPP-Agent
+func sendDataChangeToVppAgent(dataChange *configurator.Config, update bool) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
-	tools.WaitForPortAvailable(ctx, "tcp", vac.vppAgentEndpoint, 100*time.Millisecond)
+	if err := tools.WaitForPortAvailable(ctx, "tcp", defaultVPPAgentEndpoint, 100*time.Millisecond); err != nil {
+		return err
+	}
 	tracer := opentracing.GlobalTracer()
-	conn, err := grpc.Dial(vac.vppAgentEndpoint, grpc.WithInsecure(),
+	conn, err := grpc.Dial(defaultVPPAgentEndpoint, grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(
 			otgrpc.OpenTracingClientInterceptor(tracer, otgrpc.LogPayloads())),
 		grpc.WithStreamInterceptor(
@@ -120,21 +78,22 @@ func (vac *vppAgentAclComposite) applyAclOnVppInterface(ctx context.Context, acl
 	defer conn.Close()
 	client := configurator.NewConfiguratorClient(conn)
 
-	dataChange, err := converter.NewAclConverter(aclname, ifname, rules).ToDataRequest(nil, true)
-
-	if err != nil {
-		logrus.Error(err)
-		return err
-	}
 	logrus.Infof("Sending DataChange to vppagent: %v", dataChange)
-	if _, err := client.Update(ctx, &configurator.UpdateRequest{
-		Update: dataChange,
-	}); err != nil {
-		logrus.Error(err)
-		client.Delete(ctx, &configurator.DeleteRequest{
+
+	if update {
+		if _, err = client.Update(ctx, &configurator.UpdateRequest{
+			Update: dataChange,
+		}); err != nil {
+			logrus.Error(err)
+			_, err = client.Delete(ctx, &configurator.DeleteRequest{
+				Delete: dataChange,
+			})
+		}
+	} else {
+		_, err = client.Delete(ctx, &configurator.DeleteRequest{
 			Delete: dataChange,
 		})
-		return err
 	}
-	return nil
+
+	return err
 }
