@@ -35,9 +35,8 @@ type crossConnectStruct struct {
 
 type vppAgentXConnComposite struct {
 	endpoint.BaseCompositeEndpoint
-	vppAgentEndpoint string
-	crossConnects    map[string]crossConnectStruct
-	workspace        string
+	crossConnects map[string]crossConnectStruct
+	workspace     string
 }
 
 func (vxc *vppAgentXConnComposite) Request(ctx context.Context, request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
@@ -130,19 +129,17 @@ func newVppAgentXConnComposite(configuration *common.NSConfiguration) *vppAgentX
 	logrus.Infof("newVppAgentComposite")
 
 	newVppAgentXConnComposite := &vppAgentXConnComposite{
-		vppAgentEndpoint: defaultVPPAgentEndpoint,
-		crossConnects:    make(map[string]crossConnectStruct),
-		workspace:        configuration.Workspace,
+		crossConnects: make(map[string]crossConnectStruct),
+		workspace:     configuration.Workspace,
 	}
-	resetVppAgent()
+	_ = resetVppAgent()
 
 	return newVppAgentXConnComposite
 }
 
 type vppAgentAclComposite struct {
 	endpoint.BaseCompositeEndpoint
-	vppAgentEndpoint string
-	aclRules         map[string]string
+	aclRules map[string]string
 }
 
 func (vac *vppAgentAclComposite) Request(ctx context.Context, request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
@@ -165,7 +162,7 @@ func (vac *vppAgentAclComposite) Request(ctx context.Context, request *networkse
 	}
 	ingressIfName := opaque.(string)
 
-	err = vac.applyAclOnVppInterface(ctx, "IngressACL", ingressIfName, vac.aclRules)
+	err = vac.applyACLOnVppInterface(ctx, "IngressACL", ingressIfName, vac.aclRules)
 	if err != nil {
 		logrus.Error(err)
 		return nil, err
@@ -192,10 +189,8 @@ func newVppAgentAclComposite(configuration *common.NSConfiguration) *vppAgentAcl
 	logrus.Infof("newVppAgentComposite")
 
 	newVppAgentAclComposite := &vppAgentAclComposite{
-		vppAgentEndpoint: defaultVPPAgentEndpoint,
+		aclRules: getAclRulesConfig(),
 	}
-
-	newVppAgentAclComposite.aclRules = getAclRulesConfig()
 
 	return newVppAgentAclComposite
 }

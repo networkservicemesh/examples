@@ -35,7 +35,9 @@ const (
 func resetVppAgent() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
-	tools.WaitForPortAvailable(ctx, "tcp", defaultVPPAgentEndpoint, 100*time.Millisecond)
+	if err := tools.WaitForPortAvailable(ctx, "tcp", defaultVPPAgentEndpoint, 100*time.Millisecond); err != nil {
+		return err
+	}
 	conn, err := grpc.Dial(defaultVPPAgentEndpoint, grpc.WithInsecure())
 	if err != nil {
 		logrus.Errorf("can't dial grpc server: %v", err)
@@ -60,7 +62,9 @@ func sendDataChangeToVppAgent(dataChange *configurator.Config, update bool) erro
 
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
-	tools.WaitForPortAvailable(ctx, "tcp", defaultVPPAgentEndpoint, 100*time.Millisecond)
+	if err := tools.WaitForPortAvailable(ctx, "tcp", defaultVPPAgentEndpoint, 100*time.Millisecond); err != nil {
+		return err
+	}
 	tracer := opentracing.GlobalTracer()
 	conn, err := grpc.Dial(defaultVPPAgentEndpoint, grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(
@@ -77,14 +81,13 @@ func sendDataChangeToVppAgent(dataChange *configurator.Config, update bool) erro
 	logrus.Infof("Sending DataChange to vppagent: %v", dataChange)
 
 	if update {
-		if _, err := client.Update(ctx, &configurator.UpdateRequest{
+		if _, err = client.Update(ctx, &configurator.UpdateRequest{
 			Update: dataChange,
 		}); err != nil {
 			logrus.Error(err)
-			client.Delete(ctx, &configurator.DeleteRequest{
+			_, err = client.Delete(ctx, &configurator.DeleteRequest{
 				Delete: dataChange,
 			})
-			return err
 		}
 	} else {
 		_, err = client.Delete(ctx, &configurator.DeleteRequest{
@@ -92,5 +95,5 @@ func sendDataChangeToVppAgent(dataChange *configurator.Config, update bool) erro
 		})
 	}
 
-	return nil
+	return err
 }

@@ -31,18 +31,18 @@ import (
 )
 
 func getAction(parsed map[string]string) (vpp_acl.ACL_Rule_Action, error) {
-	action_name, ok := parsed["action"]
+	actionName, ok := parsed["action"]
 	if !ok {
-		return vpp_acl.ACL_Rule_Action(0), fmt.Errorf("Rule should have 'action' set.")
+		return vpp_acl.ACL_Rule_Action(0), fmt.Errorf("rule should have 'action' set")
 	}
-	action, ok := vpp_acl.ACL_Rule_Action_value[strings.ToUpper(action_name)]
+	action, ok := vpp_acl.ACL_Rule_Action_value[strings.ToUpper(actionName)]
 	if !ok {
-		return vpp_acl.ACL_Rule_Action(0), fmt.Errorf("Rule should have a valid 'action'.")
+		return vpp_acl.ACL_Rule_Action(0), fmt.Errorf("rule should have a valid 'action'")
 	}
 	return vpp_acl.ACL_Rule_Action(action), nil
 }
 
-func getIp(parsed map[string]string) (*vpp_acl.ACL_Rule_IpRule_Ip, error) {
+func getIP(parsed map[string]string) (*vpp_acl.ACL_Rule_IpRule_Ip, error) {
 	dstNet, dstNetOk := parsed["dstnet"]
 	srcNet, srcNetOk := parsed["srcnet"]
 	if dstNetOk {
@@ -107,7 +107,7 @@ func getPort(name string, parsed map[string]string) (uint16, bool, error) {
 	return uint16(port16), true, nil
 }
 
-func getTcp(parsed map[string]string) (*vpp_acl.ACL_Rule_IpRule_Tcp, error) {
+func getTCP(parsed map[string]string) (*vpp_acl.ACL_Rule_IpRule_Tcp, error) {
 	lowerPort, lpFound, lpErr := getPort("tcplowport", parsed)
 	if !lpFound {
 		return nil, nil
@@ -136,7 +136,7 @@ func getTcp(parsed map[string]string) (*vpp_acl.ACL_Rule_IpRule_Tcp, error) {
 	}, nil
 }
 
-func getUdp(parsed map[string]string) (*vpp_acl.ACL_Rule_IpRule_Udp, error) {
+func getUDP(parsed map[string]string) (*vpp_acl.ACL_Rule_IpRule_Udp, error) {
 	lowerPort, lpFound, lpErr := getPort("udplowport", parsed)
 	if !lpFound {
 		return nil, nil
@@ -163,9 +163,9 @@ func getUdp(parsed map[string]string) (*vpp_acl.ACL_Rule_IpRule_Udp, error) {
 	}, nil
 }
 
-func getIpRule(parsed map[string]string) (*vpp_acl.ACL_Rule_IpRule, error) {
+func getIPRule(parsed map[string]string) (*vpp_acl.ACL_Rule_IpRule, error) {
 
-	ip, err := getIp(parsed)
+	ip, err := getIP(parsed)
 	if err != nil {
 		return nil, err
 	}
@@ -175,12 +175,12 @@ func getIpRule(parsed map[string]string) (*vpp_acl.ACL_Rule_IpRule, error) {
 		return nil, err
 	}
 
-	tcp, err := getTcp(parsed)
+	tcp, err := getTCP(parsed)
 	if err != nil {
 		return nil, err
 	}
 
-	udp, err := getUdp(parsed)
+	udp, err := getUDP(parsed)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +195,7 @@ func getIpRule(parsed map[string]string) (*vpp_acl.ACL_Rule_IpRule, error) {
 
 func getMatch(parsed map[string]string) (*vpp_acl.ACL_Rule, error) {
 
-	iprule, err := getIpRule(parsed)
+	iprule, err := getIPRule(parsed)
 	if err != nil {
 		return nil, err
 	}
@@ -258,7 +258,7 @@ func aclConverter(name, ingress string, rules map[string]string) (*configurator.
 	return &configurator.Config{VppConfig: rv}, nil
 }
 
-func (vac *vppAgentAclComposite) applyAclOnVppInterface(ctx context.Context, aclname, ifname string, rules map[string]string) error {
+func (vac *vppAgentAclComposite) applyACLOnVppInterface(ctx context.Context, aclname, ifname string, rules map[string]string) error {
 
 	if len(rules) == 0 {
 		logrus.Info("No ACL rules speccified, skipping")
