@@ -1,4 +1,4 @@
-// Copyright 2018 VMware, Inc.
+// Copyright 2019 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"strconv"
@@ -218,7 +219,7 @@ func getMatch(parsed map[string]string) (*vpp_acl.ACL_Rule, error) {
 // udplowport, udpupport - 16-bit unsigned integer
 //
 
-func AclConverter(name, ingress string, rules map[string]string) (*configurator.Config, error) {
+func aclConverter(name, ingress string, rules map[string]string) (*configurator.Config, error) {
 
 	rv := &vpp.ConfigData{}
 
@@ -255,4 +256,21 @@ func AclConverter(name, ingress string, rules map[string]string) (*configurator.
 	}
 
 	return &configurator.Config{VppConfig: rv}, nil
+}
+
+func (vac *vppAgentAclComposite) applyAclOnVppInterface(ctx context.Context, aclname, ifname string, rules map[string]string) error {
+
+	if len(rules) == 0 {
+		logrus.Info("No ACL rules speccified, skipping")
+		return nil
+	}
+
+	dataChange, err := aclConverter(aclname, ifname, rules)
+
+	if err != nil {
+		logrus.Error(err)
+		return err
+	}
+
+	return sendDataChangeToVppAgent(dataChange, true)
 }
