@@ -28,7 +28,6 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/apis/crossconnect"
-	"github.com/networkservicemesh/networkservicemesh/dataplane/vppagent/pkg/converter"
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
@@ -166,7 +165,7 @@ func (vac *vppAgentAclComposite) applyAclOnVppInterface(ctx context.Context, acl
 	defer conn.Close()
 	client := configurator.NewConfiguratorClient(conn)
 
-	dataChange, err := converter.NewAclConverter(aclname, ifname, rules).ToDataRequest(nil, true)
+	dataChange, err := AclConverter(aclname, ifname, rules)
 
 	if err != nil {
 		logrus.Error(err)
