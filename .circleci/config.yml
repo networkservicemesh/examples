@@ -198,6 +198,12 @@ workflows:
           description: "Secure Intranet"
           requires:
             - sanity-check
+      - test:
+          name: "Test Packet Filtering"
+          example: "packet-filtering"
+          description: "Packet Filtering"
+          requires:
+            - sanity-check
   nightly-test:
     triggers:
       - schedule:
@@ -267,3 +273,13 @@ workflows:
           tag: "master"
           requires:
             - "[N] Test Secure Intranet"
+      - test:
+          name: "[N] Test Packet Filtering"
+          example: "packet-filtering"
+          description: "Packet Filtering"
+          nightly: "true"
+      - push:
+          name: "[N] Push Packet Filtering"
+          example: "packet-filtering"
+          requires:
+            - "[N] Test Packet Filtering"

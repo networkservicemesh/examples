@@ -1,0 +1,52 @@
+initactions:
+  - command:
+      name: "vppctl"
+      args: ["show", "version"]
+  - client:
+      name: "passthrough"
+      ifname: "client0"
+      labels:
+        app: "pt-1"
+        version: "v1"
+endpoints:
+  - name: "passthrough"
+    labels:
+      app: "pt-1"
+      version: "v1"
+    ifname: "endpoint0"
+    ipam:
+      prefixpool: "10.60.1.0/24"
+    action:
+      vppconfig:
+        acls:
+          - name: "acl-1"
+            rules:
+              - action: 2
+                iprule:
+                  icmp:
+                    icmptyperange:
+                      first: 8
+                      last: 8
+              - action: 2
+                iprule:
+                  tcp:
+                    destinationportrange:
+                      lowerport: 80
+                      upperport: 80
+            interfaces:
+              ingress:
+                - "endpoint0"
+        xconnectpairs:
+          - receiveinterface: "endpoint0"
+            transmitinterface: "client0"
+          - receiveinterface: "client0"
+            transmitinterface: "endpoint0"
+  - name: "passthrough"
+    labels:
+      app: "pt-1"
+      version: "v1"
+    ifname: "endpoint1"
+    action:
+      vppconfig:
+        acls:
+          - name: "acl-1"
