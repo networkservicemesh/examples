@@ -24,6 +24,8 @@ include $(TOP)/mk/targets.mk
 
 * `CHECK` - a command to be executed to verify the operability of the deployment. The command is executed from the `examples` folder. It assumes all paths are relative to it.
 
+* `FAIL_GOLINT` - shall the golang lint fail. Defaults to true, but should be unsed with `FAIL_GOLINT =` in case the example does not contain any go code.
+
 Adding an example will generate the following new make targets:
 
 * `k8s-<NAME>-build` - builds the container images as specified in `CONTAINER`

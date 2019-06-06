@@ -36,5 +36,8 @@ build-all: $(addsuffix -build,$(addprefix ${PREFIX}-,$(EXAMPLE_NAMES)))
 save-all: $(addsuffix -save,$(addprefix ${PREFIX}-,$(EXAMPLE_NAMES)))
 	@echo "Saved the following examples: ${EXAMPLE_NAMES}"
 
+.PHONY: lint-all
+lint-all: $(addsuffix -lint,$(EXAMPLE_NAMES))
+
 %:
 	@cd ${NSM_PATH} && make $*
