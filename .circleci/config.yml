@@ -56,6 +56,9 @@ jobs:
         type: string
       description:
         type: string
+      nsmbranch:
+        type: string
+        default: "master"
     machine:
       enabled: true
       docker_layer_caching: true
@@ -83,7 +86,7 @@ jobs:
       - run:
           name: Clone NSM
           command: |
-            git clone https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
+            git clone --single-branch --branch << parameters.nsmbranch >> https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
       - run:
           name: Start kind
           command: |
@@ -134,30 +137,35 @@ workflows:
           name: "Test Envoy"
           example: "envoy_interceptor"
           description: "Envoy interceptor"
+          nsmbranch: "release-0.1"
           requires:
             - sanity-check
       - test:
           name: "Test ICMP"
           example: "icmp"
           description: "Simple ICMP"
+          nsmbranch: "release-0.1"
           requires:
             - sanity-check
       - test:
           name: "Test Proxy"
           example: "proxy"
           description: "Proxy"
+          nsmbranch: "release-0.1"
           requires:
             - sanity-check
       - test:
           name: "Test VPP ICMP"
           example: "vpp-icmp"
           description: "VPP ICMP"
+          nsmbranch: "release-0.1"
           requires:
             - sanity-check
       - test:
           name: "Test Secure Intranet"
           example: "secure-intranet"
           description: "Secure Intranet"
+          nsmbranch: "release-0.1"
           requires:
             - sanity-check
   nightly-test:
