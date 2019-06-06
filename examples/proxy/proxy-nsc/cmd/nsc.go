@@ -16,6 +16,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net"
 	"net/http"
@@ -66,7 +67,7 @@ func nsmDirector(req *http.Request) {
 	state.Lock()
 	defer state.Unlock()
 
-	// Convert the
+	// Convert the request headers to labels
 	state.client.OutgoingNscLabels = make(map[string]string)
 	for name, headers := range req.Header {
 		name = strings.ToLower(name)
@@ -77,7 +78,7 @@ func nsmDirector(req *http.Request) {
 	}
 
 	ifname := "nsm" + strconv.Itoa(state.interfaceID)
-	state.interfaceID = state.interfaceID + 1
+	state.interfaceID++
 
 	outgoing, err := state.client.Connect(ifname, "kernel", "Primary interface")
 	if err != nil {
@@ -119,7 +120,7 @@ func main() {
 
 	// Create the NSM client
 	state.interfaceID = 0
-	client, err := client.NewNSMClient(nil, nil)
+	client, err := client.NewNSMClient(context.TODO(), nil)
 	if err != nil {
 		logrus.Fatalf("Unable to create the NSM client %v", err)
 	}

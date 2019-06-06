@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
-	"github.com/ligato/vpp-agent/api/configurator"
 	"time"
+
+	"github.com/ligato/vpp-agent/api/configurator"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/apis/local/connection"
@@ -14,10 +15,16 @@ import (
 	"google.golang.org/grpc"
 )
 
-func (ns *vppagentComposite) CreateVppInterface(ctx context.Context, nseConnection *connection.Connection, baseDir string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
-	defer cancel()
-	tools.WaitForPortAvailable(ctx, "tcp", ns.vppAgentEndpoint, 100*time.Millisecond)
+func (ns *vppagentComposite) CreateVppInterface(ctx context.Context, nseConnection *connection.Connection,
+	baseDir string) error {
+	if ctx == nil {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(context.Background(), 120*time.Second)
+		defer cancel()
+	}
+	if err := tools.WaitForPortAvailable(ctx, "tcp", defaultVPPAgentEndpoint, 100*time.Millisecond); err != nil {
+		return err
+	}
 	tracer := opentracing.GlobalTracer()
 	conn, err := grpc.Dial(ns.vppAgentEndpoint, grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(
@@ -47,7 +54,7 @@ func (ns *vppagentComposite) CreateVppInterface(ctx context.Context, nseConnecti
 	logrus.Infof("Sending DataChange to vppagent: %v", dataChange)
 	if _, err := client.Update(ctx, &configurator.UpdateRequest{Update: dataChange}); err != nil {
 		logrus.Error(err)
-		client.Delete(ctx, &configurator.DeleteRequest{Delete: dataChange})
+		_, _ = client.Delete(ctx, &configurator.DeleteRequest{Delete: dataChange})
 		return err
 	}
 	return nil
@@ -56,7 +63,9 @@ func (ns *vppagentComposite) CreateVppInterface(ctx context.Context, nseConnecti
 func (ns *vppagentComposite) Reset() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
-	tools.WaitForPortAvailable(ctx, "tcp", ns.vppAgentEndpoint, 100*time.Millisecond)
+	if err := tools.WaitForPortAvailable(ctx, "tcp", defaultVPPAgentEndpoint, 100*time.Millisecond); err != nil {
+		return err
+	}
 	tracer := opentracing.GlobalTracer()
 	conn, err := grpc.Dial(ns.vppAgentEndpoint, grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(

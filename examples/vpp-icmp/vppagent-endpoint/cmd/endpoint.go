@@ -16,6 +16,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
 	"github.com/networkservicemesh/networkservicemesh/sdk/common"
 	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
@@ -36,13 +38,15 @@ func main() {
 		endpoint.NewIpamEndpoint(nil),
 		endpoint.NewConnectionEndpoint(configuration))
 
-	nsmEndpoint, err := endpoint.NewNSMEndpoint(nil, configuration, composite)
+	nsmEndpoint, err := endpoint.NewNSMEndpoint(context.TODO(), configuration, composite)
 	if err != nil {
 		logrus.Fatalf("%v", err)
 	}
 
-	nsmEndpoint.Start()
-	defer nsmEndpoint.Delete()
+	if err := nsmEndpoint.Start(); err != nil {
+		logrus.Fatalf("Error starting the endpoint: %v", err)
+	}
+	defer func() { _ = nsmEndpoint.Delete() }()
 
 	<-c
 }

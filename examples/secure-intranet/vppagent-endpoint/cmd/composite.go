@@ -39,7 +39,8 @@ type vppAgentXConnComposite struct {
 	workspace     string
 }
 
-func (vxc *vppAgentXConnComposite) Request(ctx context.Context, request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
+func (vxc *vppAgentXConnComposite) Request(ctx context.Context,
+	request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
 
 	if vxc.GetNext() == nil {
 		logrus.Fatal("Should have Next set")
@@ -53,7 +54,7 @@ func (vxc *vppAgentXConnComposite) Request(ctx context.Context, request *network
 
 	opaque := vxc.GetNext().GetOpaque(incoming)
 	if opaque == nil {
-		err := fmt.Errorf("Backend: Unable to find the outgoing connection")
+		err := fmt.Errorf("backend: Unable to find the outgoing connection")
 		logrus.Errorf("%v", err)
 		return nil, err
 	}
@@ -72,7 +73,7 @@ func (vxc *vppAgentXConnComposite) Request(ctx context.Context, request *network
 		},
 	}
 
-	crossConnect, dataChange, err := vxc.crossConnecVppInterfaces(ctx, crossConnectRequest, true, vxc.workspace)
+	crossConnect, dataChange, err := vxc.crossConnecVppInterfaces(crossConnectRequest, true, vxc.workspace)
 	if err != nil {
 		logrus.Error(err)
 		return nil, err
@@ -93,7 +94,7 @@ func (vxc *vppAgentXConnComposite) Close(ctx context.Context, conn *connection.C
 	// remove from connections
 	crossConnect, ok := vxc.crossConnects[conn.GetId()]
 	if ok {
-		_, _, err := vxc.crossConnecVppInterfaces(ctx, crossConnect.crossConnect, false, vxc.workspace)
+		_, _, err := vxc.crossConnecVppInterfaces(crossConnect.crossConnect, false, vxc.workspace)
 		if err != nil {
 			logrus.Error(err)
 			return &empty.Empty{}, err
@@ -137,12 +138,13 @@ func newVppAgentXConnComposite(configuration *common.NSConfiguration) *vppAgentX
 	return newVppAgentXConnComposite
 }
 
-type vppAgentAclComposite struct {
+type vppAgentACLComposite struct {
 	endpoint.BaseCompositeEndpoint
 	aclRules map[string]string
 }
 
-func (vac *vppAgentAclComposite) Request(ctx context.Context, request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
+func (vac *vppAgentACLComposite) Request(ctx context.Context,
+	request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
 
 	if vac.GetNext() == nil {
 		logrus.Fatal("Should have Next set")
@@ -156,13 +158,13 @@ func (vac *vppAgentAclComposite) Request(ctx context.Context, request *networkse
 
 	opaque := vac.GetNext().GetOpaque(incoming)
 	if opaque == nil {
-		err := fmt.Errorf("Backend: Unable to find the ingressIfName")
+		err := fmt.Errorf("backend: Unable to find the ingressIfName")
 		logrus.Errorf("%v", err)
 		return nil, err
 	}
 	ingressIfName := opaque.(string)
 
-	err = vac.applyACLOnVppInterface(ctx, "IngressACL", ingressIfName, vac.aclRules)
+	err = vac.applyACLOnVppInterface("IngressACL", ingressIfName, vac.aclRules)
 	if err != nil {
 		logrus.Error(err)
 		return nil, err
@@ -171,7 +173,7 @@ func (vac *vppAgentAclComposite) Request(ctx context.Context, request *networkse
 	return incoming, nil
 }
 
-func (vac *vppAgentAclComposite) Close(ctx context.Context, conn *connection.Connection) (*empty.Empty, error) {
+func (vac *vppAgentACLComposite) Close(ctx context.Context, conn *connection.Connection) (*empty.Empty, error) {
 	if vac.GetNext() != nil {
 		return vac.GetNext().Close(ctx, conn)
 	}
@@ -179,7 +181,7 @@ func (vac *vppAgentAclComposite) Close(ctx context.Context, conn *connection.Con
 }
 
 // NewVppAgentComposite creates a new VPP Agent composite
-func newVppAgentAclComposite(configuration *common.NSConfiguration) *vppAgentAclComposite {
+func newvppAgentACLComposite(configuration *common.NSConfiguration, aclRules map[string]string) *vppAgentACLComposite {
 	// ensure the env variables are processed
 	if configuration == nil {
 		configuration = &common.NSConfiguration{}
@@ -188,9 +190,9 @@ func newVppAgentAclComposite(configuration *common.NSConfiguration) *vppAgentAcl
 
 	logrus.Infof("newVppAgentComposite")
 
-	newVppAgentAclComposite := &vppAgentAclComposite{
-		aclRules: getAclRulesConfig(),
+	newvppAgentACLComposite := &vppAgentACLComposite{
+		aclRules: aclRules,
 	}
 
-	return newVppAgentAclComposite
+	return newvppAgentACLComposite
 }

@@ -16,6 +16,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
 	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
 	"github.com/sirupsen/logrus"
@@ -32,7 +34,7 @@ func main() {
 		endpoint.NewIpamEndpoint(nil),
 		endpoint.NewConnectionEndpoint(nil))
 
-	nsmEndpoint, err := endpoint.NewNSMEndpoint(nil, nil, composite)
+	nsmEndpoint, err := endpoint.NewNSMEndpoint(context.TODO(), nil, composite)
 	if err != nil {
 		logrus.Fatalf("%v", err)
 	}

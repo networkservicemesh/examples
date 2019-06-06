@@ -49,7 +49,7 @@ define LINT
 .PHONY: $(NAME)-lint
 $(NAME)-lint:
 	@echo "==================== START $(NAME) ===================="
-	@cd examples/$(NAME) && golangci-lint run ./... || [ -z ${FAIL_GOLINT} ] && true
+	@cd examples/$(NAME) && golangci-lint run --enable-all ./... || [ -z ${FAIL_GOLINT} ] && true
 	@echo "====================  END $(NAME)  ===================="
 endef
 $(eval $(LINT))

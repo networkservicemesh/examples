@@ -40,7 +40,8 @@ func (ns *vppagentComposite) GetOpaque(interface{}) interface{} {
 	return nil
 }
 
-func (ns *vppagentComposite) Request(ctx context.Context, request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
+func (ns *vppagentComposite) Request(ctx context.Context,
+	request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
 
 	if ns.GetNext() == nil {
 		logrus.Fatal("Should have Next set")
@@ -77,7 +78,9 @@ func newVppAgentComposite(configuration *common.NSConfiguration) *vppagentCompos
 		vppAgentEndpoint: defaultVPPAgentEndpoint,
 		workspace:        configuration.Workspace,
 	}
-	newVppAgentComposite.Reset()
+	if err := newVppAgentComposite.Reset(); err != nil {
+		return nil
+	}
 
 	return newVppAgentComposite
 }

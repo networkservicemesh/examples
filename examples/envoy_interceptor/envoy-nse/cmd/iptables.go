@@ -49,10 +49,11 @@ func getIptablesScript() string {
 }
 
 // Request implements the request handler
-func (ie *IptablesEndpoint) Request(ctx context.Context, request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
+func (ie *IptablesEndpoint) Request(ctx context.Context,
+	request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
 
 	if ie.GetNext() == nil {
-		err := fmt.Errorf("Iptables needs next")
+		err := fmt.Errorf("iptables needs next")
 		logrus.Errorf("%v", err)
 		return nil, err
 	}

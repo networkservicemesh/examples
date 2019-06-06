@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"os"
 	"sync"
 
@@ -38,6 +39,7 @@ type nsClientBackend struct {
 func (nscb *nsClientBackend) New() error {
 	if err := Reset(nscb.vppAgentEndpoint); err != nil {
 		logrus.Fatal(err)
+		return err
 	}
 	logrus.Infof("workspace: %s", nscb.workspace)
 	return nil
@@ -70,7 +72,7 @@ func main() {
 		vppAgentEndpoint: defaultVPPAgentEndpoint,
 	}
 
-	client, err := client.NewNSMClient(nil, nil)
+	client, err := client.NewNSMClient(context.TODO(), nil)
 	if err != nil {
 		logrus.Fatalf("Unable to create the NSM client %v", err)
 	}
