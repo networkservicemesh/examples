@@ -5,4 +5,7 @@ PODS = simple-client simple-endpoint
 # NETWORK_SERVICES = icmp-responder
 CHECK = scripts/check_icmp.sh
 
+# should not fail go linter
+FAIL_GOLINT =
+
 include $(TOP)/mk/targets.mk

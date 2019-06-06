@@ -27,10 +27,13 @@ const (
 	aclRules = "aclRules"
 )
 
-var viperConfig *viper.Viper
+// ViperConfig is a configuration state container
+type ViperConfig struct {
+	viperConfig *viper.Viper
+}
 
-func initConfig() {
-	viperConfig = viper.New()
+func initConfig() *ViperConfig {
+	viperConfig := viper.New()
 	viperConfig.SetConfigName("config")
 	viperConfig.AddConfigPath("/etc/vppagent-acl-filter/")
 
@@ -44,8 +47,10 @@ func initConfig() {
 	}
 
 	logrus.Infof("ACL filter config finished")
+
+	return &ViperConfig{viperConfig: viperConfig}
 }
 
-func getAclRulesConfig() map[string]string {
-	return viperConfig.GetStringMapString(aclRules)
+func (v *ViperConfig) getACLRulesConfig() map[string]string {
+	return v.viperConfig.GetStringMapString(aclRules)
 }

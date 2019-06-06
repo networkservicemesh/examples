@@ -16,7 +16,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"strconv"
@@ -79,7 +78,7 @@ func getIcmp(parsed map[string]string) (*vpp_acl.ACL_Rule_IpRule_Icmp, error) {
 	}
 	icmpType8, err := strconv.ParseUint(icmpType, 10, 8)
 	if err != nil {
-		return nil, fmt.Errorf("Failed parsing icmptype [%v] with: %v", icmpType, err)
+		return nil, fmt.Errorf("failed parsing icmptype [%v] with: %v", icmpType, err)
 	}
 	return &vpp_acl.ACL_Rule_IpRule_Icmp{
 		Icmpv6: false,
@@ -101,7 +100,7 @@ func getPort(name string, parsed map[string]string) (uint16, bool, error) {
 	}
 	port16, err := strconv.ParseUint(port, 10, 16)
 	if err != nil {
-		return 0, true, fmt.Errorf("Failed parsing %s [%v] with: %v", name, port, err)
+		return 0, true, fmt.Errorf("failed parsing %s [%v] with: %v", name, port, err)
 	}
 
 	return uint16(port16), true, nil
@@ -258,7 +257,8 @@ func aclConverter(name, ingress string, rules map[string]string) (*configurator.
 	return &configurator.Config{VppConfig: rv}, nil
 }
 
-func (vac *vppAgentAclComposite) applyACLOnVppInterface(ctx context.Context, aclname, ifname string, rules map[string]string) error {
+func (vac *vppAgentACLComposite) applyACLOnVppInterface(aclname, ifname string,
+	rules map[string]string) error {
 
 	if len(rules) == 0 {
 		logrus.Info("No ACL rules speccified, skipping")

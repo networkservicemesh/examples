@@ -9,6 +9,7 @@ define include-example
   NETWORK_SERVICES =
   PODS =
   CHECK =
+  FAIL_GOLINT = 1
 
   include $1/Makefile
 endef

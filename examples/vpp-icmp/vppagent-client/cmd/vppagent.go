@@ -45,7 +45,7 @@ func CreateVppInterface(nscConnection *connection.Connection, baseDir string, vp
 	logrus.Infof("Sending DataChange to vppagent: %v", dataChange)
 	if _, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: dataChange}); err != nil {
 		logrus.Error(err)
-		client.Delete(context.Background(), &configurator.DeleteRequest{Delete: dataChange})
+		_, _ = client.Delete(context.Background(), &configurator.DeleteRequest{Delete: dataChange})
 		return err
 	}
 	return nil
@@ -54,7 +54,10 @@ func CreateVppInterface(nscConnection *connection.Connection, baseDir string, vp
 func Reset(vppAgentEndpoint string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
-	tools.WaitForPortAvailable(ctx, "tcp", vppAgentEndpoint, 100*time.Millisecond)
+	if err := tools.WaitForPortAvailable(ctx, "tcp", vppAgentEndpoint, 100*time.Millisecond); err != nil {
+		logrus.Errorf("reset: Timed out waiting for vpp-agent port")
+		return err
+	}
 
 	tracer := opentracing.GlobalTracer()
 	conn, err := grpc.Dial(vppAgentEndpoint, grpc.WithInsecure(),

@@ -16,7 +16,6 @@
 package main
 
 import (
-	"context"
 	"os"
 	"path"
 
@@ -29,7 +28,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (vxc *vppAgentXConnComposite) crossConnecVppInterfaces(ctx context.Context, crossConnect *crossconnect.CrossConnect, connect bool, baseDir string) (*crossconnect.CrossConnect, *configurator.Config, error) {
+func (vxc *vppAgentXConnComposite) crossConnecVppInterfaces(crossConnect *crossconnect.CrossConnect,
+	connect bool, baseDir string) (*crossconnect.CrossConnect, *configurator.Config, error) {
 
 	src := crossConnect.GetLocalSource()
 	srcName := "SRC-" + crossConnect.GetId()
@@ -44,7 +44,7 @@ func (vxc *vppAgentXConnComposite) crossConnecVppInterfaces(ctx context.Context,
 	dataChange := &configurator.Config{
 		VppConfig: &vpp.ConfigData{
 			Interfaces: []*interfaces.Interface{
-				&interfaces.Interface{
+				{
 					Name:    srcName,
 					Type:    interfaces.Interface_MEMIF,
 					Enabled: true,
@@ -55,7 +55,7 @@ func (vxc *vppAgentXConnComposite) crossConnecVppInterfaces(ctx context.Context,
 						},
 					},
 				},
-				&interfaces.Interface{
+				{
 					Name:    dstName,
 					Type:    interfaces.Interface_MEMIF,
 					Enabled: true,
@@ -68,11 +68,11 @@ func (vxc *vppAgentXConnComposite) crossConnecVppInterfaces(ctx context.Context,
 				},
 			},
 			XconnectPairs: []*l2.XConnectPair{
-				&l2.XConnectPair{
+				{
 					ReceiveInterface:  srcName,
 					TransmitInterface: dstName,
 				},
-				&l2.XConnectPair{
+				{
 					ReceiveInterface:  dstName,
 					TransmitInterface: srcName,
 				},

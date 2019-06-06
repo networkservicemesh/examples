@@ -32,7 +32,7 @@ func main() {
 	logrus.SetOutput(os.Stdout)
 	logrus.SetLevel(logrus.TraceLevel)
 
-	initConfig()
+	config := initConfig()
 
 	configuration := &common.NSConfiguration{
 		MechanismType: "mem",
@@ -40,7 +40,7 @@ func main() {
 
 	composite := endpoint.NewCompositeEndpoint(
 		endpoint.NewMonitorEndpoint(configuration),
-		newVppAgentAclComposite(configuration),
+		newvppAgentACLComposite(configuration, config.getACLRulesConfig()),
 		newVppAgentXConnComposite(configuration),
 		endpoint.NewClientEndpoint(configuration),
 		endpoint.NewConnectionEndpoint(configuration))

@@ -44,3 +44,12 @@ $(PREFIX)-$(NAME)-check:
 	@cd examples/$(NAME) && $(CHECK)
 endef
 $(eval $(RUN_CHECK))
+
+define LINT
+.PHONY: $(NAME)-lint
+$(NAME)-lint:
+	@echo "==================== START $(NAME) ===================="
+	@cd examples/$(NAME) && golangci-lint run --enable-all ./... || [ -z ${FAIL_GOLINT} ] && true
+	@echo "====================  END $(NAME)  ===================="
+endef
+$(eval $(LINT))

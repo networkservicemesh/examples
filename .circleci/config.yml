@@ -1,6 +1,7 @@
 version: 2.1
 jobs:
   sanity-check:
+    resource_class: medium+
     working_directory: ~/project/examples
     docker:
       - image: circleci/golang
@@ -10,13 +11,28 @@ jobs:
           command: |
             git clone https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
       - run:
+          name:
           command: |
             sudo apt-get install yamllint python3-pkg-resources
             ./.circleci/install-shellcheck.sh
       - run: yamllint -c .yamllint.yml $(git ls-files '*.yaml' '*.yml')
-      - run: go build ./...
+      - run:
+          name: Go build
+          command: go build ./...
+      - run:
+          name: Install golangci-lint
+          command: |
+            export GOLANGCI_LINT_VER=1.16.0
+            wget https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_LINT_VER}/golangci-lint-${GOLANGCI_LINT_VER}-linux-amd64.tar.gz
+            tar -xvf golangci-lint-${GOLANGCI_LINT_VER}-linux-amd64.tar.gz
+            sudo mv golangci-lint-${GOLANGCI_LINT_VER}-linux-amd64/golangci-lint /usr/local/bin/
+      - run:
+          name: Lint examples
+          command: |
+            make lint-all
     environment:
       GO111MODULE: 'on'
+
   build:
     working_directory: ~/project/examples
     docker:
@@ -33,12 +49,16 @@ jobs:
             export COMMIT="${CIRCLE_SHA1:8:8}"
             export TAG="${COMMIT}"
             make build-all
+
   test:
     parameters:
       example:
         type: string
       description:
         type: string
+      nsmbranch:
+        type: string
+        default: "master"
     machine:
       enabled: true
       docker_layer_caching: true
@@ -66,7 +86,7 @@ jobs:
       - run:
           name: Clone NSM
           command: |
-            git clone https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
+            git clone --single-branch --branch << parameters.nsmbranch >> https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
       - run:
           name: Start kind
           command: |
@@ -83,7 +103,8 @@ jobs:
       - run:
           name: NSM infra deploy
           command: |
-            CLUSTER_RULES_PREFIX=null make k8s-admission-webhook-deploy k8s-nsmgr-deploy k8s-vppagent-dataplane-deploy
+            make k8s-admission-webhook-save k8s-nsmgr-save k8s-vppagent-dataplane-save
+            CLUSTER_RULES_PREFIX=kind make k8s-admission-webhook-deploy k8s-nsmgr-deploy k8s-vppagent-dataplane-deploy
             kubectl wait -n nsm-system --timeout=150s --for condition=Ready --all pods
       - run:
           name: << parameters.description >> deploy
@@ -117,30 +138,35 @@ workflows:
           name: "Test Envoy"
           example: "envoy_interceptor"
           description: "Envoy interceptor"
+          nsmbranch: "release-0.1"
           requires:
             - sanity-check
       - test:
           name: "Test ICMP"
           example: "icmp"
           description: "Simple ICMP"
+          nsmbranch: "release-0.1"
           requires:
             - sanity-check
       - test:
           name: "Test Proxy"
           example: "proxy"
           description: "Proxy"
+          nsmbranch: "release-0.1"
           requires:
             - sanity-check
       - test:
           name: "Test VPP ICMP"
           example: "vpp-icmp"
           description: "VPP ICMP"
+          nsmbranch: "release-0.1"
           requires:
             - sanity-check
       - test:
           name: "Test Secure Intranet"
           example: "secure-intranet"
           description: "Secure Intranet"
+          nsmbranch: "release-0.1"
           requires:
             - sanity-check
   nightly-test:
