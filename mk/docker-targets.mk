@@ -42,6 +42,12 @@ docker-$1-$2-save: docker-$1-$2-build
 	@echo "Saving $1-$2"
 	@mkdir -p ${NSM_PATH}/scripts/vagrant/images/
 	@docker save -o ${NSM_PATH}/scripts/vagrant/images/$1-$2.tar ${ORG}/$1-$2
+
+.PHONY: docker-%-push
+docker-$1-$2-push: docker-$1-$2-build
+	@echo "Pushing $1-$2"
+	@echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+	@docker push ${ORG}/$1-$2:${TAG}
 endef
 
 $(foreach container,$(CONTAINERS),$(eval $(call generate-docker-targets,$(NAME),$(container))))

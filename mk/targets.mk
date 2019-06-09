@@ -1,9 +1,13 @@
 
 include $(TOP)/mk/docker-targets.mk
 
+define GATHER_EXAMPLES
+EXAMPLE_NAMES+=${NAME}
+endef
+$(eval $(BUIGATHER_EXAMPLESLD))
+
 define BUILD
 .PHONY: $(PREFIX)-$(NAME)-build
-EXAMPLE_NAMES+=${NAME}
 $(PREFIX)-$(NAME)-build: $(addsuffix -build,$(addprefix ${CONTAINER_BUILD_PREFIX}-$(NAME)-,$(CONTAINERS)))
 endef
 $(eval $(BUILD))
@@ -13,6 +17,12 @@ define SAVE
 $(PREFIX)-$(NAME)-save: $(addsuffix -save,$(addprefix ${CONTAINER_BUILD_PREFIX}-$(NAME)-,$(CONTAINERS))) $(addsuffix -save,$(addprefix ${CONTAINER_BUILD_PREFIX}-,$(AUX_CONTAINERS)))
 endef
 $(eval $(SAVE))
+
+define PUSH
+.PHONY: $(PREFIX)-$(NAME)-push
+$(PREFIX)-$(NAME)-push: $(addsuffix -push,$(addprefix ${CONTAINER_BUILD_PREFIX}-$(NAME)-,$(CONTAINERS)))
+endef
+$(eval $(PUSH))
 
 define LOAD_IMAGES
 .PHONY: $(PREFIX)-$(NAME)-load-images

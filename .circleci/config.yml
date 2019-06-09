@@ -50,6 +50,30 @@ jobs:
             export TAG="${COMMIT}"
             make build-all
 
+  push:
+    parameters:
+      example:
+        type: string
+    working_directory: ~/project/examples
+    docker:
+      - image: circleci/golang
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          command: |
+            git clone https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
+      - run:
+          command: |
+            export COMMIT="${CIRCLE_SHA1:8:8}"
+            export TAG="${COMMIT}"
+            make build-all
+      - run:
+          name: Push << parameters.example >> containers
+          command: |
+            make k8s-<< parameters.example >>-push
+
   test:
     parameters:
       example:
@@ -59,6 +83,9 @@ jobs:
       nsmbranch:
         type: string
         default: "master"
+      nightly:
+        type: string
+        default: "false"
     machine:
       enabled: true
       docker_layer_caching: true
@@ -87,6 +114,9 @@ jobs:
           name: Clone NSM
           command: |
             git clone --single-branch --branch << parameters.nsmbranch >> https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
+            if [ "<< parameters.nightly >>" == "true" ]; then
+              grep -v github.com/networkservicemesh/networkservicemesh ../networkservicemesh/go.mod > ../networkservicemesh/go.mod
+            fi
       - run:
           name: Start kind
           command: |
@@ -138,35 +168,30 @@ workflows:
           name: "Test Envoy"
           example: "envoy_interceptor"
           description: "Envoy interceptor"
-          nsmbranch: "release-0.1"
           requires:
             - sanity-check
       - test:
           name: "Test ICMP"
           example: "icmp"
           description: "Simple ICMP"
-          nsmbranch: "release-0.1"
           requires:
             - sanity-check
       - test:
           name: "Test Proxy"
           example: "proxy"
           description: "Proxy"
-          nsmbranch: "release-0.1"
           requires:
             - sanity-check
       - test:
           name: "Test VPP ICMP"
           example: "vpp-icmp"
           description: "VPP ICMP"
-          nsmbranch: "release-0.1"
           requires:
             - sanity-check
       - test:
           name: "Test Secure Intranet"
           example: "secure-intranet"
           description: "Secure Intranet"
-          nsmbranch: "release-0.1"
           requires:
             - sanity-check
   nightly-test:
@@ -182,19 +207,49 @@ workflows:
           name: "Test Envoy"
           example: "envoy_interceptor"
           description: "Envoy interceptor"
+          nightly: "true"
+      - push:
+          name: "Push Envoy"
+          example: "envoy_interceptor"
+          requires:
+            - "Test Envoy"
       - test:
           name: "Test ICMP"
           example: "icmp"
           description: "Simple ICMP"
+          nightly: "true"
+      - push:
+          name: "Push ICMP"
+          example: "icmp"
+          requires:
+            - "Test ICMP"
       - test:
           name: "Test Proxy"
           example: "proxy"
           description: "Proxy"
+          nightly: "true"
+      - push:
+          name: "Push Proxy"
+          example: "proxy"
+          requires:
+            - "Test Proxy"
       - test:
           name: "Test VPP ICMP"
           example: "vpp-icmp"
           description: "VPP ICMP"
+          nightly: "true"
+      - push:
+          name: "Push VPP ICMP"
+          example: "vpp-icmp"
+          requires:
+            - "Test VPP ICMP"
       - test:
           name: "Test Secure Intranet"
           example: "secure-intranet"
           description: "Secure Intranet"
+          nightly: "true"
+      - push:
+          name: "Push Secure Intranet"
+          example: "secure-intranet"
+          requires:
+            - "Test Secure Intranet"
