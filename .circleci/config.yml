@@ -83,6 +83,9 @@ jobs:
       nsmbranch:
         type: string
         default: "master"
+      nightly:
+        type: string
+        default: "false"
     machine:
       enabled: true
       docker_layer_caching: true
@@ -111,6 +114,9 @@ jobs:
           name: Clone NSM
           command: |
             git clone --single-branch --branch << parameters.nsmbranch >> https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
+            if [ "<< parameters.nightly >>" == "true" ]; then
+              grep -v github.com/networkservicemesh/networkservicemesh ../networkservicemesh/go.mod > ../networkservicemesh/go.mod
+            fi
       - run:
           name: Start kind
           command: |
@@ -201,6 +207,7 @@ workflows:
           name: "Test Envoy"
           example: "envoy_interceptor"
           description: "Envoy interceptor"
+          nightly: "true"
       - push:
           name: "Push Envoy"
           example: "envoy_interceptor"
@@ -210,6 +217,7 @@ workflows:
           name: "Test ICMP"
           example: "icmp"
           description: "Simple ICMP"
+          nightly: "true"
       - push:
           name: "Push ICMP"
           example: "icmp"
@@ -219,6 +227,7 @@ workflows:
           name: "Test Proxy"
           example: "proxy"
           description: "Proxy"
+          nightly: "true"
       - push:
           name: "Push Proxy"
           example: "proxy"
@@ -228,6 +237,7 @@ workflows:
           name: "Test VPP ICMP"
           example: "vpp-icmp"
           description: "VPP ICMP"
+          nightly: "true"
       - push:
           name: "Push VPP ICMP"
           example: "vpp-icmp"
@@ -237,6 +247,7 @@ workflows:
           name: "Test Secure Intranet"
           example: "secure-intranet"
           description: "Secure Intranet"
+          nightly: "true"
       - push:
           name: "Push Secure Intranet"
           example: "secure-intranet"
