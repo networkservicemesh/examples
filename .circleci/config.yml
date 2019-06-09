@@ -50,6 +50,30 @@ jobs:
             export TAG="${COMMIT}"
             make build-all
 
+  push:
+    parameters:
+      example:
+        type: string
+    working_directory: ~/project/examples
+    docker:
+      - image: circleci/golang
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          command: |
+            git clone https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
+      - run:
+          command: |
+            export COMMIT="${CIRCLE_SHA1:8:8}"
+            export TAG="${COMMIT}"
+            make build-all
+      - run:
+          name: Push << parameters.example >> containers
+          command: |
+            make k8s-<< parameters.example >>-push
+
   test:
     parameters:
       example:
