@@ -201,19 +201,44 @@ workflows:
           name: "Test Envoy"
           example: "envoy_interceptor"
           description: "Envoy interceptor"
+      - push:
+          name: "Push Envoy"
+          example: "envoy_interceptor"
+          requires:
+            - "Test Envoy"
       - test:
           name: "Test ICMP"
           example: "icmp"
           description: "Simple ICMP"
+      - push:
+          name: "Push ICMP"
+          example: "icmp"
+          requires:
+            - "Test ICMP"
       - test:
           name: "Test Proxy"
           example: "proxy"
           description: "Proxy"
+      - push:
+          name: "Push Proxy"
+          example: "proxy"
+          requires:
+            - "Test Proxy"
       - test:
           name: "Test VPP ICMP"
           example: "vpp-icmp"
           description: "VPP ICMP"
+      - push:
+          name: "Push VPP ICMP"
+          example: "vpp-icmp"
+          requires:
+            - "Test VPP ICMP"
       - test:
           name: "Test Secure Intranet"
           example: "secure-intranet"
           description: "Secure Intranet"
+      - push:
+          name: "Push Secure Intranet"
+          example: "secure-intranet"
+          requires:
+            - "Test Secure Intranet"
