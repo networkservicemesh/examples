@@ -4,7 +4,7 @@ include $(TOP)/mk/docker-targets.mk
 define GATHER_EXAMPLES
 EXAMPLE_NAMES+=${NAME}
 endef
-$(eval $(BUIGATHER_EXAMPLESLD))
+$(eval $(GATHER_EXAMPLES))
 
 define BUILD
 .PHONY: $(PREFIX)-$(NAME)-build
