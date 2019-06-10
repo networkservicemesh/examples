@@ -115,7 +115,8 @@ jobs:
           command: |
             git clone --single-branch --branch << parameters.nsmbranch >> https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
             if [ "<< parameters.nightly >>" == "true" ]; then
-              grep -v github.com/networkservicemesh/networkservicemesh ../networkservicemesh/go.mod > ../networkservicemesh/go.mod
+              mv ../networkservicemesh/go.mod ../networkservicemesh/go.mod.orig
+              grep -v github.com/networkservicemesh/networkservicemesh ../networkservicemesh/go.mod.orig > ../networkservicemesh/go.mod
             fi
       - run:
           name: Start kind
