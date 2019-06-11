@@ -111,13 +111,16 @@ jobs:
             kind version
       - checkout
       - run:
+          name: Patch go.mod
+          command: |
+            if [ "<< parameters.nightly >>" == "true" ]; then
+              mv go.mod go.mod.orig
+              grep -v github.com/networkservicemesh/networkservicemesh go.mod.orig > go.mod
+            fi
+      - run:
           name: Clone NSM
           command: |
             git clone --single-branch --branch << parameters.nsmbranch >> https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
-            if [ "<< parameters.nightly >>" == "true" ]; then
-              mv ../networkservicemesh/go.mod ../networkservicemesh/go.mod.orig
-              grep -v github.com/networkservicemesh/networkservicemesh ../networkservicemesh/go.mod.orig > ../networkservicemesh/go.mod
-            fi
       - run:
           name: Start kind
           command: |
