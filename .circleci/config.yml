@@ -1,7 +1,7 @@
 version: 2.1
 jobs:
   sanity-check:
-    resource_class: medium+
+    resource_class: large
     working_directory: ~/project/examples
     docker:
       - image: circleci/golang
@@ -22,7 +22,7 @@ jobs:
       - run:
           name: Install golangci-lint
           command: |
-            export GOLANGCI_LINT_VER=1.16.0
+            export GOLANGCI_LINT_VER=1.17.1
             wget https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_LINT_VER}/golangci-lint-${GOLANGCI_LINT_VER}-linux-amd64.tar.gz
             tar -xvf golangci-lint-${GOLANGCI_LINT_VER}-linux-amd64.tar.gz
             sudo mv golangci-lint-${GOLANGCI_LINT_VER}-linux-amd64/golangci-lint /usr/local/bin/
@@ -208,52 +208,52 @@ workflows:
                 - master
     jobs:
       - test:
-          name: "Test Envoy"
+          name: "[N] Test Envoy"
           example: "envoy_interceptor"
           description: "Envoy interceptor"
           nightly: "true"
       - push:
-          name: "Push Envoy"
+          name: "[N] Push Envoy"
           example: "envoy_interceptor"
           requires:
-            - "Test Envoy"
+            - "[N] Test Envoy"
       - test:
-          name: "Test ICMP"
+          name: "[N] Test ICMP"
           example: "icmp"
           description: "Simple ICMP"
           nightly: "true"
       - push:
-          name: "Push ICMP"
+          name: "[N] Push ICMP"
           example: "icmp"
           requires:
-            - "Test ICMP"
+            - "[N] Test ICMP"
       - test:
-          name: "Test Proxy"
+          name: "[N] Test Proxy"
           example: "proxy"
           description: "Proxy"
           nightly: "true"
       - push:
-          name: "Push Proxy"
+          name: "[N] Push Proxy"
           example: "proxy"
           requires:
-            - "Test Proxy"
+            - "[N] Test Proxy"
       - test:
-          name: "Test VPP ICMP"
+          name: "[N] Test VPP ICMP"
           example: "vpp-icmp"
           description: "VPP ICMP"
           nightly: "true"
       - push:
-          name: "Push VPP ICMP"
+          name: "[N] Push VPP ICMP"
           example: "vpp-icmp"
           requires:
-            - "Test VPP ICMP"
+            - "[N] Test VPP ICMP"
       - test:
-          name: "Test Secure Intranet"
+          name: "[N] Test Secure Intranet"
           example: "secure-intranet"
           description: "Secure Intranet"
           nightly: "true"
       - push:
-          name: "Push Secure Intranet"
+          name: "[N] Push Secure Intranet"
           example: "secure-intranet"
           requires:
-            - "Test Secure Intranet"
+            - "[N] Test Secure Intranet"
