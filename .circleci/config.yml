@@ -46,8 +46,7 @@ jobs:
             git clone https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
       - run:
           command: |
-            export COMMIT="${CIRCLE_SHA1:8:8}"
-            export TAG="${COMMIT}"
+            export TAG="${CIRCLE_SHA1:8:8}"
             make build-all
 
   push:

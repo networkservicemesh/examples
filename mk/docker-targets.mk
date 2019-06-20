@@ -33,8 +33,8 @@ define generate-docker-targets
 .PHONY: docker-$1-$2-build
 docker-$1-$2-build:
 	@${DOCKERBUILD} -t ${ORG}/$1-$2 -f examples/$1/$2/Dockerfile .
-	@if [ "x${COMMIT}" != "x" ] ; then \
-		docker tag ${ORG}/$1-$2 ${ORG}/$1-$2:${COMMIT} ;\
+	@if [ "x${TAG}" != "x" ] ; then \
+		docker tag ${ORG}/$1-$2 ${ORG}/$1-$2:${TAG} ;\
 	fi
 
 .PHONY: docker-%-save

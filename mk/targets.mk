@@ -36,7 +36,7 @@ $(PREFIX)-$(NAME)-deploy: $(PREFIX)-$(NAME)-delete $(addsuffix -deploy,$(addpref
 
 .PHONY: $(PREFIX)-$(NAME)-%-deploy
 $(PREFIX)-$(NAME)-%-deploy:
-	@sed "s;\(image:[ \t]*networkservicemesh/[^:]*\).*;\1$${COMMIT/$${COMMIT}/:$${COMMIT}};" examples/$(NAME)/$(PREFIX)/\$$*.yaml | kubectl apply -f -
+	@sed "s;\(image:[ \t]*networkservicemesh/[^:]*\).*;\1$${TAG/$${TAG}/:$${TAG}};" examples/$(NAME)/$(PREFIX)/\$$*.yaml | kubectl apply -f -
 endef
 $(eval $(DEPLOY))
 
