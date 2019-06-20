@@ -53,6 +53,10 @@ jobs:
     parameters:
       example:
         type: string
+      org:
+        type: string
+      tag:
+        type: string
     working_directory: ~/project/examples
     docker:
       - image: circleci/golang
@@ -64,14 +68,9 @@ jobs:
           command: |
             git clone https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
       - run:
+          name: Push << parameters.example >> containers with tag << parameters.tag >>
           command: |
-            export COMMIT="${CIRCLE_SHA1:8:8}"
-            export TAG="${COMMIT}"
-            make build-all
-      - run:
-          name: Push << parameters.example >> containers
-          command: |
-            make k8s-<< parameters.example >>-push
+            ORG=<< parameters.org >> TAG=<< parameters.tag >> make k8s-<< parameters.example >>-push
 
   test:
     parameters:
@@ -148,6 +147,9 @@ jobs:
           name: << parameters.description >> check
           command: |
             make k8s-<< parameters.example >>-check
+      - run:
+          name: << parameters.description >> delete
+          command: |
             make k8s-<< parameters.example >>-delete
       - run:
           name: Dump cluster state
@@ -214,6 +216,8 @@ workflows:
       - push:
           name: "[N] Push Envoy"
           example: "envoy_interceptor"
+          org: "networkservicemeshci"
+          tag: "master"
           requires:
             - "[N] Test Envoy"
       - test:
@@ -224,6 +228,8 @@ workflows:
       - push:
           name: "[N] Push ICMP"
           example: "icmp"
+          org: "networkservicemeshci"
+          tag: "master"
           requires:
             - "[N] Test ICMP"
       - test:
@@ -234,6 +240,8 @@ workflows:
       - push:
           name: "[N] Push Proxy"
           example: "proxy"
+          org: "networkservicemeshci"
+          tag: "master"
           requires:
             - "[N] Test Proxy"
       - test:
@@ -244,6 +252,8 @@ workflows:
       - push:
           name: "[N] Push VPP ICMP"
           example: "vpp-icmp"
+          org: "networkservicemeshci"
+          tag: "master"
           requires:
             - "[N] Test VPP ICMP"
       - test:
@@ -254,5 +264,7 @@ workflows:
       - push:
           name: "[N] Push Secure Intranet"
           example: "secure-intranet"
+          org: "networkservicemeshci"
+          tag: "master"
           requires:
             - "[N] Test Secure Intranet"
