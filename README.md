@@ -8,7 +8,7 @@ This repository contains examples and use-cases for Network Service Mesh. It is 
 
 ### Control where NSM code is with `NSM_PATH`
 
-The main cluster and infrastructure deployment targets are executed straight from the upstream `netowrkservicemesh` repository. The path to it is set by the environment `NSM_PATH`, with a default value of `../networkservicemesh`. The easiest way to use it is to download both `networkservicemesh` and `examples` in the same root folder and then follow the nex intructions.
+The main cluster and infrastructure deployment targets are executed straight from the upstream `netowrkservicemesh` repository. The path to it is set by the environment `NSM_PATH`, with a default value of `../networkservicemesh`. The easiest way to use it is to download both `networkservicemesh` and `examples` in the same root folder and then follow the next intructions.
 
 ### Run the `examples`
 
