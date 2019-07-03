@@ -20,7 +20,7 @@ include $(TOP)/mk/targets.mk
 
 * `PODS` - list of the pods to be deployed. Each of the names here should correspond to a file in the example's `k8s` folder. E.g. `examples/proxy/k8s/proxy-nsc.yaml`
 
-* `NETWORK_SERVICES` - a list of the Network Services to be deployed before the Endpoints that implement them. Each of the names here should correspond to a file in the example's `k8s` folder. E.g. `examples/secure-intranet/k8s/secure-intranet.yaml`. The Network Services can also be implicitly created when endpoint annotations indicate the endpoint implements the service.
+* `NETWORK_SERVICES` - a list of the Network Services to be deployed before the Endpoints that implement them. Each of the names here should correspond to a file in the example's `k8s` folder. E.g. `examples/secure-intranet/k8s/secure-intranet.yaml`.
 
 * `CHECK` - a command to be executed to verify the operability of the deployment. The command is executed from the `examples` folder. It assumes all paths are relative to it.
 
