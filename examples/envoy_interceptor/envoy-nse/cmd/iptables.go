@@ -80,6 +80,11 @@ func (ie *IptablesEndpoint) Close(ctx context.Context, connection *connection.Co
 	return &empty.Empty{}, nil
 }
 
+// Name returns the composite name
+func (ie *IptablesEndpoint) Name() string {
+	return "Iptables"
+}
+
 func (ie *IptablesEndpoint) invoke() {
 	out, err := exec.Command(ie.script, ie.arguments...).Output()
 	logrus.Infof("%s", out)
