@@ -31,6 +31,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// IpamEndpoint the IPAM endpoint
 type IpamEndpoint struct {
 	endpoint.BaseCompositeEndpoint
 	PrefixPool prefix_pool.PrefixPool
@@ -38,7 +39,8 @@ type IpamEndpoint struct {
 }
 
 // Request implements the request handler
-func (ice *IpamEndpoint) Request(ctx context.Context, request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
+func (ice *IpamEndpoint) Request(ctx context.Context,
+	request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
 
 	if ice.GetNext() == nil {
 		err := fmt.Errorf("IPAM needs next")
@@ -64,7 +66,8 @@ func (ice *IpamEndpoint) Request(ctx context.Context, request *networkservice.Ne
 		currentIPFamily = connectioncontext.IpFamily_IPV6
 	}
 
-	srcIP, dstIP, prefixes, err := ice.PrefixPool.Extract(request.Connection.Id, currentIPFamily, request.Connection.Context.ExtraPrefixRequest...)
+	srcIP, dstIP, prefixes, err := ice.PrefixPool.Extract(request.Connection.Id,
+		currentIPFamily, request.Connection.Context.ExtraPrefixRequest...)
 	if err != nil {
 		return nil, err
 	}
