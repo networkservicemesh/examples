@@ -108,6 +108,11 @@ func (vxc *vppAgentXConnComposite) Close(ctx context.Context, conn *connection.C
 	return &empty.Empty{}, nil
 }
 
+// Name returns the composite name
+func (vxc *vppAgentXConnComposite) Name() string {
+	return "VPP Agent XConn"
+}
+
 // GetOpaque will return the corresponding outgoing connection
 func (vxc *vppAgentXConnComposite) GetOpaque(incoming interface{}) interface{} {
 
@@ -178,6 +183,11 @@ func (vac *vppAgentACLComposite) Close(ctx context.Context, conn *connection.Con
 		return vac.GetNext().Close(ctx, conn)
 	}
 	return &empty.Empty{}, nil
+}
+
+// Name returns the composite name
+func (vac *vppAgentACLComposite) Name() string {
+	return "VPP Agent ACL"
 }
 
 // NewVppAgentComposite creates a new VPP Agent composite

@@ -70,6 +70,11 @@ func (vbc *vppAgentBridgeComposite) Close(ctx context.Context, conn *connection.
 	return &empty.Empty{}, nil
 }
 
+// Name returns the composite name
+func (vbc *vppAgentBridgeComposite) Name() string {
+	return "VPP Agent Bridge"
+}
+
 // vppAgentBridgeComposite creates a new VPP Agent composite
 func newVppAgentBridgeComposite(configuration *common.NSConfiguration) *vppAgentBridgeComposite {
 	// ensure the env variables are processed
