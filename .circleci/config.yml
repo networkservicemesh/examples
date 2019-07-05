@@ -112,8 +112,7 @@ jobs:
           name: Patch go.mod
           command: |
             if [ "<< parameters.nightly >>" == "true" ]; then
-              mv go.mod go.mod.orig
-              grep -v github.com/networkservicemesh/networkservicemesh go.mod.orig > go.mod
+              sed -i.bak 's/\(networkservicemesh\/networkservicemesh\).*/\1 master/g' go.mod
             fi
       - run:
           name: Clone NSM
