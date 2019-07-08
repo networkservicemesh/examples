@@ -1,0 +1,13 @@
+---
+apiVersion: networkservicemesh.io/v1alpha1
+kind: NetworkService
+metadata:
+  name: vl3-service
+spec:
+  payload: IP
+  matches:
+    - match:
+      route:
+        - destination:
+          destinationSelector:
+            app: vl3-nse-ucnf

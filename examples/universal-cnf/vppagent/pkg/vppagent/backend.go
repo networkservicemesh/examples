@@ -22,7 +22,7 @@ import (
 	"path"
 	"strconv"
 
-	vpp "github.com/ligato/vpp-agent/api/models/vpp"
+	"github.com/ligato/vpp-agent/api/models/vpp"
 	interfaces "github.com/ligato/vpp-agent/api/models/vpp/interfaces"
 	vpp_l3 "github.com/ligato/vpp-agent/api/models/vpp/l3"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection"

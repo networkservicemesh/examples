@@ -16,20 +16,21 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"os"
+
+	"github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/pkg/ucnf"
+	"github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/pkg/vppagent"
+	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
 
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
 	"github.com/networkservicemesh/networkservicemesh/sdk/common"
 	"github.com/sirupsen/logrus"
-
-	config "github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/cmd/config"
-	vppagent "github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/cmd/vppagent"
 )
 
 const (
-	defaultConfigPath = "/etc/universal-cnf/config.yaml"
+	defaultConfigPath   = "/etc/universal-cnf/config.yaml"
+	defaultPluginModule = ""
 )
 
 // Flags holds the command line flags as supplied with the binary invocation
@@ -45,6 +46,12 @@ func (mf *Flags) Process() {
 	flag.Parse()
 }
 
+type defaultCompositeEndpointAddon string
+
+func (dcea defaultCompositeEndpointAddon) AddCompositeEndpoints(nsConfig *common.NSConfiguration) *[]endpoint.ChainedEndpoint {
+	return nil
+}
+
 func main() {
 	// Capture signals to cleanup before exiting
 	c := tools.NewOSSignalChannel()
@@ -55,35 +62,8 @@ func main() {
 	mainFlags := &Flags{}
 	mainFlags.Process()
 
-	configuration := common.FromEnv()
-
-	cnfConfig, err := config.NewUniversalCNFConfig(&vppagent.UniversalCNFVPPAgentBackend{})
-	if err != nil {
-		logrus.Fatalf("Error creating the Universal CNF Config")
-	}
-
-	if err := cnfConfig.InitConfig(mainFlags.ConfigPath); err != nil {
-		logrus.Fatalf("Error processing [%s]: %v", mainFlags.ConfigPath, err)
-	}
-
-	if mainFlags.Verify {
-		cnfConfig.Dump()
-		os.Exit(0)
-	}
-
-	pia := config.NewProcessInitActions(cnfConfig.GetBackend(), cnfConfig.InitActions, configuration)
-	defer pia.Cleanup()
-
-	if err := pia.Process(context.Background(), cnfConfig.GetBackend()); err != nil {
-		logrus.Fatalf("Error processing the init actions: %v", err)
-	}
-
-	pe := config.NewProcessEndpoints(cnfConfig.GetBackend(), cnfConfig.Endpoints, configuration)
-	defer pe.Cleanup()
-
-	if err := pe.Process(); err != nil {
-		logrus.Fatalf("Error processing the new endpoints: %v", err)
-	}
-
+	var defCEAddon defaultCompositeEndpointAddon
+	ucnfNse := ucnf.NewUcnfNse(mainFlags.ConfigPath, mainFlags.Verify, &vppagent.UniversalCNFVPPAgentBackend{}, defCEAddon)
+	defer ucnfNse.Cleanup()
 	<-c
 }

@@ -27,3 +27,5 @@ replace (
 	github.com/networkservicemesh/networkservicemesh/sdk => github.com/networkservicemesh/networkservicemesh/sdk v0.0.0-20191110020756-e6a23cc4eff7
 	github.com/networkservicemesh/networkservicemesh/utils => github.com/networkservicemesh/networkservicemesh/utils v0.0.0-20191110020756-e6a23cc4eff7
 )
+
+# replace github.com/networkservicemesh/networkservicemesh => ../networkservicemesh

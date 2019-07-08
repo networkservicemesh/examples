@@ -18,6 +18,8 @@ package config
 import (
 	"context"
 
+	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/apis/local/networkservice"
+
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection/mechanisms/memif"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/networkservice"
 
@@ -29,7 +31,7 @@ import (
 // SingleEndpoint keeps the state of a single endpoint instance
 type SingleEndpoint struct {
 	NSConfiguration *common.NSConfiguration
-	NSComposite     networkservice.NetworkServiceServer
+	NSComposite     *networkservice.NetworkServiceServer
 	Endpoint        *Endpoint
 	Cleanup         func()
 }
@@ -39,12 +41,20 @@ type ProcessEndpoints struct {
 	Endpoints []*SingleEndpoint
 }
 
+type CompositeEndpointAddons interface {
+	AddCompositeEndpoints(*common.NSConfiguration) *[]networkservice.NetworkServiceServer
+}
+
 // NewProcessEndpoints returns a new ProcessInitCommands struct
-func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint,
-	nsconfig *common.NSConfiguration) *ProcessEndpoints {
+func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint, ceAddons CompositeEndpointAddons) *ProcessEndpoints {
 	result := &ProcessEndpoints{}
 
 	for _, e := range endpoints {
+
+		var ipPrefix string
+		if e.Ipam != nil {
+			ipPrefix = e.Ipam.PrefixPool
+		}
 		configuration := &common.NSConfiguration{
 			NsmServerSocket:    nsconfig.NsmServerSocket,
 			NsmClientSocket:    nsconfig.NsmClientSocket,
@@ -52,10 +62,8 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint,
 			AdvertiseNseName:   e.Name,
 			OutgoingNscName:    nsconfig.OutgoingNscName,
 			AdvertiseNseLabels: labelStringFromMap(e.Labels),
-			OutgoingNscLabels:  nsconfig.OutgoingNscLabels,
 			MechanismType:      memif.MECHANISM,
-			IPAddress:          nsconfig.IPAddress,
-			Routes:             nil,
+			IPAddress:          ipPrefix,
 		}
 
 		// Build the list of composites
@@ -63,20 +71,18 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint,
 			endpoint.NewMonitorEndpoint(configuration),
 			endpoint.NewConnectionEndpoint(configuration),
 		}
+		// Invoke any additional composite endpoint constructors via the add-on interface
+		addCompositeEndpoints := ceAddons.AddCompositeEndpoints(configuration)
+		if addCompositeEndpoints != nil {
+			compositeEndpoints = append(compositeEndpoints, *addCompositeEndpoints...)
+		}
 
 		if e.Ipam != nil {
-			compositeEndpoints = append(compositeEndpoints, endpoint.NewIpamEndpoint((&common.NSConfiguration{
-				NsmServerSocket:    nsconfig.NsmServerSocket,
-				NsmClientSocket:    nsconfig.NsmClientSocket,
-				Workspace:          nsconfig.Workspace,
-				AdvertiseNseName:   nsconfig.AdvertiseNseName,
-				OutgoingNscName:    nsconfig.OutgoingNscName,
-				AdvertiseNseLabels: nsconfig.AdvertiseNseLabels,
-				OutgoingNscLabels:  nsconfig.OutgoingNscLabels,
-				MechanismType:      nsconfig.MechanismType,
-				IPAddress:          e.Ipam.PrefixPool,
-				Routes:             nil,
-			})))
+			/*
+				compositeEndpoints = append(compositeEndpoints, endpoint.NewIpamEndpoint(&common.NSConfiguration{
+					IPAddress: e.Ipam.PrefixPool,
+				}))
+			*/
 
 			if len(e.Ipam.Routes) > 0 {
 				routeAddr := makeRouteMutator(e.Ipam.Routes)
@@ -90,7 +96,7 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint,
 
 		result.Endpoints = append(result.Endpoints, &SingleEndpoint{
 			NSConfiguration: configuration,
-			NSComposite:     composite,
+			NSComposite:     &composite,
 			Endpoint:        e,
 		})
 	}
@@ -101,13 +107,14 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint,
 // Process iterates over the init commands and applies them
 func (pe *ProcessEndpoints) Process() error {
 	for _, e := range pe.Endpoints {
-		nsEndpoint, err := endpoint.NewNSMEndpoint(context.TODO(), e.NSConfiguration, e.NSComposite)
+		nsEndpoint, err := endpoint.NewNSMEndpoint(context.TODO(), e.NSConfiguration, *e.NSComposite)
 		if err != nil {
 			logrus.Fatalf("%v", err)
 			return err
 		}
 
 		_ = nsEndpoint.Start()
+		logrus.Infof("Started endpoint %s", nsEndpoint.GetName())
 		e.Cleanup = func() { _ = nsEndpoint.Delete() }
 	}
 

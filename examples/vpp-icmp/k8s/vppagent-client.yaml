@@ -5,7 +5,7 @@ spec:
   selector:
     matchLabels:
       networkservicemesh.io/app: "vppagent-client"
-  replicas: 4
+  replicas: 1
   template:
     metadata:
       labels:
@@ -21,6 +21,12 @@ spec:
               value: "icmp-responder"
             - name: OUTGOING_NSC_LABELS
               value: "app=vppagent-client"
+            - name: TRACER_ENABLED
+              value: "true"
+            - name: JAEGER_SERVICE_HOST
+              value: jaeger.nsm-system
+            - name: JAEGER_SERVICE_PORT_JAEGER
+              value: "6831"
           resources:
             limits:
               networkservicemesh.io/socket: 1

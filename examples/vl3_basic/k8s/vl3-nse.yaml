@@ -1,0 +1,49 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+spec:
+  selector:
+    matchLabels:
+      networkservicemesh.io/app: "vl3-nse"
+  template:
+    metadata:
+      labels:
+        networkservicemesh.io/app: "vl3-nse"
+        networkservicemesh.io/impl: "vl3-service"
+    spec:
+      containers:
+        - name: vl3-nse
+          image: tiswanso/vl3_basic-vl3-nse:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ADVERTISE_NSE_NAME
+              value: "vl3-service"
+            - name: ADVERTISE_NSE_LABELS
+              value: "app=vl3-nse"
+            - name: TRACER_ENABLED
+              value: "true"
+            - name: IP_ADDRESS
+              value: "100.100.1.0/24"
+            - name: JAEGER_SERVICE_HOST
+              value: jaeger.nsm-system
+            - name: JAEGER_SERVICE_PORT_JAEGER
+              value: "6831"
+            - name: JAEGER_AGENT_HOST
+              value: jaeger.nsm-system
+            - name: JAEGER_AGENT_PORT
+              value: "6831"
+            - name: NSREGISTRY_ADDR
+              value: "nsmmgr.nsm-system"
+            - name: NSREGISTRY_PORT
+              value: "5000"
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+            privileged: true
+          resources:
+            limits:
+              networkservicemesh.io/socket: 1
+metadata:
+  name: vl3-nse
+  namespace: default

@@ -1,0 +1,22 @@
+FROM golang:alpine as build
+
+FROM envoyproxy/envoy-alpine:v1.10.0
+
+# install requisite packages
+RUN apk --no-cache add \
+    bind-tools \
+    bash \
+    iptables \
+    ip6tables \
+    iproute2 \
+    python \
+    py-pip \
+    tini \
+    && pip install --upgrade \
+    pip \
+    supervisor
+
+COPY vl3_nse /usr/bin/nse
+
+ENTRYPOINT [ "/sbin/tini", "--" ]
+CMD ["/usr/bin/nse"]

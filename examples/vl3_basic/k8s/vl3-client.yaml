@@ -1,0 +1,23 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  selector:
+    matchLabels:
+      networkservicemesh.io/app: "vl3-client"
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        networkservicemesh.io/app: "vl3-client"
+    spec:
+      containers:
+        - name: kiali
+          image: tiswanso/kali_testssl:latest
+          command: ["/bin/sleep","infinity"]
+          imagePullPolicy: IfNotPresent
+metadata:
+  name: "vl3-client"
+  namespace: default
+  annotations:
+    ns.networkservicemesh.io: vl3-service

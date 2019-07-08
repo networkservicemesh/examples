@@ -30,6 +30,7 @@ import (
 
 // UniversalCNFEndpoint is a Universal CNF Endpoint composite implementation
 type UniversalCNFEndpoint struct {
+	//endpoint.BaseCompositeEndpoint
 	endpoint  *Endpoint
 	backend   UniversalCNFBackend
 	nsmClient *client.NsmClient
