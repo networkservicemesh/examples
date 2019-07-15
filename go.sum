@@ -105,8 +105,8 @@ github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJ
 github.com/modern-go/reflect2 v1.0.1/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f/go.mod h1:ZdcZmHo+o7JKHSa8/e818NopupXU1YMK5fe1lsApnBw=
-github.com/networkservicemesh/networkservicemesh v0.0.0-20190703134645-0079cab59bac h1:Lf8Xwgv2jitEEE9dWDJwVo0ki4ZIqvRKAKqUS7AwsWk=
-github.com/networkservicemesh/networkservicemesh v0.0.0-20190703134645-0079cab59bac/go.mod h1:NYJ8/E07EBR4GnfUu7jjh5nXQi3UNu8fDUe9Vu5OEuw=
+github.com/networkservicemesh/networkservicemesh v0.0.0-20190705203634-3581baa19a30 h1:8RQPxT7Z6ebMPVSpTzihE4GKUYhCjfNAq8vJnetN6uE=
+github.com/networkservicemesh/networkservicemesh v0.0.0-20190705203634-3581baa19a30/go.mod h1:NYJ8/E07EBR4GnfUu7jjh5nXQi3UNu8fDUe9Vu5OEuw=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
 github.com/onsi/ginkgo v1.6.0 h1:Ix8l273rp3QzYgXSR+c8d1fTG7UPgYkOSELPhiY/YGw=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
