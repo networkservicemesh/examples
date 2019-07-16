@@ -87,7 +87,7 @@ func nsmDirector(req *http.Request) {
 		return
 	}
 
-	ipv4Addr, _, err := net.ParseCIDR(outgoing.GetContext().GetDstIpAddr())
+	ipv4Addr, _, err := net.ParseCIDR(outgoing.GetContext().GetIpContext().GetDstIpAddr())
 	if err != nil {
 		log.Fatal(err)
 	}
