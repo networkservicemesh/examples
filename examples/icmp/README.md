@@ -1,1 +1,1 @@
-# Simple ICMP
+# Simple kernel interface ICMP responder
