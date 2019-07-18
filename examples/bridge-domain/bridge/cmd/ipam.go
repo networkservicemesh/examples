@@ -55,7 +55,7 @@ func (ice *IpamEndpoint) Request(ctx context.Context,
 	}
 
 	/* Exclude the prefixes from the pool of available prefixes */
-	excludedPrefixes, err := ice.PrefixPool.ExcludePrefixes(request.Connection.Context.ExcludedPrefixes)
+	excludedPrefixes, err := ice.PrefixPool.ExcludePrefixes(request.Connection.Context.IpContext.ExcludedPrefixes)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (ice *IpamEndpoint) Request(ctx context.Context,
 	}
 
 	srcIP, dstIP, prefixes, err := ice.PrefixPool.Extract(request.Connection.Id,
-		currentIPFamily, request.Connection.Context.ExtraPrefixRequest...)
+		currentIPFamily, request.Connection.Context.IpContext.ExtraPrefixRequest...)
 	if err != nil {
 		return nil, err
 	}
@@ -84,10 +84,10 @@ func (ice *IpamEndpoint) Request(ctx context.Context,
 	}
 
 	// Update source/dst IP's
-	newConnection.Context.SrcIpAddr = srcIP.String()
-	newConnection.Context.DstIpAddr = ice.SelfIP
+	newConnection.Context.IpContext.SrcIpAddr = srcIP.String()
+	newConnection.Context.IpContext.DstIpAddr = ice.SelfIP
 
-	newConnection.Context.ExtraPrefixes = prefixes
+	newConnection.Context.IpContext.ExtraPrefixes = prefixes
 
 	err = newConnection.IsComplete()
 	if err != nil {
