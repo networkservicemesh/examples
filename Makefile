@@ -39,5 +39,10 @@ save-all: $(addsuffix -save,$(addprefix ${PREFIX}-,$(EXAMPLE_NAMES)))
 .PHONY: lint-all
 lint-all: $(addsuffix -lint,$(EXAMPLE_NAMES))
 
+.PHONY: list
+list: $(addsuffix -list,$(EXAMPLE_NAMES))
+	@printf "\n Get the full description of the example by calling:\n\n \t make <example-name>-describe \n\n"
+
+# NSM fallthrough target
 %:
 	@cd ${NSM_PATH} && make $*

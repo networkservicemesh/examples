@@ -63,3 +63,19 @@ $(NAME)-lint:
 	@echo "====================  END $(NAME)  ===================="
 endef
 $(eval $(LINT))
+
+define DESCRIBE
+.PHONY: $(NAME)-list
+$(NAME)-list:
+	@printf "\t %-30s %s\n" $(NAME) $(DESCRIPTION)
+
+.PHONY: $(NAME)-describe
+$(NAME)-describe:
+	@if [ -x $(which consolemd) ]; then \
+		consolemd examples/$(NAME)/README.md; \
+	else \
+		more examples/$(NAME)/README.md; \
+		printf "\n \n Consider using *consolemd* by running: \n \t pip install consolemd \n\n"; \
+	fi
+endef
+$(eval $(DESCRIBE))

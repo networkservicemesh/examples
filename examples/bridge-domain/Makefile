@@ -1,4 +1,5 @@
 NAME = bridge-domain
+DESCRIPTION = "A simple VPP bridge domain example"
 CONTAINERS = bridge
 AUX_CONTAINERS =
 PODS = simple-client bridge

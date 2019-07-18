@@ -1,4 +1,5 @@
 NAME = icmp
+DESCRIPTION = "Basic kernel interface ICMP reposnder"
 CONTAINERS =
 AUX_CONTAINERS = proxy-sidecar-nse
 PODS = simple-client simple-endpoint

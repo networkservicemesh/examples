@@ -1,4 +1,5 @@
 NAME = vpp-icmp
+DESCRIPTION = "Basic memif interface ICMP reposnder with VPP"
 CONTAINERS = vppagent-client vppagent-endpoint
 PODS = vppagent-client vppagent-endpoint
 NETWORK_SERVICES = icmp-responder
