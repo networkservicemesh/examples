@@ -75,7 +75,7 @@ $(NAME)-describe:
 		consolemd examples/$(NAME)/README.md; \
 	else \
 		more examples/$(NAME)/README.md; \
-		printf "\n \n Consider using *consolemd* by running: \n \t pip install consolemd \n\n"; \
+		printf "\n \n Consider installing *consolemd* by running: \n \t pip install consolemd \n\n"; \
 	fi
 endef
 $(eval $(DESCRIBE))

@@ -10,6 +10,26 @@ This repository contains examples and use-cases for Network Service Mesh. It is 
 
 The main cluster and infrastructure deployment targets are executed straight from the upstream `networkservicemesh` repository. The path to it is set by the environment `NSM_PATH`, with a default value of `../networkservicemesh`. The easiest way to use it is to download both `networkservicemesh` and `examples` in the same root folder and then follow the next instructions.
 
+### Browsing the `examples`
+
+The repo host s number of example setups of NSM based applications. The quick way to check what is availabe is to run:
+
+```shell
+$ make list
+	 bridge-domain                  A simple VPP bridge domain example
+	 envoy_interceptor              No description set
+	 icmp                           Basic kernel interface ICMP reposnder
+	 proxy                          HTTP reverse proxy, which maps the HTTP requests to NSM Client requests
+	 secure-intranet                The *Sarah* Secure Intranet Connectivity implementation
+	 vpp-icmp                       Basic memif interface ICMP reposnder with VPP
+
+ Get the full description of the example by calling:
+
+	 make <example-name>-describe
+```
+
+As seen ont he last line, there is a possibility to run `make <example>-describe` and get a more detailed explanation of the particular application. Please consider installing `consolemd` (`pip install consolemd`) for a better console experience browsing the documentation.
+
 ### Run the `examples`
 
 In the `examples` repository folder, execute the following set of commands.  These commands are for the proxy example.  Change the term "proxy" for other examples:
