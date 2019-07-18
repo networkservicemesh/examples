@@ -7,7 +7,7 @@ require (
 	github.com/golang/protobuf v1.3.2
 	github.com/grpc-ecosystem/grpc-opentracing v0.0.0-20180507213350-8e809c8a8645
 	github.com/ligato/vpp-agent v2.1.1+incompatible
-	github.com/networkservicemesh/networkservicemesh v0.0.0-20190715170814-54548ed42f1d
+	github.com/networkservicemesh/networkservicemesh v0.0.0-20190717072458-d6ed5d9afa4e
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/viper v1.4.0
