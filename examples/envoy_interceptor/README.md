@@ -1,6 +1,6 @@
 # Envoy interceptor
 
-This example demoes how Envoy can be used as a transparent proxy, to intercept the NS traffic. We declare a NS named `web-service` and implemented by a single NS endpoint. The endpoint leverages the SDK's built in simple IPAM and adds a new Iptables composite. That new composite calls an external script which redirects all the traffic to a designated port.
+This example demos how Envoy can be used as a transparent proxy, to intercept the NS traffic. We declare a NS named `web-service` and implemented by a single NS endpoint. The endpoint leverages the SDK's built in simple IPAM and adds a new Iptables composite. That new composite calls an external script which redirects all the traffic to a designated port.
 
 A simplified diagram of the demo is shown below:
 
