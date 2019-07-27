@@ -5,7 +5,7 @@ spec:
   selector:
     matchLabels:
       networkservicemesh.io/app: "simple-client"
-  replicas: 2
+  replicas: 3
   template:
     metadata:
       labels:
