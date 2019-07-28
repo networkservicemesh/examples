@@ -1,4 +1,5 @@
 NAME = packet-filtering
+DESCRIPTION = "Packet filtering - usecase for the CNF Testbed"
 CONTAINERS =
 AUX_CONTAINERS = universal-cnf-vppagent
 PODS = packet-filter simple-client gateway
