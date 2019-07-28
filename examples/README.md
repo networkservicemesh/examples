@@ -14,6 +14,8 @@ include $(TOP)/mk/targets.mk
 
 * `NAME` - name of the example, e.g. `proxy`
 
+* `DESCRIPTION` - a short, one line description of the example
+
 * `CONTAINERS` - list of all the containers to be built. Each of these should have a folder under `examples/<NAME>`, e.g. `examples/proxy/nginx`. This folder should have a file called `Dockerfile` to describe how the container is built. The `Dockerfile` is assumed to be executed from the top level project folder, i.e. the paths referenced in it should look like `examples/proxy/nginx/html`.
 
 * `AUX_CONTAINERS` - specify a dependency container from another example. This allows for example to share container build definitions. The container name has to be in the form of `<DEP_NAME>-<DEP_CONTAINER>`, where `<DEP_NAME>` is the name of the dependency example, and `<DEP_CONTAINER>` is the name of the container within that example.

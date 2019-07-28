@@ -1,5 +1,6 @@
 
 NAME = proxy
+DESCRIPTION = "HTTP reverse proxy, which maps the HTTP requests to NSM Client requests"
 CONTAINERS = nginx sidecar-nse proxy-nsc
 PODS = proxy-nsc nginx-nse
 NETWORK_SERVICES = web-service
