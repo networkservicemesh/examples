@@ -55,8 +55,8 @@ func (b *UniversalCNFVPPAgentBackend) ProcessClient(
 		return fmt.Errorf("unable to convert dpconfig to vppconfig	")
 	}
 
-	srcIP := conn.GetContext().GetSrcIpAddr()
-	dstIP := conn.GetContext().GetDstIpAddr()
+	srcIP := conn.GetContext().GetIpContext().GetSrcIpAddr()
+	dstIP := conn.GetContext().GetIpContext().GetDstIpAddr()
 	socketFilename := path.Join(getBaseDir(), conn.GetMechanism().GetSocketFilename())
 
 	ipAddresses := []string{}
@@ -79,7 +79,7 @@ func (b *UniversalCNFVPPAgentBackend) ProcessClient(
 		})
 
 	// Process static routes
-	for _, route := range conn.GetContext().GetRoutes() {
+	for _, route := range conn.GetContext().GetIpContext().GetDstRoutes() {
 		route := &vpp.Route{
 			Type:              vpp_l3.Route_INTER_VRF,
 			DstNetwork:        route.Prefix,
@@ -99,7 +99,7 @@ func (b *UniversalCNFVPPAgentBackend) ProcessEndpoint(
 		return fmt.Errorf("unable to convert dpconfig to vppconfig	")
 	}
 
-	dstIP := conn.GetContext().GetDstIpAddr()
+	dstIP := conn.GetContext().GetIpContext().GetDstIpAddr()
 	socketFilename := path.Join(getBaseDir(), conn.GetMechanism().GetSocketFilename())
 
 	ipAddresses := []string{}
@@ -126,7 +126,7 @@ func (b *UniversalCNFVPPAgentBackend) ProcessEndpoint(
 	}
 
 	// Process static routes
-	for _, route := range conn.GetContext().GetRoutes() {
+	for _, route := range conn.GetContext().GetIpContext().GetDstRoutes() {
 		route := &vpp.Route{
 			Type:              vpp_l3.Route_INTER_VRF,
 			DstNetwork:        route.Prefix,

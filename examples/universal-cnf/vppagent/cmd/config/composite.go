@@ -125,7 +125,7 @@ func NewUniversalCNFEndpoint(backend UniversalCNFBackend, endpoint *Endpoint) *U
 func makeRouteMutator(routes []string) endpoint.ConnectionMutator {
 	return func(c *connection.Connection) error {
 		for _, r := range routes {
-			c.Context.Routes = append(c.Context.Routes, &connectioncontext.Route{
+			c.GetContext().GetIpContext().DstRoutes = append(c.GetContext().GetIpContext().DstRoutes, &connectioncontext.Route{
 				Prefix: r,
 			})
 		}
