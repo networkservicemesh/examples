@@ -8,8 +8,8 @@ spec:
   matches:
     - match:
       sourceSelector:
-        app: vppagent-endpoint
+        app: vppagent-client
       route:
         - destination:
           destinationSelector:
-            app: icmp-responder
+            app: vppagent-endpoint
