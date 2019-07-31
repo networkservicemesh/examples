@@ -281,5 +281,7 @@ workflows:
       - push:
           name: "[N] Push Packet Filtering"
           example: "packet-filtering"
+          org: "networkservicemeshci"
+          tag: "master"
           requires:
             - "[N] Test Packet Filtering"
