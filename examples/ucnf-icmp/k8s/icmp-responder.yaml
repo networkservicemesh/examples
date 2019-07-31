@@ -8,8 +8,8 @@ spec:
   matches:
     - match:
       sourceSelector:
-        app: ucnf-endpoint
+        app: ucnf-client
       route:
         - destination:
           destinationSelector:
-            app: icmp-responder
+            app: ucnf-endpoint

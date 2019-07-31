@@ -47,4 +47,4 @@ data:
           name: "icmp-responder"
           ifname: "client0"
           labels:
-            app: "ucnf-endpoint"
+            app: "ucnf-client"

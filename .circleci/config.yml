@@ -199,6 +199,12 @@ workflows:
           requires:
             - sanity-check
       - test:
+          name: "Test UCNF ICMP"
+          example: "ucnf-icmp"
+          description: "UCNF ICMP"
+          requires:
+            - sanity-check
+      - test:
           name: "Test Packet Filtering"
           example: "packet-filtering"
           description: "Packet Filtering"
@@ -285,3 +291,15 @@ workflows:
           tag: "master"
           requires:
             - "[N] Test Packet Filtering"
+      - test:
+          name: "[N] Test UCNF ICMP"
+          example: "ucnf-icmp"
+          description: "UCNF ICMP"
+          nightly: "true"
+      - push:
+          name: "[N] Push UCNF ICMP"
+          example: "ucnf-icmp"
+          org: "networkservicemeshci"
+          tag: "master"
+          requires:
+            - "[N] Test UCNF ICMP"
