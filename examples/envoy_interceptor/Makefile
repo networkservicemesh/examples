@@ -1,4 +1,5 @@
 NAME = envoy_interceptor
+DESCRIPTION = "Run Envoy as a NS Endpoint"
 CONTAINERS = envoy-nse
 PODS = simple-client envoy-nse
 NETWORK_SERVICES = web-service

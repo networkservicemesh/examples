@@ -1,0 +1,49 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      networkservicemesh.io/app: "icmp-responder"
+      networkservicemesh.io/impl: "ucnf-endpoint"
+  template:
+    metadata:
+      labels:
+        networkservicemesh.io/app: "icmp-responder"
+        networkservicemesh.io/impl: "ucnf-endpoint"
+    spec:
+      containers:
+        - name: universal-cnf-endpoint
+          image: networkservicemesh/universal-cnf-vppagent:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TRACER_ENABLED
+              value: "true"
+          resources:
+            limits:
+              networkservicemesh.io/socket: 1
+          volumeMounts:
+            - mountPath: /etc/universal-cnf/config.yaml
+              subPath: config.yaml
+              name: universal-cnf-config-volume
+      volumes:
+        - name: universal-cnf-config-volume
+          configMap:
+            name: universal-cnf-endpoint
+metadata:
+  name: ucnf-endpoint
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: universal-cnf-endpoint
+data:
+  config.yaml: |
+    endpoints:
+    - name: "icmp-responder"
+      labels:
+        app: "ucnf-endpoint"
+      ipam:
+        prefixpool: "10.60.1.0/24"
+      ifname: "endpoint0"
