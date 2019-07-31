@@ -37,6 +37,7 @@ type Command struct {
 type Client struct {
 	Name   string
 	Labels map[string]string
+	Routes []string
 	IfName string
 }
 

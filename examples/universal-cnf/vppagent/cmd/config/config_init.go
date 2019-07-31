@@ -52,6 +52,7 @@ func NewProcessInitActions(backend UniversalCNFBackend, initactions []*Action) *
 			nsConfig := &common.NSConfiguration{
 				OutgoingNscName:   c.Name,
 				OutgoingNscLabels: labels,
+				Routes:            c.Routes,
 			}
 			nsmClient, err = client.NewNSMClient(context.TODO(), nsConfig)
 			if err != nil {

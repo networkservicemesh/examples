@@ -17,6 +17,7 @@ package vppagent
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"path"
 
@@ -99,6 +100,7 @@ func (b *UniversalCNFVPPAgentBackend) ProcessEndpoint(
 		return fmt.Errorf("unable to convert dpconfig to vppconfig	")
 	}
 
+	srcIP, _, _ := net.ParseCIDR(conn.GetContext().GetIpContext().GetSrcIpAddr())
 	dstIP := conn.GetContext().GetIpContext().GetDstIpAddr()
 	socketFilename := path.Join(getBaseDir(), conn.GetMechanism().GetSocketFilename())
 
@@ -126,12 +128,11 @@ func (b *UniversalCNFVPPAgentBackend) ProcessEndpoint(
 	}
 
 	// Process static routes
-	for _, route := range conn.GetContext().GetIpContext().GetDstRoutes() {
+	for _, route := range conn.GetContext().GetIpContext().GetSrcRoutes() {
 		route := &vpp.Route{
-			Type:              vpp_l3.Route_INTER_VRF,
-			DstNetwork:        route.Prefix,
-			NextHopAddr:       dstIP,
-			OutgoingInterface: ifName,
+			Type:        vpp_l3.Route_INTER_VRF,
+			DstNetwork:  route.Prefix,
+			NextHopAddr: srcIP.String(),
 		}
 		vppconfig.Routes = append(vppconfig.Routes, route)
 	}
