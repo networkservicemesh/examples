@@ -44,6 +44,7 @@ data:
       - client:
           name: "packet-filtering"
           ifname: "client0"
+          routes: ["10.60.3.0/24"]
           labels:
             app: "packet-filter"
     endpoints:

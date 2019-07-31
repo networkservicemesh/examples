@@ -44,10 +44,6 @@ data:
       - command:
           name: "echo"
           args: ["Do attach the PCI device here and assign it an IP address from 10.60.1.0/24"]
-      - command:
-          # a terrible hack that should be removed once NSM's SDK get's a better route management
-          name: "vppctl"
-          args: ["ip", "route", "add", "10.60.3.0/24", "via", "10.60.2.1"]
     endpoints:
     - name: "packet-filtering"
       labels:
