@@ -20,7 +20,7 @@ spec:
             - name: OUTGOING_NSC_NAME
               value: "icmp-responder"
             - name: OUTGOING_NSC_LABELS
-              value: "app=vppagent-endpoint"
+              value: "app=vppagent-client"
           resources:
             limits:
               networkservicemesh.io/socket: 1

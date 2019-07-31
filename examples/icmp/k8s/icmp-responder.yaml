@@ -8,8 +8,8 @@ spec:
   matches:
     - match:
       sourceSelector:
-        app: simple-endpoint
+        app: simple-client
       route:
         - destination:
           destinationSelector:
-            app: icmp-responder
+            app: simple-endpoint

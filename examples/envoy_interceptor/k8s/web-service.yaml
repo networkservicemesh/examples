@@ -10,4 +10,4 @@ spec:
       route:
         - destination:
           destinationSelector:
-            app: nginx-nse
+            app: envoy-nse
