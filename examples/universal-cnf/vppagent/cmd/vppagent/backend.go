@@ -20,6 +20,7 @@ import (
 	"net"
 	"os"
 	"path"
+	"strconv"
 
 	vpp "github.com/ligato/vpp-agent/api/models/vpp"
 	interfaces "github.com/ligato/vpp-agent/api/models/vpp/interfaces"
@@ -30,6 +31,7 @@ import (
 
 // UniversalCNFVPPAgentBackend is the VPP CNF backend struct
 type UniversalCNFVPPAgentBackend struct {
+	EndpointIfID map[string]int
 }
 
 // NewDPConfig returns a plain DPConfig struct
@@ -37,8 +39,10 @@ func (b *UniversalCNFVPPAgentBackend) NewDPConfig() *vpp.ConfigData {
 	return &vpp.ConfigData{}
 }
 
-// NewUniversalCNFBackend initialises the VPP CNF backend
+// NewUniversalCNFBackend initializes the VPP CNF backend
 func (b *UniversalCNFVPPAgentBackend) NewUniversalCNFBackend() error {
+
+	b.EndpointIfID = make(map[string]int)
 
 	if err := ResetVppAgent(); err != nil {
 		logrus.Fatalf("Error resetting vpp: %v", err)
@@ -94,7 +98,7 @@ func (b *UniversalCNFVPPAgentBackend) ProcessClient(
 
 // ProcessEndpoint runs the endpoint code for VPP CNF
 func (b *UniversalCNFVPPAgentBackend) ProcessEndpoint(
-	dpconfig interface{}, ifName string, conn *connection.Connection) error {
+	dpconfig interface{}, serviceName, ifName string, conn *connection.Connection) error {
 	vppconfig, ok := dpconfig.(*vpp.ConfigData)
 	if !ok {
 		return fmt.Errorf("unable to convert dpconfig to vppconfig	")
@@ -111,7 +115,7 @@ func (b *UniversalCNFVPPAgentBackend) ProcessEndpoint(
 
 	vppconfig.Interfaces = append(vppconfig.Interfaces,
 		&interfaces.Interface{
-			Name:        ifName,
+			Name:        ifName + b.GetEndpointIfID(serviceName),
 			Type:        interfaces.Interface_MEMIF,
 			Enabled:     true,
 			IpAddresses: ipAddresses,
@@ -137,6 +141,17 @@ func (b *UniversalCNFVPPAgentBackend) ProcessEndpoint(
 		vppconfig.Routes = append(vppconfig.Routes, route)
 	}
 	return nil
+}
+
+// GetEndpointIfID generates a new interface ID from the service name
+func (b *UniversalCNFVPPAgentBackend) GetEndpointIfID(serviceName string) string {
+	if _, ok := b.EndpointIfID[serviceName]; !ok {
+		b.EndpointIfID[serviceName] = 0
+	} else {
+		b.EndpointIfID[serviceName]++
+	}
+
+	return "/" + strconv.Itoa(b.EndpointIfID[serviceName])
 }
 
 // ProcessDPConfig applies the VPP CNF configuration to VPP

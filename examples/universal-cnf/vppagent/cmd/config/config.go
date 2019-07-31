@@ -113,7 +113,7 @@ type UniversalCNFBackend interface {
 	NewDPConfig() *vpp.ConfigData
 	NewUniversalCNFBackend() error
 	ProcessClient(dpconfig interface{}, ifName string, conn *connection.Connection) error
-	ProcessEndpoint(dpconfig interface{}, ifName string, conn *connection.Connection) error
+	ProcessEndpoint(dpconfig interface{}, serviceName, ifName string, conn *connection.Connection) error
 	ProcessDPConfig(dpconfig interface{}) error
 }
 

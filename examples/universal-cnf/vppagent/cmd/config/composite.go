@@ -63,7 +63,7 @@ func (uce *UniversalCNFEndpoint) Request(ctx context.Context,
 		action.DPConfig = uce.backend.NewDPConfig()
 	}
 
-	if err := uce.backend.ProcessEndpoint(action.DPConfig, uce.endpoint.IfName, conn); err != nil {
+	if err := uce.backend.ProcessEndpoint(action.DPConfig, uce.endpoint.Name, uce.endpoint.IfName, conn); err != nil {
 		logrus.Errorf("Failed to process: %+v", uce.endpoint.Action)
 		return nil, err
 	}
