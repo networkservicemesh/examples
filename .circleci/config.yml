@@ -303,3 +303,12 @@ workflows:
           tag: "master"
           requires:
             - "[N] Test UCNF ICMP"
+      - push:
+          name: "[N] Push Universal CNF"
+          example: "universal-cnf"
+          org: "networkservicemeshci"
+          tag: "master"
+          requires:
+            - "[N] Push Packet Filtering"
+            - "[N] Push UCNF ICMP"
+
