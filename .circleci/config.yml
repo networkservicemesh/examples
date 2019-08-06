@@ -72,6 +72,27 @@ jobs:
           command: |
             ORG=<< parameters.org >> TAG=<< parameters.tag >> make k8s-<< parameters.example >>-push
 
+  push-all:
+    parameters:
+      org:
+        type: string
+      tag:
+        type: string
+    working_directory: ~/project/examples
+    docker:
+      - image: circleci/golang
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          command: |
+            git clone https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
+      - run:
+          name: Push all containers with tag << parameters.tag >>
+          command: |
+            ORG=<< parameters.org >> TAG=<< parameters.tag >> make push-all
+
   test:
     parameters:
       example:
@@ -210,6 +231,21 @@ workflows:
           description: "Packet Filtering"
           requires:
             - sanity-check
+      - push-all:
+          name: "Push all"
+          org: "networkservicemesh"
+          tag: "master"
+          filters:
+            branches:
+              only: master
+          requires:
+            - "Test Envoy"
+            - "Test ICMP"
+            - "Test Proxy"
+            - "Test VPP ICMP"
+            # - "Test Secure Intranet" temporarily disabled
+            - "Test UCNF ICMP"
+            - "Test Packet Filtering"
   nightly-test:
     triggers:
       - schedule:
@@ -311,4 +347,3 @@ workflows:
           requires:
             - "[N] Push Packet Filtering"
             - "[N] Push UCNF ICMP"
-
