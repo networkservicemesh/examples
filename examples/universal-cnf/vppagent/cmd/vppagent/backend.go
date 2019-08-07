@@ -61,7 +61,7 @@ func (b *UniversalCNFVPPAgentBackend) ProcessClient(
 	}
 
 	srcIP := conn.GetContext().GetIpContext().GetSrcIpAddr()
-	dstIP := conn.GetContext().GetIpContext().GetDstIpAddr()
+	dstIP, _, _ := net.ParseCIDR(conn.GetContext().GetIpContext().GetDstIpAddr())
 	socketFilename := path.Join(getBaseDir(), conn.GetMechanism().GetSocketFilename())
 
 	ipAddresses := []string{}
@@ -86,10 +86,9 @@ func (b *UniversalCNFVPPAgentBackend) ProcessClient(
 	// Process static routes
 	for _, route := range conn.GetContext().GetIpContext().GetDstRoutes() {
 		route := &vpp.Route{
-			Type:              vpp_l3.Route_INTER_VRF,
-			DstNetwork:        route.Prefix,
-			NextHopAddr:       dstIP,
-			OutgoingInterface: ifName,
+			Type:        vpp_l3.Route_INTER_VRF,
+			DstNetwork:  route.Prefix,
+			NextHopAddr: dstIP.String(),
 		}
 		vppconfig.Routes = append(vppconfig.Routes, route)
 	}

@@ -30,11 +30,15 @@ include examples/examples.mk
 
 .PHONY: build-all
 build-all: $(addsuffix -build,$(addprefix ${PREFIX}-,$(EXAMPLE_NAMES)))
-	@echo "Built the following examples: ${EXAMPLE_NAMES}"
+	@echo "Built examples: ${EXAMPLE_NAMES}"
 
 .PHONY: save-all
 save-all: $(addsuffix -save,$(addprefix ${PREFIX}-,$(EXAMPLE_NAMES)))
-	@echo "Saved the following examples: ${EXAMPLE_NAMES}"
+	@echo "Saved examples: ${EXAMPLE_NAMES}"
+
+.PHONY: push-all
+push-all: $(addsuffix -push,$(addprefix ${PREFIX}-,$(EXAMPLE_NAMES)))
+	@echo "Pushed examples: ${EXAMPLE_NAMES}"
 
 .PHONY: lint-all
 lint-all: $(addsuffix -lint,$(EXAMPLE_NAMES))
