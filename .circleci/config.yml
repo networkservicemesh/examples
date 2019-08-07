@@ -8,17 +8,10 @@ jobs:
     steps:
       - checkout
       - run:
-          command: |
-            git clone https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
-      - run:
           name:
           command: |
-            sudo apt-get install yamllint python3-pkg-resources
-            ./.circleci/install-shellcheck.sh
+            sudo apt-get install yamllint
       - run: yamllint -c .yamllint.yml $(git ls-files '*.yaml' '*.yml')
-      - run:
-          name: Go build
-          command: go build ./...
       - run:
           name: Install golangci-lint
           command: |
