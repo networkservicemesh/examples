@@ -131,12 +131,13 @@ jobs:
           name: Wait for kind to settle
           command: |
             kubectl wait -n kube-system --timeout=150s --for condition=Ready --all pods
-      - run:
-          name: NSM infra deploy
-          command: |
-            make k8s-admission-webhook-save k8s-nsmgr-save k8s-vppagent-dataplane-save
-            CLUSTER_RULES_PREFIX=kind make k8s-admission-webhook-deploy k8s-nsmgr-deploy k8s-vppagent-dataplane-deploy
-            kubectl wait -n nsm-system --timeout=150s --for condition=Ready --all pods
+      - helm/install-helm-client
+      - helm/install-helm-on-cluster:
+          enable-cluster-wide-admin-access: true
+      - helm/install-helm-chart:
+          chart: "../networkservicemesh/deployments/helm/nsm"
+          values-to-override: |
+            "org=networkservicemesh,tag=<< parameters.nsmbranch >>,admission-webhook.org=networkservicemesh,admission-webhook.tag=<< parameters.nsmbranch >>"
       - run:
           name: Build << parameters.example >> images
           command: |
@@ -164,6 +165,8 @@ jobs:
     environment:
       CLUSTER_RULES_PREFIX: "kind"
 
+orbs:
+  helm: circleci/helm@0.1.2
 workflows:
   version: 2
   test-and-push:
