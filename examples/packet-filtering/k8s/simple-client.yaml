@@ -18,7 +18,15 @@ spec:
           image: alpine:latest
           imagePullPolicy: IfNotPresent
           command: ['tail', '-f', '/dev/null']
+      initContainers:
+        - name: nsm-init-container
+          image: networkservicemesh/nsm-init:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: NS_NETWORKSERVICEMESH_IO
+              value: packet-filtering
+          resources:
+            limits:
+              networkservicemesh.io/socket: "1"
 metadata:
   name: simple-client
-  annotations:
-    ns.networkservicemesh.io: packet-filtering
