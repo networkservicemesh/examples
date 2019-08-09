@@ -20,7 +20,7 @@ spec:
           command: ['tail', '-f', '/dev/null']
       initContainers:
         - name: nsm-init-container
-          image: networkservicemesh/nsm-init:latest
+          image: networkservicemesh/nsm-init:master
           imagePullPolicy: IfNotPresent
           env:
             - name: NS_NETWORKSERVICEMESH_IO
