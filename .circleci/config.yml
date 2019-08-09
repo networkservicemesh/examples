@@ -8,17 +8,10 @@ jobs:
     steps:
       - checkout
       - run:
-          command: |
-            git clone https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
-      - run:
           name:
           command: |
-            sudo apt-get install yamllint python3-pkg-resources
-            ./.circleci/install-shellcheck.sh
+            sudo apt-get install yamllint
       - run: yamllint -c .yamllint.yml $(git ls-files '*.yaml' '*.yml')
-      - run:
-          name: Go build
-          command: go build ./...
       - run:
           name: Install golangci-lint
           command: |
@@ -43,10 +36,6 @@ jobs:
           docker_layer_caching: true
       - run:
           command: |
-            git clone https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
-      - run:
-          command: |
-            export TAG="${CIRCLE_SHA1:8:8}"
             make build-all
 
   push:
@@ -65,9 +54,6 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
-          command: |
-            git clone https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
-      - run:
           name: Push << parameters.example >> containers with tag << parameters.tag >>
           command: |
             ORG=<< parameters.org >> TAG=<< parameters.tag >> make k8s-<< parameters.example >>-push
@@ -85,9 +71,6 @@ jobs:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
-      - run:
-          command: |
-            git clone https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
       - run:
           name: Push all containers with tag << parameters.tag >>
           command: |
@@ -148,16 +131,17 @@ jobs:
           name: Wait for kind to settle
           command: |
             kubectl wait -n kube-system --timeout=150s --for condition=Ready --all pods
+      - helm/install-helm-client
+      - helm/install-helm-on-cluster:
+          enable-cluster-wide-admin-access: true
+      - helm/install-helm-chart:
+          chart: "../networkservicemesh/deployments/helm/nsm"
+          values-to-override: |
+            "org=networkservicemesh,tag=<< parameters.nsmbranch >>,admission-webhook.org=networkservicemesh,admission-webhook.tag=<< parameters.nsmbranch >>"
       - run:
           name: Build << parameters.example >> images
           command: |
             make k8s-<< parameters.example >>-save
-      - run:
-          name: NSM infra deploy
-          command: |
-            make k8s-admission-webhook-save k8s-nsmgr-save k8s-vppagent-dataplane-save
-            CLUSTER_RULES_PREFIX=kind make k8s-admission-webhook-deploy k8s-nsmgr-deploy k8s-vppagent-dataplane-deploy
-            kubectl wait -n nsm-system --timeout=150s --for condition=Ready --all pods
       - run:
           name: << parameters.description >> deploy
           command: |
@@ -181,14 +165,13 @@ jobs:
     environment:
       CLUSTER_RULES_PREFIX: "kind"
 
+orbs:
+  helm: circleci/helm@0.1.2
 workflows:
   version: 2
-  build-and-test:
+  test-and-push:
     jobs:
       - sanity-check
-      - build:
-          requires:
-            - sanity-check
       - test:
           name: "Test Envoy"
           example: "envoy_interceptor"
@@ -260,90 +243,33 @@ workflows:
           example: "envoy_interceptor"
           description: "Envoy interceptor"
           nightly: "true"
-      - push:
-          name: "[N] Push Envoy"
-          example: "envoy_interceptor"
-          org: "networkservicemeshci"
-          tag: "master"
-          requires:
-            - "[N] Test Envoy"
       - test:
           name: "[N] Test ICMP"
           example: "icmp"
           description: "Simple ICMP"
           nightly: "true"
-      - push:
-          name: "[N] Push ICMP"
-          example: "icmp"
-          org: "networkservicemeshci"
-          tag: "master"
-          requires:
-            - "[N] Test ICMP"
       - test:
           name: "[N] Test Proxy"
           example: "proxy"
           description: "Proxy"
           nightly: "true"
-      - push:
-          name: "[N] Push Proxy"
-          example: "proxy"
-          org: "networkservicemeshci"
-          tag: "master"
-          requires:
-            - "[N] Test Proxy"
       - test:
           name: "[N] Test VPP ICMP"
           example: "vpp-icmp"
           description: "VPP ICMP"
           nightly: "true"
-      - push:
-          name: "[N] Push VPP ICMP"
-          example: "vpp-icmp"
-          org: "networkservicemeshci"
-          tag: "master"
-          requires:
-            - "[N] Test VPP ICMP"
       - test:
           name: "[N] Test Secure Intranet"
           example: "secure-intranet"
           description: "Secure Intranet"
           nightly: "true"
-      - push:
-          name: "[N] Push Secure Intranet"
-          example: "secure-intranet"
-          org: "networkservicemeshci"
-          tag: "master"
-          requires:
-            - "[N] Test Secure Intranet"
       - test:
           name: "[N] Test Packet Filtering"
           example: "packet-filtering"
           description: "Packet Filtering"
           nightly: "true"
-      - push:
-          name: "[N] Push Packet Filtering"
-          example: "packet-filtering"
-          org: "networkservicemeshci"
-          tag: "master"
-          requires:
-            - "[N] Test Packet Filtering"
       - test:
           name: "[N] Test UCNF ICMP"
           example: "ucnf-icmp"
           description: "UCNF ICMP"
           nightly: "true"
-      - push:
-          name: "[N] Push UCNF ICMP"
-          example: "ucnf-icmp"
-          org: "networkservicemeshci"
-          tag: "master"
-          requires:
-            - "[N] Test UCNF ICMP"
-      - push:
-          name: "[N] Push Universal CNF"
-          example: "universal-cnf"
-          org: "networkservicemeshci"
-          tag: "master"
-          requires:
-            - "[N] Push Packet Filtering"
-            - "[N] Push UCNF ICMP"
