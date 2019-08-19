@@ -4,7 +4,7 @@ Universal CNF (UCNF) is an attempt to implement a swiss-army knife container, wh
 
 ## Configuration
 
-UCNF can be deployed and configured to implement various cloud-native netowrking scenarios. For this, it exposes a configuration file interface, where the solution integrator can program it.
+UCNF can be deployed and configured to implement various cloud-native networking scenarios. For that, it exposes a configuration file interface, where the solution integrator can program it.
 
 ### The configuration file
 The configuration of UCNF is a yaml file that resides in `/etc/universal-cnf/config.yaml`. One would typically want to manage these configurations through Kubernetes ConfigMap and mount it as volume. Here is an incomplete `Deployment` which illustrates this concept:
