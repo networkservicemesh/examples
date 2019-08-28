@@ -62,7 +62,7 @@ func nsmDirector(req *http.Request) {
 	ifname := "nsm" + strconv.Itoa(state.interfaceID)
 	state.interfaceID++
 
-	outgoing, err := state.client.Connect(ifname, "kernel", "Primary interface")
+	outgoing, err := state.client.Connect(context.TODO(), ifname, "kernel", "Primary interface")
 	if err != nil {
 		// cancel request
 		logrus.Errorf("Error: %v", err)
@@ -82,7 +82,7 @@ func nsmDirector(req *http.Request) {
 	go func() {
 		<-req.Context().Done()
 		logrus.Infof("Connection goes down for: %v", outgoing)
-		state.client.Close(outgoing)
+		_ = state.client.Close(context.TODO(), outgoing)
 	}()
 }
 
@@ -98,7 +98,7 @@ func main() {
 	// Init the tracer
 	tracer, closer := tools.InitJaeger("nsc")
 	opentracing.SetGlobalTracer(tracer)
-	defer closer.Close()
+	defer func()  {_ = closer.Close()}()
 
 	// Create the NSM client
 	state.interfaceID = 0

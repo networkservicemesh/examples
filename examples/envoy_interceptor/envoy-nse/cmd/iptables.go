@@ -18,7 +18,7 @@ package main
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
 	"os"
 	"os/exec"
 
@@ -26,13 +26,11 @@ import (
 	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/apis/local/connection"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/apis/local/networkservice"
 	"github.com/networkservicemesh/networkservicemesh/sdk/common"
-	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
 	"github.com/sirupsen/logrus"
 )
 
 // IptablesEndpoint is a monitoring composite
 type IptablesEndpoint struct {
-	endpoint.BaseCompositeEndpoint
 	script    string
 	arguments []string
 }
@@ -53,20 +51,13 @@ func getIptablesScript() string {
 func (ie *IptablesEndpoint) Request(ctx context.Context,
 	request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
 
-	if ie.GetNext() == nil {
-		err := fmt.Errorf("iptables needs next")
-		logrus.Errorf("%v", err)
-		return nil, err
-	}
-
-	incomingConnection, err := ie.GetNext().Request(ctx, request)
-	if err != nil {
-		logrus.Errorf("Next request failed: %v", err)
-		return nil, err
-	}
-
+	incomingConnection := request.GetConnection()
 	logrus.Infof("Iptables UpdateConnection: %v", incomingConnection)
 	ie.invoke()
+
+	if endpoint.Next(ctx) != nil {
+		return endpoint.Next(ctx).Request(ctx, request)
+	}
 
 	return incomingConnection, nil
 }
@@ -74,8 +65,9 @@ func (ie *IptablesEndpoint) Request(ctx context.Context,
 // Close implements the close handler
 func (ie *IptablesEndpoint) Close(ctx context.Context, connection *connection.Connection) (*empty.Empty, error) {
 	logrus.Infof("Iptables DeleteConnection: %v", connection)
-	if ie.GetNext() != nil {
-		return ie.GetNext().Close(ctx, connection)
+
+	if endpoint.Next(ctx) != nil {
+		return endpoint.Next(ctx).Close(ctx, connection)
 	}
 	ie.invoke()
 	return &empty.Empty{}, nil

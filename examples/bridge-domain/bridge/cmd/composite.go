@@ -17,18 +17,17 @@ package main
 
 import (
 	"context"
+	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	l2 "github.com/ligato/vpp-agent/api/models/vpp/l2"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/apis/local/connection"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/apis/local/networkservice"
 	"github.com/networkservicemesh/networkservicemesh/sdk/common"
-	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
 	"github.com/sirupsen/logrus"
 )
 
 type vppAgentBridgeComposite struct {
-	endpoint.BaseCompositeEndpoint
 	workspace    string
 	bdInterfaces []*l2.BridgeDomain_Interface
 }
@@ -36,23 +35,17 @@ type vppAgentBridgeComposite struct {
 func (vbc *vppAgentBridgeComposite) Request(ctx context.Context,
 	request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
 
-	if vbc.GetNext() == nil {
-		logrus.Fatal("Should have Next set")
-	}
-
-	incoming, err := vbc.GetNext().Request(ctx, request)
+	err := vbc.insertVPPAgentInterface(request.GetConnection(), true, vbc.workspace)
 	if err != nil {
 		logrus.Error(err)
 		return nil, err
 	}
 
-	err = vbc.insertVPPAgentInterface(incoming, true, vbc.workspace)
-	if err != nil {
-		logrus.Error(err)
-		return nil, err
+	if endpoint.Next(ctx) != nil {
+		return endpoint.Next(ctx).Request(ctx, request)
 	}
 
-	return incoming, nil
+	return request.GetConnection(), nil
 }
 
 func (vbc *vppAgentBridgeComposite) Close(ctx context.Context, conn *connection.Connection) (*empty.Empty, error) {
@@ -63,8 +56,11 @@ func (vbc *vppAgentBridgeComposite) Close(ctx context.Context, conn *connection.
 		return &empty.Empty{}, err
 	}
 
-	if vbc.GetNext() != nil {
+	if endpoint.Next(ctx) != nil {
 		_, _ = vbc.GetNext().Close(ctx, conn)
+		if _, err := endpoint.Next(ctx).Close(ctx, conn); err != nil {
+			return &empty.Empty{}, nil
+		}
 	}
 
 	return &empty.Empty{}, nil

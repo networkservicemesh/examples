@@ -35,10 +35,11 @@ func main() {
 
 	composite := endpoint.NewCompositeEndpoint(
 		endpoint.NewMonitorEndpoint(configuration),
-		vppagent.NewFlush(configuration, "localhost:9113"),
-		vppagent.NewMemifConnect(configuration),
+		endpoint.NewConnectionEndpoint(configuration),
 		endpoint.NewIpamEndpoint(nil),
-		endpoint.NewConnectionEndpoint(configuration))
+		vppagent.NewMemifConnect(configuration),
+		vppagent.NewCommit(configuration, "localhost:9113", true),
+		)
 
 	nsmEndpoint, err := endpoint.NewNSMEndpoint(context.TODO(), configuration, composite)
 	if err != nil {

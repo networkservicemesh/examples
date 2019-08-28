@@ -29,9 +29,10 @@ func main() {
 
 	composite := endpoint.NewCompositeEndpoint(
 		endpoint.NewMonitorEndpoint(nil),
-		newVppAgentBridgeComposite(nil),
+		endpoint.NewConnectionEndpoint(nil),
 		NewIpamEndpoint(nil),
-		endpoint.NewConnectionEndpoint(nil))
+		newVppAgentBridgeComposite(nil),
+	)
 
 	nsmEndpoint, err := endpoint.NewNSMEndpoint(context.TODO(), nil, composite)
 	if err != nil {
