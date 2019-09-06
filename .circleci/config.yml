@@ -4,13 +4,13 @@ jobs:
     resource_class: large
     working_directory: ~/project/examples
     docker:
-      - image: circleci/golang
+      - image: circleci/golang:1.12-stretch
     steps:
       - checkout
       - run:
           name:
           command: |
-            sudo apt-get install yamllint
+            sudo apt-get install yamllint python3-pkg-resources
       - run: yamllint -c .yamllint.yml $(git ls-files '*.yaml' '*.yml')
       - run:
           name: Install golangci-lint
@@ -29,7 +29,7 @@ jobs:
   build:
     working_directory: ~/project/examples
     docker:
-      - image: circleci/golang
+      - image: circleci/golang:1.12-stretch
     steps:
       - checkout
       - setup_remote_docker:
@@ -48,7 +48,7 @@ jobs:
         type: string
     working_directory: ~/project/examples
     docker:
-      - image: circleci/golang
+      - image: circleci/golang:1.12-stretch
     steps:
       - checkout
       - setup_remote_docker:
@@ -66,7 +66,7 @@ jobs:
         type: string
     working_directory: ~/project/examples
     docker:
-      - image: circleci/golang
+      - image: circleci/golang:1.12-stretch
     steps:
       - checkout
       - setup_remote_docker:
