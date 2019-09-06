@@ -39,7 +39,7 @@ func main() {
 		endpoint.NewIpamEndpoint(nil),
 		vppagent.NewMemifConnect(configuration),
 		vppagent.NewCommit(configuration, "localhost:9113", true),
-		)
+	)
 
 	nsmEndpoint, err := endpoint.NewNSMEndpoint(context.TODO(), configuration, composite)
 	if err != nil {

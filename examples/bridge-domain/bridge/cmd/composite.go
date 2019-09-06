@@ -17,6 +17,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
 
 	"github.com/golang/protobuf/ptypes/empty"

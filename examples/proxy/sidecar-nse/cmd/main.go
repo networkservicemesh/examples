@@ -33,7 +33,7 @@ func main() {
 		endpoint.NewIpamEndpoint(nil),
 	)
 
-	nsmEndpoint, err := endpoint.NewNSMEndpoint(context.TODO(), nil, composite)
+	nsmEndpoint, err := endpoint.NewNSMEndpoint(context.Background(), nil, composite)
 	if err != nil {
 		logrus.Fatalf("%v", err)
 	}

@@ -16,13 +16,15 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
 
-	config "github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/cmd/config"
-	vppagent "github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/cmd/vppagent"
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
 	"github.com/sirupsen/logrus"
+
+	config "github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/cmd/config"
+	vppagent "github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/cmd/vppagent"
 )
 
 const (
@@ -69,7 +71,7 @@ func main() {
 	pia := config.NewProcessInitActions(cnfConfig.GetBackend(), cnfConfig.InitActions)
 	defer pia.Cleanup()
 
-	if err := pia.Process(cnfConfig.GetBackend()); err != nil {
+	if err := pia.Process(context.Background(), cnfConfig.GetBackend()); err != nil {
 		logrus.Fatalf("Error processing the init actions: %v", err)
 	}
 

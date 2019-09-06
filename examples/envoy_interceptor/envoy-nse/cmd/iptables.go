@@ -18,9 +18,10 @@ package main
 import (
 	"bytes"
 	"context"
-	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
 	"os"
 	"os/exec"
+
+	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/apis/local/connection"

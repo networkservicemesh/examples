@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
 	"github.com/networkservicemesh/networkservicemesh/sdk/client"
@@ -37,6 +38,7 @@ const (
 	proxyHostEnv      = "PROXY_HOST"
 	defaultProxyHost  = ":8080"
 	proxyHeaderPrefix = "nsm-"
+	connectTimeout    = 15 * time.Second
 )
 
 var state struct {
@@ -62,7 +64,11 @@ func nsmDirector(req *http.Request) {
 	ifname := "nsm" + strconv.Itoa(state.interfaceID)
 	state.interfaceID++
 
-	outgoing, err := state.client.Connect(context.TODO(), ifname, "kernel", "Primary interface")
+	// We define a connection establish timeout to 15 seconds
+	ctx, cancelOp := context.WithTimeout(context.Background(), connectTimeout)
+	defer cancelOp()
+
+	outgoing, err := state.client.Connect(ctx, ifname, "kernel", "Primary interface")
 	if err != nil {
 		// cancel request
 		logrus.Errorf("Error: %v", err)
@@ -98,11 +104,12 @@ func main() {
 	// Init the tracer
 	tracer, closer := tools.InitJaeger("nsc")
 	opentracing.SetGlobalTracer(tracer)
-	defer func()  {_ = closer.Close()}()
+	defer func() { _ = closer.Close() }()
 
 	// Create the NSM client
 	state.interfaceID = 0
-	client, err := client.NewNSMClient(context.TODO(), nil)
+
+	client, err := client.NewNSMClient(context.Background(), nil)
 	if err != nil {
 		logrus.Fatalf("Unable to create the NSM client %v", err)
 	}

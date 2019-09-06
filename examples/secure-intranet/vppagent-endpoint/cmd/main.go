@@ -50,7 +50,7 @@ func main() {
 		vppagent.NewCommit(configuration, "localhost:9112", true),
 	)
 
-	nsmEndpoint, err := endpoint.NewNSMEndpoint(context.TODO(), configuration, composite)
+	nsmEndpoint, err := endpoint.NewNSMEndpoint(context.Background(), configuration, composite)
 	if err != nil {
 		logrus.Fatalf("%v", err)
 	}

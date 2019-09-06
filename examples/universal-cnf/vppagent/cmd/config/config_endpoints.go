@@ -18,6 +18,8 @@ package config
 import (
 	"context"
 
+	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/apis/local/networkservice"
+
 	"github.com/networkservicemesh/networkservicemesh/sdk/common"
 	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
 	"github.com/sirupsen/logrus"
@@ -26,7 +28,7 @@ import (
 // SingleEndpoint keeps the state of a single endpoint instance
 type SingleEndpoint struct {
 	NSConfiguration *common.NSConfiguration
-	NSComposite     *endpoint.CompositeEndpoint
+	NSComposite     networkservice.NetworkServiceServer
 	Endpoint        *Endpoint
 	Cleanup         func()
 }
@@ -49,9 +51,9 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint) *Pr
 		}
 
 		// Build the list of composites
-		compositeEndpoints := []endpoint.ChainedEndpoint{
+		compositeEndpoints := []networkservice.NetworkServiceServer{
 			endpoint.NewMonitorEndpoint(configuration),
-			NewUniversalCNFEndpoint(backend, e),
+			endpoint.NewConnectionEndpoint(configuration),
 		}
 
 		if e.Ipam != nil {
@@ -64,9 +66,7 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint) *Pr
 				compositeEndpoints = append(compositeEndpoints, endpoint.NewCustomFuncEndpoint("route", routeAddr))
 			}
 		}
-
-		compositeEndpoints = append(compositeEndpoints, endpoint.NewConnectionEndpoint(configuration))
-
+		compositeEndpoints = append(compositeEndpoints, NewUniversalCNFEndpoint(backend, e))
 		// Compose the Endpoint
 		composite := endpoint.NewCompositeEndpoint(compositeEndpoints...)
 
