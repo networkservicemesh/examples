@@ -20,11 +20,13 @@ spec:
           command: ['tail', '-f', '/dev/null']
       initContainers:
         - name: nsm-init-container
-          image: networkservicemesh/nsm-init:master
+          image: networkservicemesh/nsm-init:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: NS_NETWORKSERVICEMESH_IO
               value: packet-filtering
+            - name: TRACER_ENABLED
+              value: "true"
           resources:
             limits:
               networkservicemesh.io/socket: "1"
