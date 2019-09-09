@@ -179,6 +179,12 @@ workflows:
           requires:
             - sanity-check
       - test:
+          name: "Test GW Routers"
+          example: "gw-routers"
+          description: "GW Routers"
+          requires:
+            - sanity-check
+      - test:
           name: "Test ICMP"
           example: "icmp"
           description: "Simple ICMP"
@@ -242,6 +248,11 @@ workflows:
           name: "[N] Test Envoy"
           example: "envoy_interceptor"
           description: "Envoy interceptor"
+          nightly: "true"
+      - test:
+          name: "[N] GW Routers"
+          example: "gw-routers"
+          description: "GW Routers"
           nightly: "true"
       - test:
           name: "[N] Test ICMP"
