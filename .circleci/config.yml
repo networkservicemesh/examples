@@ -4,7 +4,7 @@ jobs:
     resource_class: large
     working_directory: ~/project/examples
     docker:
-      - image: circleci/golang
+      - image: circleci/golang:1.12
     steps:
       - checkout
       - run:
@@ -24,7 +24,7 @@ jobs:
           command: |
             make lint-all
     environment:
-      GO111MODULE: 'on'
+      GO111MODULE: "on"
 
   build:
     working_directory: ~/project/examples
