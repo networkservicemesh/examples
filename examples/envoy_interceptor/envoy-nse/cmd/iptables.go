@@ -16,6 +16,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -86,11 +87,14 @@ func (ie *IptablesEndpoint) Name() string {
 }
 
 func (ie *IptablesEndpoint) invoke() {
-	out, err := exec.Command(ie.script, ie.arguments...).Output()
-	logrus.Infof("%s", out)
+	var out bytes.Buffer
+	cmd := exec.Command(ie.script, ie.arguments...) // #nosec
+	cmd.Stdout = &out
+	err := cmd.Run()
 	if err != nil {
 		logrus.Error(err)
 	}
+	logrus.Infof("%v", out)
 }
 
 // NewIptablesEndpoint creates a IptablesEndpoint

@@ -79,7 +79,7 @@ func (ice *IpamEndpoint) Request(ctx context.Context,
 	}
 
 	// We'll use same DST IP for all connections
-	if len(ice.SelfIP) == 0 {
+	if ice.SelfIP == "" {
 		ice.SelfIP = dstIP.String()
 	}
 
