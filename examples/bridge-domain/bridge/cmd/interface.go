@@ -28,6 +28,29 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func getDataChange(conn *connection.Connection, bd *l2.BridgeDomain, ifName, baseDir string) *configurator.Config {
+	return &configurator.Config{
+		VppConfig: &vpp.ConfigData{
+			Interfaces: []*interfaces.Interface{
+				{
+					Name:    ifName,
+					Type:    interfaces.Interface_MEMIF,
+					Enabled: true,
+					Link: &interfaces.Interface_Memif{
+						Memif: &interfaces.MemifLink{
+							Master:         true,
+							SocketFilename: path.Join(baseDir, conn.GetMechanism().GetSocketFilename()),
+						},
+					},
+				},
+			},
+			BridgeDomains: []*l2.BridgeDomain{
+				bd,
+			},
+		},
+	}
+}
+
 func (vxc *vppAgentBridgeComposite) insertVPPAgentInterface(conn *connection.Connection,
 	connect bool, baseDir string) error {
 
@@ -72,26 +95,7 @@ func (vxc *vppAgentBridgeComposite) insertVPPAgentInterface(conn *connection.Con
 		}
 	}
 
-	dataChange := &configurator.Config{
-		VppConfig: &vpp.ConfigData{
-			Interfaces: []*interfaces.Interface{
-				{
-					Name:    ifName,
-					Type:    interfaces.Interface_MEMIF,
-					Enabled: true,
-					Link: &interfaces.Interface_Memif{
-						Memif: &interfaces.MemifLink{
-							Master:         true,
-							SocketFilename: path.Join(baseDir, conn.GetMechanism().GetSocketFilename()),
-						},
-					},
-				},
-			},
-			BridgeDomains: []*l2.BridgeDomain{
-				bd,
-			},
-		},
-	}
+	dataChange := getDataChange(conn, bd, ifName, baseDir)
 
 	logrus.Infof("Sending DataChange to vppagent: %+v", dataChange)
 

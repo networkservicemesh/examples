@@ -43,7 +43,7 @@ func resetVppAgent() error {
 		logrus.Errorf("can't dial grpc server: %v", err)
 		return err
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	client := configurator.NewConfiguratorClient(conn)
 	logrus.Infof("Resetting vppagent...")
 	_, err = client.Update(context.Background(), &configurator.UpdateRequest{
@@ -75,7 +75,7 @@ func sendDataChangeToVppAgent(dataChange *configurator.Config, update bool) erro
 		logrus.Errorf("can't dial grpc server: %v", err)
 		return err
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	client := configurator.NewConfiguratorClient(conn)
 
 	logrus.Infof("Sending DataChange to vppagent: %v", dataChange)

@@ -60,7 +60,7 @@ func main() {
 
 	tracer, closer := tools.InitJaeger("nsc")
 	opentracing.SetGlobalTracer(tracer)
-	defer closer.Close()
+	defer func() { _ = closer.Close() }()
 
 	workspace, ok := os.LookupEnv(nsmd.WorkspaceEnv)
 	if !ok {

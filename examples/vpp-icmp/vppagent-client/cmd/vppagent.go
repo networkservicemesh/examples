@@ -15,7 +15,8 @@ import (
 	"google.golang.org/grpc"
 )
 
-func CreateVppInterface(nscConnection *connection.Connection, baseDir string, vppAgentEndpoint string) error {
+// CreateVppInterface creates a VPP memif interface
+func CreateVppInterface(nscConnection *connection.Connection, baseDir, vppAgentEndpoint string) error {
 	tracer := opentracing.GlobalTracer()
 	conn, err := grpc.Dial(vppAgentEndpoint, grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(
@@ -27,7 +28,7 @@ func CreateVppInterface(nscConnection *connection.Connection, baseDir string, vp
 		logrus.Errorf("can't dial grpc server: %v", err)
 		return err
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	client := configurator.NewConfiguratorClient(conn)
 
 	conversionParameters := &converter.ConnectionConversionParameters{
@@ -51,6 +52,7 @@ func CreateVppInterface(nscConnection *connection.Connection, baseDir string, vp
 	return nil
 }
 
+// Reset resets the vpp configuration through the vpp-agent
 func Reset(vppAgentEndpoint string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
@@ -70,7 +72,7 @@ func Reset(vppAgentEndpoint string) error {
 		logrus.Errorf("can't dial grpc server: %v", err)
 		return err
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	client := configurator.NewConfiguratorClient(conn)
 	logrus.Infof("Resetting vppagent...")
 	_, err = client.Update(context.Background(), &configurator.UpdateRequest{
