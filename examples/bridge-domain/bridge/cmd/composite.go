@@ -58,7 +58,6 @@ func (vbc *vppAgentBridgeComposite) Close(ctx context.Context, conn *connection.
 	}
 
 	if endpoint.Next(ctx) != nil {
-		_, _ = vbc.GetNext().Close(ctx, conn)
 		if _, err := endpoint.Next(ctx).Close(ctx, conn); err != nil {
 			return &empty.Empty{}, nil
 		}
