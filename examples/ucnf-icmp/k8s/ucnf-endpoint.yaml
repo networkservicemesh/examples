@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: universal-cnf-endpoint
-          image: networkservicemesh/universal-cnf-vppagent:latest
+          image: networkservicemesh/universal-cnf-vppagent:master
           imagePullPolicy: IfNotPresent
           env:
             - name: TRACER_ENABLED
