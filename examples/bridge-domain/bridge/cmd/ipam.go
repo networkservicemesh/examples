@@ -17,7 +17,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -33,7 +32,6 @@ import (
 
 // IpamEndpoint the IPAM endpoint
 type IpamEndpoint struct {
-	endpoint.BaseCompositeEndpoint
 	PrefixPool prefix_pool.PrefixPool
 	SelfIP     string
 }
@@ -41,18 +39,6 @@ type IpamEndpoint struct {
 // Request implements the request handler
 func (ice *IpamEndpoint) Request(ctx context.Context,
 	request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
-
-	if ice.GetNext() == nil {
-		err := fmt.Errorf("IPAM needs next")
-		logrus.Errorf("%v", err)
-		return nil, err
-	}
-
-	newConnection, err := ice.GetNext().Request(ctx, request)
-	if err != nil {
-		logrus.Errorf("Next request failed: %v", err)
-		return nil, err
-	}
 
 	/* Exclude the prefixes from the pool of available prefixes */
 	excludedPrefixes, err := ice.PrefixPool.ExcludePrefixes(request.Connection.Context.IpContext.ExcludedPrefixes)
@@ -83,6 +69,7 @@ func (ice *IpamEndpoint) Request(ctx context.Context,
 		ice.SelfIP = dstIP.String()
 	}
 
+	newConnection := request.GetConnection()
 	// Update source/dst IP's
 	newConnection.Context.IpContext.SrcIpAddr = srcIP.String()
 	newConnection.Context.IpContext.DstIpAddr = ice.SelfIP
@@ -96,6 +83,11 @@ func (ice *IpamEndpoint) Request(ctx context.Context,
 	}
 
 	logrus.Infof("IPAM completed on connection: %v", newConnection)
+
+	if endpoint.Next(ctx) != nil {
+		return endpoint.Next(ctx).Request(ctx, request)
+	}
+
 	return newConnection, nil
 }
 
@@ -110,8 +102,10 @@ func (ice *IpamEndpoint) Close(ctx context.Context, connection *connection.Conne
 	if err != nil {
 		logrus.Error("Release error: ", err)
 	}
-	if ice.GetNext() != nil {
-		return ice.GetNext().Close(ctx, connection)
+	if endpoint.Next(ctx) != nil {
+		if _, err := endpoint.Next(ctx).Close(ctx, connection); err != nil {
+			return &empty.Empty{}, nil
+		}
 	}
 	return &empty.Empty{}, nil
 }

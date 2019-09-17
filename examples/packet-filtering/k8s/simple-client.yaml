@@ -25,6 +25,8 @@ spec:
           env:
             - name: NS_NETWORKSERVICEMESH_IO
               value: packet-filtering
+            - name: TRACER_ENABLED
+              value: "true"
           resources:
             limits:
               networkservicemesh.io/socket: "1"

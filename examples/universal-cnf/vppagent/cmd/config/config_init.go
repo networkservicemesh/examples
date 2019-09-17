@@ -70,9 +70,9 @@ func NewProcessInitActions(backend UniversalCNFBackend, initactions []*Action) *
 }
 
 // Process iterates over the init commands and applies them
-func (pia *ProcessInitActions) Process(backend UniversalCNFBackend) error {
+func (pia *ProcessInitActions) Process(ctx context.Context, backend UniversalCNFBackend) error {
 	for _, sa := range pia.InitActions {
-		if err := sa.Action.Process(backend, sa.nsmClient); err != nil {
+		if err := sa.Action.Process(ctx, backend, sa.nsmClient); err != nil {
 			logrus.Errorf("Failed processing %+v", sa.Action)
 			return err
 		}

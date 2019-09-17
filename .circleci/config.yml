@@ -10,7 +10,7 @@ jobs:
       - run:
           name:
           command: |
-            sudo apt-get install yamllint
+            sudo apt-get install yamllint python3-pkg-resources
       - run: yamllint -c .yamllint.yml $(git ls-files '*.yaml' '*.yml')
       - run:
           name: Install golangci-lint

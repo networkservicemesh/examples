@@ -29,10 +29,11 @@ func main() {
 
 	composite := endpoint.NewCompositeEndpoint(
 		endpoint.NewMonitorEndpoint(nil),
+		endpoint.NewConnectionEndpoint(nil),
 		endpoint.NewIpamEndpoint(nil),
-		endpoint.NewConnectionEndpoint(nil))
+	)
 
-	nsmEndpoint, err := endpoint.NewNSMEndpoint(context.TODO(), nil, composite)
+	nsmEndpoint, err := endpoint.NewNSMEndpoint(context.Background(), nil, composite)
 	if err != nil {
 		logrus.Fatalf("%v", err)
 	}

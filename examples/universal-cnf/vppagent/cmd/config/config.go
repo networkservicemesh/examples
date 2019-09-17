@@ -16,6 +16,7 @@
 package config
 
 import (
+	"context"
 	"io/ioutil"
 	"os/exec"
 
@@ -41,9 +42,9 @@ type Client struct {
 	IfName string
 }
 
-func (c *Client) Process(backend UniversalCNFBackend, dpconfig interface{}, nsmclient *client.NsmClient) error {
-
-	conn, err := nsmclient.Connect(c.IfName, "mem", "VPP interface "+c.IfName)
+func (c *Client) Process(ctx context.Context,
+	backend UniversalCNFBackend, dpconfig interface{}, nsmclient *client.NsmClient) error {
+	conn, err := nsmclient.Connect(ctx, c.IfName, "mem", "VPP interface "+c.IfName)
 	if err != nil {
 		logrus.Errorf("Error creating %s: %v", c.IfName, err)
 		return err
@@ -62,7 +63,7 @@ type Action struct {
 }
 
 // Process executes the actions as defined
-func (a *Action) Process(backend UniversalCNFBackend, nsmclient *client.NsmClient) error {
+func (a *Action) Process(ctx context.Context, backend UniversalCNFBackend, nsmclient *client.NsmClient) error {
 	command := a.Command
 	if command != nil && len(command.Name) > 0 {
 		logrus.Infof("Executing %v", command)
@@ -78,7 +79,7 @@ func (a *Action) Process(backend UniversalCNFBackend, nsmclient *client.NsmClien
 		if a.DPConfig == nil {
 			a.DPConfig = &vpp.ConfigData{}
 		}
-		if err := client.Process(backend, a.DPConfig, nsmclient); err != nil {
+		if err := client.Process(ctx, backend, a.DPConfig, nsmclient); err != nil {
 			logrus.Errorf("Error running the client: %v", err)
 		}
 	}
