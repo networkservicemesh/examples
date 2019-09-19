@@ -6,4 +6,7 @@ PODS = proxy-nsc source
 NETWORK_SERVICES = streamer
 CHECK =
 
+# should not fail go linter
+FAIL_GOLINT =
+
 include $(TOP)/mk/targets.mk
