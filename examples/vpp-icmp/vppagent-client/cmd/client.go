@@ -16,13 +16,13 @@ package main
 
 import (
 	"context"
-	"os"
-	"sync"
+	"github.com/networkservicemesh/networkservicemesh/controlplane/api/local/networkservice"
+	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
 
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/local/connection"
-	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/nsmd"
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
-	"github.com/networkservicemesh/networkservicemesh/sdk/client"
+	"github.com/networkservicemesh/networkservicemesh/sdk/common"
+	"github.com/networkservicemesh/networkservicemesh/sdk/vppagent"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 )
@@ -31,71 +31,41 @@ const (
 	defaultVPPAgentEndpoint = "localhost:9113"
 )
 
-type nsClientBackend struct {
-	workspace        string
-	vppAgentEndpoint string
-}
-
-func (nscb *nsClientBackend) New() error {
-	if err := Reset(nscb.vppAgentEndpoint); err != nil {
-		logrus.Fatal(err)
-		return err
-	}
-	logrus.Infof("workspace: %s", nscb.workspace)
-	return nil
-}
-
-func (nscb *nsClientBackend) Connect(connection *connection.Connection) error {
-	logrus.Infof("nsClientBackend received: %v", connection)
-	err := CreateVppInterface(connection, nscb.workspace, nscb.vppAgentEndpoint)
-	if err != nil {
-		logrus.Errorf("VPPAgent failed creating the requested interface with: %v", err)
-	}
-	return err
-}
-
 func main() {
 	// Capture signals to cleanup before exiting
 	c := tools.NewOSSignalChannel()
 
+	// Setup OpenTracing
 	tracer, closer := tools.InitJaeger("nsc")
 	opentracing.SetGlobalTracer(tracer)
 	defer func() { _ = closer.Close() }()
 
-	workspace, ok := os.LookupEnv(nsmd.WorkspaceEnv)
-	if !ok {
-		logrus.Fatalf("Failed getting %s", nsmd.WorkspaceEnv)
-	}
+	// Create Configuration Object
+	configuration := &common.NSConfiguration{}
 
-	backend := &nsClientBackend{
-		workspace:        workspace,
-		vppAgentEndpoint: defaultVPPAgentEndpoint,
-	}
+	// Create synthetic Endpoint we can use to connect vppagent as a client using memif
+	composite := endpoint.NewCompositeEndpoint(
+		vppagent.NewClientMemifConnect(configuration),
+		vppagent.NewCommit(configuration, defaultVPPAgentEndpoint, true),
+	)
 
-	client, err := client.NewNSMClient(context.TODO(), nil)
+	// Request the Network Service
+	_, err := composite.Request(context.TODO(), &networkservice.NetworkServiceRequest{
+		MechanismPreferences: []*connection.Mechanism{
+			&connection.Mechanism{
+				Type: connection.MechanismType_MEM_INTERFACE,
+			},
+		},
+	})
+
+	// Error handling
 	if err != nil {
-		logrus.Fatalf("Unable to create the NSM client %v", err)
+		logrus.Fatalf("Error attempting to connect to Network Service: %+v",err)
 	}
 
-	err = backend.New()
-	if err != nil {
-		logrus.Fatalf("Unable to create the backend %v", err)
-	}
-
-	var outgoingConnection *connection.Connection
-	outgoingConnection, err = client.Connect(context.Background(), "if1", "mem", "Primary interface")
-	if err != nil {
-		logrus.Fatalf("Unable to connect %v", err)
-	}
-
-	err = backend.Connect(outgoingConnection)
-	if err != nil {
-		logrus.Fatalf("Unable to connect %v", err)
-	}
-
+	// Declare victory!
 	logrus.Info("nsm client: initialization is completed successfully, wait for Ctrl+C...")
-	var wg sync.WaitGroup
-	wg.Add(1)
 
+	// Wait until we receive a signal like SIGTERM
 	<-c
 }
