@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/local/networkservice"
 	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
 
@@ -52,7 +53,7 @@ func main() {
 	// Request the Network Service
 	_, err := composite.Request(context.TODO(), &networkservice.NetworkServiceRequest{
 		MechanismPreferences: []*connection.Mechanism{
-			&connection.Mechanism{
+			{
 				Type: connection.MechanismType_MEM_INTERFACE,
 			},
 		},
@@ -60,7 +61,7 @@ func main() {
 
 	// Error handling
 	if err != nil {
-		logrus.Fatalf("Error attempting to connect to Network Service: %+v",err)
+		logrus.Fatalf("Error attempting to connect to Network Service: %+v", err)
 	}
 
 	// Declare victory!
