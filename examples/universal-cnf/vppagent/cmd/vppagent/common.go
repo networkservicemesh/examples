@@ -18,16 +18,16 @@ package vppagent
 import (
 	"os"
 
-	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/nsmd"
+	"github.com/networkservicemesh/networkservicemesh/sdk/common"
 	"github.com/sirupsen/logrus"
 )
 
 func getBaseDir() string {
 
 	// TODO: figure out a better way to get the baseDir
-	baseDir, ok := os.LookupEnv(nsmd.WorkspaceEnv)
+	baseDir, ok := os.LookupEnv(common.WorkspaceEnv)
 	if !ok {
-		logrus.Fatalf("Failed getting %s", nsmd.WorkspaceEnv)
+		logrus.Fatalf("Failed getting %s", common.WorkspaceEnv)
 	}
 
 	return baseDir
