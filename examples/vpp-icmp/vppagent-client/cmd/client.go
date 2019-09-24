@@ -52,6 +52,9 @@ func main() {
 
 	// Request the Network Service
 	_, err := composite.Request(context.TODO(), &networkservice.NetworkServiceRequest{
+		Connection: &connection.Connection{
+			Id: "if1",
+		},
 		MechanismPreferences: []*connection.Mechanism{
 			{
 				Type: connection.MechanismType_MEM_INTERFACE,
