@@ -36,6 +36,7 @@ func main() {
 	// Capture signals to cleanup before exiting
 	c := tools.NewOSSignalChannel()
 
+	logrus.Info("Setting up Jaeger")
 	// Setup OpenTracing
 	tracer, closer := tools.InitJaeger("nsc")
 	opentracing.SetGlobalTracer(tracer)
@@ -44,12 +45,19 @@ func main() {
 	// Create Configuration Object
 	configuration := &common.NSConfiguration{}
 
+	logrus.Info("Creating Composite Endpoint")
 	// Create synthetic Endpoint we can use to connect vppagent as a client using memif
 	composite := endpoint.NewCompositeEndpoint(
 		vppagent.NewClientMemifConnect(configuration),
 		vppagent.NewCommit(configuration, defaultVPPAgentEndpoint, true),
 	)
 
+	logrus.Info("Initializing Composite Endpoint")
+	if err := endpoint.Init(composite, nil); err != nil {
+		logrus.Fatalf("Error attempting to Init composite: %+v", err)
+	}
+
+	logrus.Info("Requesting Network Service")
 	// Request the Network Service
 	_, err := composite.Request(context.TODO(), &networkservice.NetworkServiceRequest{
 		Connection: &connection.Connection{
@@ -61,6 +69,7 @@ func main() {
 			},
 		},
 	})
+	logrus.Info("Finished Requesting Network Service")
 
 	// Error handling
 	if err != nil {
