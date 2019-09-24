@@ -48,6 +48,7 @@ func main() {
 	logrus.Info("Creating Composite Endpoint")
 	// Create synthetic Endpoint we can use to connect vppagent as a client using memif
 	composite := endpoint.NewCompositeEndpoint(
+		endpoint.NewClientEndpoint(configuration),
 		vppagent.NewClientMemifConnect(configuration),
 		vppagent.NewCommit(configuration, defaultVPPAgentEndpoint, true),
 	)
@@ -59,7 +60,7 @@ func main() {
 
 	logrus.Info("Requesting Network Service")
 	// Request the Network Service
-	_, err := composite.Request(context.TODO(), &networkservice.NetworkServiceRequest{
+	conn, err := composite.Request(context.TODO(), &networkservice.NetworkServiceRequest{
 		Connection: &connection.Connection{
 			Id: "if1",
 		},
@@ -69,7 +70,7 @@ func main() {
 			},
 		},
 	})
-	logrus.Info("Finished Requesting Network Service")
+	logrus.Info("Connected with Connection %+v", conn)
 
 	// Error handling
 	if err != nil {
