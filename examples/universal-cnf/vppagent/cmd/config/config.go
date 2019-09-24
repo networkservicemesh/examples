@@ -22,7 +22,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/ligato/vpp-agent/api/models/vpp"
-	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/apis/local/connection"
+	"github.com/networkservicemesh/networkservicemesh/controlplane/api/local/connection"
 	"github.com/networkservicemesh/networkservicemesh/sdk/client"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -44,7 +44,8 @@ type Client struct {
 
 func (c *Client) Process(ctx context.Context,
 	backend UniversalCNFBackend, dpconfig interface{}, nsmclient *client.NsmClient) error {
-	conn, err := nsmclient.Connect(ctx, c.IfName, "mem", "VPP interface "+c.IfName)
+	conn, err := nsmclient.ConnectRetry(ctx, c.IfName, "mem", "VPP interface "+c.IfName,
+		client.ConnectionRetry, client.RequestDelay)
 	if err != nil {
 		logrus.Errorf("Error creating %s: %v", c.IfName, err)
 		return err

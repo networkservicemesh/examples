@@ -54,6 +54,7 @@ func NewProcessInitActions(backend UniversalCNFBackend, initactions []*Action) *
 				OutgoingNscLabels: labels,
 				Routes:            c.Routes,
 			}
+
 			nsmClient, err = client.NewNSMClient(context.TODO(), nsConfig)
 			if err != nil {
 				logrus.Errorf("Unable to create the NSM client %v", err)

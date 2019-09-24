@@ -2,13 +2,15 @@ package main
 
 import (
 	"context"
+	"path"
 	"time"
 
 	"github.com/ligato/vpp-agent/api/configurator"
+	"github.com/ligato/vpp-agent/api/models/vpp"
+	vpp_interfaces "github.com/ligato/vpp-agent/api/models/vpp/interfaces"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
-	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/apis/local/connection"
-	"github.com/networkservicemesh/networkservicemesh/dataplane/vppagent/pkg/converter"
+	"github.com/networkservicemesh/networkservicemesh/controlplane/api/local/connection"
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
@@ -23,26 +25,33 @@ func CreateVppInterface(nscConnection *connection.Connection, baseDir, vppAgentE
 			otgrpc.OpenTracingClientInterceptor(tracer, otgrpc.LogPayloads())),
 		grpc.WithStreamInterceptor(
 			otgrpc.OpenTracingStreamClientInterceptor(tracer)))
-
+	defer func() { _ = conn.Close() }()
 	if err != nil {
 		logrus.Errorf("can't dial grpc server: %v", err)
 		return err
 	}
-	defer func() { _ = conn.Close() }()
+	fullyQualifiedSocketFilename := path.Join(baseDir, nscConnection.GetMechanism().GetSocketFilename())
+	dataChange := &configurator.Config{
+		VppConfig: &vpp.ConfigData{
+			Interfaces: []*vpp_interfaces.Interface{
+				{
+					Name:        nscConnection.Id,
+					Type:        vpp_interfaces.Interface_MEMIF,
+					Enabled:     true,
+					IpAddresses: []string{nscConnection.GetContext().GetIpContext().GetSrcIpAddr()},
+					Link: &vpp_interfaces.Interface_Memif{
+						Memif: &vpp_interfaces.MemifLink{
+							Master:         false,
+							SocketFilename: path.Join(fullyQualifiedSocketFilename),
+						},
+					},
+				},
+			},
+		},
+	}
+
 	client := configurator.NewConfiguratorClient(conn)
 
-	conversionParameters := &converter.ConnectionConversionParameters{
-		Name:      "SRC-" + nscConnection.GetId(),
-		Terminate: true,
-		Side:      converter.SOURCE,
-		BaseDir:   baseDir,
-	}
-	dataChange, err := converter.NewMemifInterfaceConverter(nscConnection, conversionParameters).ToDataRequest(nil, true)
-
-	if err != nil {
-		logrus.Error(err)
-		return err
-	}
 	logrus.Infof("Sending DataChange to vppagent: %v", dataChange)
 	if _, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: dataChange}); err != nil {
 		logrus.Error(err)

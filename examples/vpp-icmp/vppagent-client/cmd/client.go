@@ -19,10 +19,10 @@ import (
 	"os"
 	"sync"
 
-	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/apis/local/connection"
-	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/nsmd"
+	"github.com/networkservicemesh/networkservicemesh/controlplane/api/local/connection"
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
 	"github.com/networkservicemesh/networkservicemesh/sdk/client"
+	"github.com/networkservicemesh/networkservicemesh/sdk/common"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 )
@@ -62,9 +62,9 @@ func main() {
 	opentracing.SetGlobalTracer(tracer)
 	defer func() { _ = closer.Close() }()
 
-	workspace, ok := os.LookupEnv(nsmd.WorkspaceEnv)
+	workspace, ok := os.LookupEnv(common.WorkspaceEnv)
 	if !ok {
-		logrus.Fatalf("Failed getting %s", nsmd.WorkspaceEnv)
+		logrus.Fatalf("Failed getting %s", common.WorkspaceEnv)
 	}
 
 	backend := &nsClientBackend{
@@ -72,7 +72,7 @@ func main() {
 		vppAgentEndpoint: defaultVPPAgentEndpoint,
 	}
 
-	client, err := client.NewNSMClient(context.TODO(), nil)
+	outgoingClient, err := client.NewNSMClient(context.TODO(), nil)
 	if err != nil {
 		logrus.Fatalf("Unable to create the NSM client %v", err)
 	}
@@ -83,7 +83,8 @@ func main() {
 	}
 
 	var outgoingConnection *connection.Connection
-	outgoingConnection, err = client.Connect(context.Background(), "if1", "mem", "Primary interface")
+	outgoingConnection, err = outgoingClient.ConnectRetry(context.Background(), "if1", "mem",
+		"Primary interface", client.ConnectionRetry, client.RequestDelay)
 	if err != nil {
 		logrus.Fatalf("Unable to connect %v", err)
 	}
