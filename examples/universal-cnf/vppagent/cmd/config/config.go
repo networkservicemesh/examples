@@ -44,7 +44,8 @@ type Client struct {
 
 func (c *Client) Process(ctx context.Context,
 	backend UniversalCNFBackend, dpconfig interface{}, nsmclient *client.NsmClient) error {
-	conn, err := nsmclient.Connect(ctx, c.IfName, "mem", "VPP interface "+c.IfName)
+	conn, err := nsmclient.ConnectRetry(ctx, c.IfName, "mem", "VPP interface "+c.IfName,
+		client.ConnectionRetry, client.RequestDelay)
 	if err != nil {
 		logrus.Errorf("Error creating %s: %v", c.IfName, err)
 		return err
