@@ -25,7 +25,11 @@ func CreateVppInterface(nscConnection *connection.Connection, baseDir, vppAgentE
 			otgrpc.OpenTracingClientInterceptor(tracer, otgrpc.LogPayloads())),
 		grpc.WithStreamInterceptor(
 			otgrpc.OpenTracingStreamClientInterceptor(tracer)))
-
+	defer func() { _ = conn.Close() }()
+	if err != nil {
+		logrus.Errorf("can't dial grpc server: %v", err)
+		return err
+	}
 	fullyQualifiedSocketFilename := path.Join(baseDir, nscConnection.GetMechanism().GetSocketFilename())
 	dataChange := &configurator.Config{
 		VppConfig: &vpp.ConfigData{
@@ -45,11 +49,7 @@ func CreateVppInterface(nscConnection *connection.Connection, baseDir, vppAgentE
 			},
 		},
 	}
-	if err != nil {
-		logrus.Errorf("can't dial grpc server: %v", err)
-		return err
-	}
-	defer func() { _ = conn.Close() }()
+
 	client := configurator.NewConfiguratorClient(conn)
 
 	logrus.Infof("Sending DataChange to vppagent: %v", dataChange)
