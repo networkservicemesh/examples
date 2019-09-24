@@ -83,7 +83,8 @@ func main() {
 	}
 
 	var outgoingConnection *connection.Connection
-	outgoingConnection, err = outgoingClient.Connect(context.Background(), "if1", "mem", "Primary interface")
+	outgoingConnection, err = outgoingClient.ConnectRetry(context.Background(), "if1", "mem",
+		"Primary interface", client.ConnectionRetry, client.RequestDelay)
 	if err != nil {
 		logrus.Fatalf("Unable to connect %v", err)
 	}
