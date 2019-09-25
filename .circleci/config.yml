@@ -116,7 +116,7 @@ jobs:
           name: Patch go.mod
           command: |
             if [ "<< parameters.nightly >>" == "true" ]; then
-              sed -i.bak 's/\(networkservicemesh\/networkservicemesh\).*/\1 master/g' go.mod
+               ./scripts/update_networkservicemesh.sh master # Update to the master branch
             fi
       - run:
           name: Clone NSM
