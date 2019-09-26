@@ -61,45 +61,20 @@ func (vxc *vppAgentBridgeComposite) insertVPPAgentInterface(conn *connection.Con
 		return err
 	}
 
-	var bd *l2.BridgeDomain
-
 	if connect {
-		vxc.bdInterfaces = append(vxc.bdInterfaces, &l2.BridgeDomain_Interface{
-			Name:                    ifName,
-			BridgedVirtualInterface: false,
+		vxc.bridgeDomain.Interfaces = append(vxc.bridgeDomain.Interfaces, &l2.BridgeDomain_Interface{
+			Name: ifName,
 		})
-
-		bd = &l2.BridgeDomain{
-			Name:                "bd1",
-			Flood:               false,
-			UnknownUnicastFlood: false,
-			Forward:             true,
-			Learn:               true,
-			ArpTermination:      false,
-			Interfaces:          vxc.bdInterfaces,
-		}
 	} else {
-		bd = &l2.BridgeDomain{
-			Name:                "bd1",
-			Flood:               false,
-			UnknownUnicastFlood: false,
-			Forward:             true,
-			Learn:               true,
-			ArpTermination:      false,
-			Interfaces: []*l2.BridgeDomain_Interface{
-				{
-					Name:                    ifName,
-					BridgedVirtualInterface: false,
-				},
-			},
+		for k, v := range vxc.bridgeDomain.Interfaces {
+			if v.Name == ifName {
+				vxc.bridgeDomain.Interfaces = append(vxc.bridgeDomain.Interfaces[:k], vxc.bridgeDomain.Interfaces[k+1:]...)
+				break
+			}
 		}
 	}
 
-	dataChange := getDataChange(conn, bd, ifName, baseDir)
-
-	logrus.Infof("Sending DataChange to vppagent: %+v", dataChange)
-
-	err := sendDataChangeToVppAgent(dataChange, connect)
+	err := sendDataChangeToVppAgent(getDataChange(conn, vxc.bridgeDomain, ifName, baseDir))
 	if err != nil {
 		logrus.Error(err)
 		return err

@@ -19,4 +19,4 @@ spec:
 metadata:
   name: simple-client
   annotations:
-    ns.networkservicemesh.io: bridge-domain
+    ns.networkservicemesh.io: bridge-domain?app=bridge
