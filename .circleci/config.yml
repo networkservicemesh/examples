@@ -162,6 +162,8 @@ jobs:
             kubectl get nodes --all-namespaces
             kubectl get pods -o wide --all-namespaces
             kubectl describe pods --all-namespaces
+            kubectl logs $(kubectl get pods -o name| grep simple | sed 's;pod/;;') || true
+            kubectl logs $(kubectl get pods -o name| grep simple | sed 's;pod/;;') -p || true
     environment:
       CLUSTER_RULES_PREFIX: "kind"
 
