@@ -19,7 +19,7 @@ This example implements a setup where the NS Endpoint is an Ethernet learning br
     +--------+
 ```
 
-Usage;
+Usage ipv4;
 ```
 # Start the bridge and the test app;
 kubectl apply -f ./k8s/bridge.yaml
@@ -36,4 +36,23 @@ ifconfig
 ping 10.60.1.1
 ping 10.60.1.2
 ping 10.60.1.3
+```
+
+Usage ipv6;
+```
+# Start the bridge and the test app;
+kubectl apply -f ./k8s/bridge-ipv6.yaml
+kubectl get pods -l networkservicemesh.io/app=bridge-domain-ipv6
+kubectl apply -f ./k8s/simple-client-ipv6.yaml
+kubectl get pods -l networkservicemesh.io/app=simple-client-ipv6
+# (wait until all simple-clients are running and ready (3/3))
+
+# Test;
+p=<select-a-simple-client-pod>
+kubectl exec -it -c alpine-img $p sh
+# Inside the container;
+ifconfig
+ping 1200::1
+ping 1200::2
+ping 1200::3
 ```
