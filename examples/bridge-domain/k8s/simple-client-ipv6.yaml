@@ -1,0 +1,22 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  selector:
+    matchLabels:
+      networkservicemesh.io/app: "simple-client-ipv6"
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        networkservicemesh.io/app: "simple-client-ipv6"
+    spec:
+      containers:
+        - name: alpine-img
+          image: alpine:latest
+          imagePullPolicy: IfNotPresent
+          command: ['tail', '-f', '/dev/null']
+metadata:
+  name: simple-client
+  annotations:
+    ns.networkservicemesh.io: bridge-domain-ipv6?app=bridge-ipv6
