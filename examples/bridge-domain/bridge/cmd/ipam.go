@@ -35,7 +35,8 @@ type IpamEndpoint struct {
 }
 
 // Request implements the request handler
-func (ice *IpamEndpoint) Request(ctx context.Context, request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
+func (ice *IpamEndpoint) Request(
+	ctx context.Context, request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
 
 	srcIP, err := ice.ipam.Allocate()
 	if err != nil {
