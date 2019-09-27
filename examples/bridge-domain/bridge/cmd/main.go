@@ -28,14 +28,14 @@ func main() {
 	// Capture signals to cleanup before exiting
 	c := tools.NewOSSignalChannel()
 
-	configuration := &common.NSConfiguration{
+	configuration := (&common.NSConfiguration{
 		MechanismType: "mem",
-	}
+	}).FromEnv()
 
 	composite := endpoint.NewCompositeEndpoint(
 		endpoint.NewMonitorEndpoint(configuration),
 		endpoint.NewConnectionEndpoint(configuration),
-		NewIpamEndpoint(nil),
+		NewIpamEndpoint(configuration),
 		newVppAgentBridgeComposite(configuration),
 	)
 

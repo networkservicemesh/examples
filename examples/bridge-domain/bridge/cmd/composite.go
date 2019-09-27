@@ -85,11 +85,6 @@ func (vbc *vppAgentBridgeComposite) Name() string {
 
 // vppAgentBridgeComposite creates a new VPP Agent composite
 func newVppAgentBridgeComposite(configuration *common.NSConfiguration) *vppAgentBridgeComposite {
-	// ensure the env variables are processed
-	if configuration == nil {
-		configuration = &common.NSConfiguration{}
-	}
-	configuration.CompleteNSConfiguration()
 
 	bridgeDomain := &l2.BridgeDomain{
 		Name:                "brd",

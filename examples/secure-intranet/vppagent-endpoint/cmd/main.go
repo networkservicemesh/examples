@@ -46,8 +46,8 @@ func main() {
 		vppagent.NewClientMemifConnect(configuration),
 		vppagent.NewMemifConnect(configuration),
 		vppagent.NewXConnect(configuration),
-		vppagent.NewACL(configuration, config.getACLRulesConfig()),
-		vppagent.NewCommit(configuration, "localhost:9112", true),
+		vppagent.NewACL(config.getACLRulesConfig()),
+		vppagent.NewCommit("localhost:9112", true),
 	)
 
 	nsmEndpoint, err := endpoint.NewNSMEndpoint(context.Background(), configuration, composite)

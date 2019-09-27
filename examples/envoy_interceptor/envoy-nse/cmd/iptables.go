@@ -26,7 +26,6 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/local/connection"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/local/networkservice"
-	"github.com/networkservicemesh/networkservicemesh/sdk/common"
 	"github.com/sirupsen/logrus"
 )
 
@@ -91,13 +90,7 @@ func (ie *IptablesEndpoint) invoke() {
 }
 
 // NewIptablesEndpoint creates a IptablesEndpoint
-func NewIptablesEndpoint(configuration *common.NSConfiguration) *IptablesEndpoint {
-	// ensure the env variables are processed
-	if configuration == nil {
-		configuration = &common.NSConfiguration{}
-	}
-	configuration.CompleteNSConfiguration()
-
+func NewIptablesEndpoint() *IptablesEndpoint {
 	self := &IptablesEndpoint{
 		script:    getIptablesScript(),
 		arguments: os.Args[1:],

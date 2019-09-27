@@ -29,16 +29,16 @@ func main() {
 	// Capture signals to cleanup before exiting
 	c := tools.NewOSSignalChannel()
 
-	configuration := &common.NSConfiguration{
+	configuration := (&common.NSConfiguration{
 		MechanismType: "mem",
-	}
+	}).FromEnv()
 
 	composite := endpoint.NewCompositeEndpoint(
 		endpoint.NewMonitorEndpoint(configuration),
 		endpoint.NewConnectionEndpoint(configuration),
 		endpoint.NewIpamEndpoint(nil),
 		vppagent.NewMemifConnect(configuration),
-		vppagent.NewCommit(configuration, "localhost:9113", true),
+		vppagent.NewCommit("localhost:9113", true),
 	)
 
 	nsmEndpoint, err := endpoint.NewNSMEndpoint(context.TODO(), configuration, composite)

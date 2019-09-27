@@ -71,8 +71,8 @@ func main() {
 		workspace:        workspace,
 		vppAgentEndpoint: defaultVPPAgentEndpoint,
 	}
-
-	outgoingClient, err := client.NewNSMClient(context.TODO(), nil)
+	configuration := common.FromEnv()
+	outgoingClient, err := client.NewNSMClient(context.TODO(), configuration)
 	if err != nil {
 		logrus.Fatalf("Unable to create the NSM client %v", err)
 	}
