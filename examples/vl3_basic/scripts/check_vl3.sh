@@ -13,7 +13,9 @@
 #     - for each IP found: issue curl http://<vL3 IP>:5000/hello from within all NSCs
 #
 
-kubectl wait -n default --timeout=150s --for condition=Ready --all pods
+#kubectl wait -n default --timeout=150s --for=condition=Ready --all pods
+kubectl wait -n default --timeout=150s --for condition=Ready -l networkservicemesh.io/app=vl3-nse-ucnf pod
+kubectl wait -n default --timeout=150s --for condition=Ready -l app=helloworld pod
 
 nscs=$(kubectl get pods -o=name | grep helloworld | sed 's@.*/@@')
 for nsc in $nscs; do
