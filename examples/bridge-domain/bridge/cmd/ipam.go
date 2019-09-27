@@ -17,64 +17,42 @@ package main
 
 import (
 	"context"
-	"math/rand"
-	"time"
+	"net"
 
+	"github.com/Nordix/simple-ipam/pkg/ipam"
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connectioncontext"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/local/connection"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/local/networkservice"
 	"github.com/networkservicemesh/networkservicemesh/sdk/common"
 	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
-	"github.com/networkservicemesh/networkservicemesh/sdk/prefix_pool"
 	"github.com/sirupsen/logrus"
 )
 
-// IpamEndpoint the IPAM endpoint
+// IpamEndpoint a comment
 type IpamEndpoint struct {
-	PrefixPool prefix_pool.PrefixPool
-	SelfIP     string
+	ipam   *ipam.IPAM
+	SelfIP net.IP
 }
 
 // Request implements the request handler
-func (ice *IpamEndpoint) Request(ctx context.Context,
-	request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
+func (ice *IpamEndpoint) Request(
+	ctx context.Context, request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
 
-	/* Exclude the prefixes from the pool of available prefixes */
-	excludedPrefixes, err := ice.PrefixPool.ExcludePrefixes(request.Connection.Context.IpContext.ExcludedPrefixes)
+	srcIP, err := ice.ipam.Allocate()
 	if err != nil {
 		return nil, err
-	}
-
-	/* Determine whether the pool is IPv4 or IPv6 */
-	currentIPFamily := connectioncontext.IpFamily_IPV4
-	if common.IsIPv6(ice.PrefixPool.GetPrefixes()[0]) {
-		currentIPFamily = connectioncontext.IpFamily_IPV6
-	}
-
-	srcIP, dstIP, prefixes, err := ice.PrefixPool.Extract(request.Connection.Id,
-		currentIPFamily, request.Connection.Context.IpContext.ExtraPrefixRequest...)
-	if err != nil {
-		return nil, err
-	}
-
-	/* Release the actual prefixes that were excluded during IPAM */
-	err = ice.PrefixPool.ReleaseExcludedPrefixes(excludedPrefixes)
-	if err != nil {
-		return nil, err
-	}
-
-	// We'll use same DST IP for all connections
-	if ice.SelfIP == "" {
-		ice.SelfIP = dstIP.String()
 	}
 
 	newConnection := request.GetConnection()
 	// Update source/dst IP's
-	newConnection.Context.IpContext.SrcIpAddr = srcIP.String()
-	newConnection.Context.IpContext.DstIpAddr = ice.SelfIP
-
-	newConnection.Context.IpContext.ExtraPrefixes = prefixes
+	newConnection.Context.IpContext.SrcIpAddr = (&net.IPNet{
+		IP:   srcIP,
+		Mask: ice.ipam.CIDR.Mask,
+	}).String()
+	newConnection.Context.IpContext.DstIpAddr = (&net.IPNet{
+		IP:   ice.SelfIP,
+		Mask: ice.ipam.CIDR.Mask,
+	}).String()
 
 	err = newConnection.IsComplete()
 	if err != nil {
@@ -82,7 +60,7 @@ func (ice *IpamEndpoint) Request(ctx context.Context,
 		return nil, err
 	}
 
-	logrus.Infof("IPAM completed on connection: %v", newConnection)
+	logrus.Infof("ipam completed on connection: %v", newConnection)
 
 	if endpoint.Next(ctx) != nil {
 		return endpoint.Next(ctx).Request(ctx, request)
@@ -93,14 +71,9 @@ func (ice *IpamEndpoint) Request(ctx context.Context,
 
 // Close implements the close handler
 func (ice *IpamEndpoint) Close(ctx context.Context, connection *connection.Connection) (*empty.Empty, error) {
-	prefix, requests, err := ice.PrefixPool.GetConnectionInformation(connection.GetId())
-	logrus.Infof("Release connection prefixes network: %s extra requests: %v", prefix, requests)
-	if err != nil {
-		logrus.Errorf("Error: %v", err)
-	}
-	err = ice.PrefixPool.Release(connection.GetId())
-	if err != nil {
-		logrus.Error("Release error: ", err)
+	addr, _, err := net.ParseCIDR(connection.Context.IpContext.SrcIpAddr)
+	if err == nil {
+		ice.ipam.Free(addr)
 	}
 	if endpoint.Next(ctx) != nil {
 		if _, err := endpoint.Next(ctx).Close(ctx, connection); err != nil {
@@ -123,17 +96,18 @@ func NewIpamEndpoint(configuration *common.NSConfiguration) *IpamEndpoint {
 	}
 	configuration.CompleteNSConfiguration()
 
-	pool, err := prefix_pool.NewPrefixPool(configuration.IPAddress)
+	ipam, err := ipam.New(configuration.IPAddress)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	rand.Seed(time.Now().UTC().UnixNano())
-
-	self := &IpamEndpoint{
-		PrefixPool: pool,
-		SelfIP:     "",
+	selfIP, err := ipam.Allocate()
+	if err != nil {
+		panic(err.Error())
 	}
 
-	return self
+	return &IpamEndpoint{
+		ipam:   ipam,
+		SelfIP: selfIP,
+	}
 }

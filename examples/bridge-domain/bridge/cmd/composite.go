@@ -21,6 +21,8 @@ import (
 	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/ligato/vpp-agent/api/configurator"
+	"github.com/ligato/vpp-agent/api/models/vpp"
 	l2 "github.com/ligato/vpp-agent/api/models/vpp/l2"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/local/connection"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/local/networkservice"
@@ -30,7 +32,7 @@ import (
 
 type vppAgentBridgeComposite struct {
 	workspace    string
-	bdInterfaces []*l2.BridgeDomain_Interface
+	bridgeDomain *l2.BridgeDomain
 }
 
 func (vbc *vppAgentBridgeComposite) Request(ctx context.Context,
@@ -47,6 +49,16 @@ func (vbc *vppAgentBridgeComposite) Request(ctx context.Context,
 	}
 
 	return request.GetConnection(), nil
+}
+
+func (vbc *vppAgentBridgeComposite) CreateBridgeDomain() {
+	dataChange := &configurator.Config{
+		VppConfig: &vpp.ConfigData{
+			BridgeDomains: []*l2.BridgeDomain{vbc.bridgeDomain},
+		},
+	}
+
+	_ = sendDataChangeToVppAgent(dataChange)
 }
 
 func (vbc *vppAgentBridgeComposite) Close(ctx context.Context, conn *connection.Connection) (*empty.Empty, error) {
@@ -79,12 +91,24 @@ func newVppAgentBridgeComposite(configuration *common.NSConfiguration) *vppAgent
 	}
 	configuration.CompleteNSConfiguration()
 
-	logrus.Infof("vppAgentBridgeComposite")
+	bridgeDomain := &l2.BridgeDomain{
+		Name:                "brd",
+		Flood:               true,
+		UnknownUnicastFlood: true,
+		Forward:             true,
+		Learn:               true,
+		MacAge:              120,
+		Interfaces:          make([]*l2.BridgeDomain_Interface, 0),
+	}
 
 	newVppAgentBridgeComposite := &vppAgentBridgeComposite{
-		workspace: configuration.Workspace,
+		workspace:    configuration.Workspace,
+		bridgeDomain: bridgeDomain,
 	}
+
 	_ = resetVppAgent()
+
+	newVppAgentBridgeComposite.CreateBridgeDomain()
 
 	return newVppAgentBridgeComposite
 }

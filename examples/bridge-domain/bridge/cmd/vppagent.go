@@ -35,9 +35,11 @@ const (
 func resetVppAgent() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
+
 	if err := tools.WaitForPortAvailable(ctx, "tcp", defaultVPPAgentEndpoint, 100*time.Millisecond); err != nil {
 		return err
 	}
+
 	conn, err := grpc.Dial(defaultVPPAgentEndpoint, grpc.WithInsecure())
 	if err != nil {
 		logrus.Errorf("can't dial grpc server: %v", err)
@@ -45,7 +47,7 @@ func resetVppAgent() error {
 	}
 	defer func() { _ = conn.Close() }()
 	client := configurator.NewConfiguratorClient(conn)
-	logrus.Infof("Resetting vppagent...")
+	logrus.Infof("Resetting vppagent..., with: %v", &configurator.Config{})
 	_, err = client.Update(context.Background(), &configurator.UpdateRequest{
 		Update:     &configurator.Config{},
 		FullResync: true,
@@ -58,11 +60,13 @@ func resetVppAgent() error {
 }
 
 // SendDataChangeToVppAgent send the udpate to the VPP-Agent
-func sendDataChangeToVppAgent(dataChange *configurator.Config, update bool) error {
+func sendDataChangeToVppAgent(dataChange *configurator.Config) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
+
 	if err := tools.WaitForPortAvailable(ctx, "tcp", defaultVPPAgentEndpoint, 100*time.Millisecond); err != nil {
+		logrus.Error(err)
 		return err
 	}
 	tracer := opentracing.GlobalTracer()
@@ -80,16 +84,10 @@ func sendDataChangeToVppAgent(dataChange *configurator.Config, update bool) erro
 
 	logrus.Infof("Sending DataChange to vppagent: %v", dataChange)
 
-	if update {
-		if _, err = client.Update(ctx, &configurator.UpdateRequest{
-			Update: dataChange,
-		}); err != nil {
-			logrus.Error(err)
-			_, err = client.Delete(ctx, &configurator.DeleteRequest{
-				Delete: dataChange,
-			})
-		}
-	} else {
+	if _, err = client.Update(ctx, &configurator.UpdateRequest{
+		Update: dataChange,
+	}); err != nil {
+		logrus.Error(err)
 		_, err = client.Delete(ctx, &configurator.DeleteRequest{
 			Delete: dataChange,
 		})

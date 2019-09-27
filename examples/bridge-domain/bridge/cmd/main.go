@@ -19,6 +19,7 @@ import (
 	"context"
 
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
+	"github.com/networkservicemesh/networkservicemesh/sdk/common"
 	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
 	"github.com/sirupsen/logrus"
 )
@@ -27,14 +28,18 @@ func main() {
 	// Capture signals to cleanup before exiting
 	c := tools.NewOSSignalChannel()
 
+	configuration := &common.NSConfiguration{
+		MechanismType: "mem",
+	}
+
 	composite := endpoint.NewCompositeEndpoint(
-		endpoint.NewMonitorEndpoint(nil),
-		endpoint.NewConnectionEndpoint(nil),
+		endpoint.NewMonitorEndpoint(configuration),
+		endpoint.NewConnectionEndpoint(configuration),
 		NewIpamEndpoint(nil),
-		newVppAgentBridgeComposite(nil),
+		newVppAgentBridgeComposite(configuration),
 	)
 
-	nsmEndpoint, err := endpoint.NewNSMEndpoint(context.TODO(), nil, composite)
+	nsmEndpoint, err := endpoint.NewNSMEndpoint(context.TODO(), configuration, composite)
 	if err != nil {
 		logrus.Fatalf("%v", err)
 	}
