@@ -137,7 +137,7 @@ jobs:
       - helm/install-helm-chart:
           chart: "../networkservicemesh/deployments/helm/nsm"
           values-to-override: |
-            "org=networkservicemesh,tag=<< parameters.nsmbranch >>,admission-webhook.org=networkservicemesh,admission-webhook.tag=<< parameters.nsmbranch >>"
+            "org=networkservicemesh,tag=<< parameters.nsmbranch >>,admission-webhook.org=networkservicemesh,admission-webhook.tag=<< parameters.nsmbranch >>",spire.org=networkservicemesh,spire.tag=<< parameters.nsmbranch >>
       - run:
           name: Build << parameters.example >> images
           command: |
@@ -162,8 +162,6 @@ jobs:
             kubectl get nodes --all-namespaces
             kubectl get pods -o wide --all-namespaces
             kubectl describe pods --all-namespaces
-            kubectl logs $(kubectl get pods -o name| grep simple | sed 's;pod/;;') || true
-            kubectl logs $(kubectl get pods -o name| grep simple | sed 's;pod/;;') -p || true
     environment:
       CLUSTER_RULES_PREFIX: "kind"
 
