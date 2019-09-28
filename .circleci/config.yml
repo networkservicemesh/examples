@@ -137,7 +137,7 @@ jobs:
       - helm/install-helm-chart:
           chart: "../networkservicemesh/deployments/helm/nsm"
           values-to-override: |
-            "org=networkservicemesh,tag=<< parameters.nsmbranch >>,admission-webhook.org=networkservicemesh,admission-webhook.tag=<< parameters.nsmbranch >>",spire.org=networkservicemesh,spire.tag=<< parameters.nsmbranch >>
+            "org=networkservicemesh,tag=<< parameters.nsmbranch >>,admission-webhook.org=networkservicemesh,admission-webhook.tag=<< parameters.nsmbranch >>",spire.enabled=false
       - run:
           name: Build << parameters.example >> images
           command: |
