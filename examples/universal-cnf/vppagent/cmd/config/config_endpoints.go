@@ -39,15 +39,22 @@ type ProcessEndpoints struct {
 }
 
 // NewProcessEndpoints returns a new ProcessInitCommands struct
-func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint) *ProcessEndpoints {
+func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint, nsconfig *common.NSConfiguration) *ProcessEndpoints {
 	result := &ProcessEndpoints{}
 
 	for _, e := range endpoints {
 
 		configuration := &common.NSConfiguration{
+			NsmServerSocket:    nsconfig.NsmServerSocket,
+			NsmClientSocket:    nsconfig.NsmClientSocket,
+			Workspace:          nsconfig.Workspace,
 			AdvertiseNseName:   e.Name,
+			OutgoingNscName:    nsconfig.OutgoingNscName,
 			AdvertiseNseLabels: labelStringFromMap(e.Labels),
+			OutgoingNscLabels:  nsconfig.OutgoingNscLabels,
 			MechanismType:      "mem",
+			IPAddress:          nsconfig.IPAddress,
+			Routes:             nil,
 		}
 
 		// Build the list of composites
@@ -57,16 +64,25 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint) *Pr
 		}
 
 		if e.Ipam != nil {
-			compositeEndpoints = append(compositeEndpoints, endpoint.NewIpamEndpoint(&common.NSConfiguration{
-				IPAddress: e.Ipam.PrefixPool,
-			}))
+			compositeEndpoints = append(compositeEndpoints, endpoint.NewIpamEndpoint((&common.NSConfiguration{
+				NsmServerSocket:    nsconfig.NsmServerSocket,
+				NsmClientSocket:    nsconfig.NsmClientSocket,
+				Workspace:          nsconfig.Workspace,
+				AdvertiseNseName:   nsconfig.AdvertiseNseName,
+				OutgoingNscName:    nsconfig.OutgoingNscName,
+				AdvertiseNseLabels: nsconfig.AdvertiseNseLabels,
+				OutgoingNscLabels:  nsconfig.OutgoingNscLabels,
+				MechanismType:      nsconfig.MechanismType,
+				IPAddress:          e.Ipam.PrefixPool,
+				Routes:             nil,
+			})))
 
 			if len(e.Ipam.Routes) > 0 {
 				routeAddr := makeRouteMutator(e.Ipam.Routes)
 				compositeEndpoints = append(compositeEndpoints, endpoint.NewCustomFuncEndpoint("route", routeAddr))
 			}
 		}
-		compositeEndpoints = append(compositeEndpoints, NewUniversalCNFEndpoint(backend, e))
+		compositeEndpoints = append(compositeEndpoints, NewUniversalCNFEndpoint(backend, e, nsconfig))
 		// Compose the Endpoint
 		composite := endpoint.NewCompositeEndpoint(compositeEndpoints...)
 

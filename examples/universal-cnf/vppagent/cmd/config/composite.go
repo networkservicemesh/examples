@@ -83,7 +83,7 @@ func (uce *UniversalCNFEndpoint) Name() string {
 }
 
 // NewUniversalCNFEndpoint creates a MonitorEndpoint
-func NewUniversalCNFEndpoint(backend UniversalCNFBackend, endpoint *Endpoint) *UniversalCNFEndpoint {
+func NewUniversalCNFEndpoint(backend UniversalCNFBackend, endpoint *Endpoint, nsConfig *common.NSConfiguration) *UniversalCNFEndpoint {
 
 	var nsmClient *client.NsmClient
 	var err error
@@ -95,10 +95,8 @@ func NewUniversalCNFEndpoint(backend UniversalCNFBackend, endpoint *Endpoint) *U
 		labels := labelStringFromMap(c.Labels)
 
 		// Call the NS Client initiation
-		nsConfig := &common.NSConfiguration{
-			OutgoingNscName:   c.Name,
-			OutgoingNscLabels: labels,
-		}
+		nsConfig.OutgoingNscName = c.Name
+		nsConfig.OutgoingNscLabels = labels
 		nsmClient, err = client.NewNSMClient(context.TODO(), nsConfig)
 		if err != nil {
 			logrus.Errorf("Unable to create the NSM client %v", err)
