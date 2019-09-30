@@ -83,7 +83,8 @@ func (uce *UniversalCNFEndpoint) Name() string {
 }
 
 // NewUniversalCNFEndpoint creates a MonitorEndpoint
-func NewUniversalCNFEndpoint(backend UniversalCNFBackend, endpoint *Endpoint, nsConfig *common.NSConfiguration) *UniversalCNFEndpoint {
+func NewUniversalCNFEndpoint(backend UniversalCNFBackend, endpoint *Endpoint,
+	nsConfig *common.NSConfiguration) *UniversalCNFEndpoint {
 
 	var nsmClient *client.NsmClient
 	var err error

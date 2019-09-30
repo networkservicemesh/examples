@@ -35,7 +35,8 @@ type ProcessInitActions struct {
 }
 
 // NewProcessInitActions returns a new ProcessInitCommands struct
-func NewProcessInitActions(backend UniversalCNFBackend, initactions []*Action, nsConfig *common.NSConfiguration) *ProcessInitActions {
+func NewProcessInitActions(backend UniversalCNFBackend, initactions []*Action,
+	nsConfig *common.NSConfiguration) *ProcessInitActions {
 	pia := &ProcessInitActions{}
 	for _, a := range initactions {
 
