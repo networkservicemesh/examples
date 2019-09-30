@@ -35,9 +35,9 @@ func main() {
 
 	config := initConfig()
 
-	configuration := &common.NSConfiguration{
+	configuration := (&common.NSConfiguration{
 		MechanismType: "mem",
-	}
+	}).FromEnv()
 
 	composite := endpoint.NewCompositeEndpoint(
 		endpoint.NewMonitorEndpoint(configuration),
