@@ -30,6 +30,7 @@ import (
 
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
 	"github.com/networkservicemesh/networkservicemesh/sdk/client"
+	"github.com/networkservicemesh/networkservicemesh/sdk/common"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 )
@@ -108,8 +109,8 @@ func main() {
 
 	// Create the NSM client
 	state.interfaceID = 0
-
-	client, err := client.NewNSMClient(context.Background(), nil)
+	configuration := common.FromEnv()
+	client, err := client.NewNSMClient(context.Background(), configuration)
 	if err != nil {
 		logrus.Fatalf("Unable to create the NSM client %v", err)
 	}

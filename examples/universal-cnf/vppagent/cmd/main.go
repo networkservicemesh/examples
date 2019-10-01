@@ -21,6 +21,7 @@ import (
 	"os"
 
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
+	"github.com/networkservicemesh/networkservicemesh/sdk/common"
 	"github.com/sirupsen/logrus"
 
 	config "github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/cmd/config"
@@ -54,6 +55,8 @@ func main() {
 	mainFlags := &Flags{}
 	mainFlags.Process()
 
+	configuration := common.FromEnv()
+
 	cnfConfig, err := config.NewUniversalCNFConfig(&vppagent.UniversalCNFVPPAgentBackend{})
 	if err != nil {
 		logrus.Fatalf("Error creating the Universal CNF Config")
@@ -68,14 +71,14 @@ func main() {
 		os.Exit(0)
 	}
 
-	pia := config.NewProcessInitActions(cnfConfig.GetBackend(), cnfConfig.InitActions)
+	pia := config.NewProcessInitActions(cnfConfig.GetBackend(), cnfConfig.InitActions, configuration)
 	defer pia.Cleanup()
 
 	if err := pia.Process(context.Background(), cnfConfig.GetBackend()); err != nil {
 		logrus.Fatalf("Error processing the init actions: %v", err)
 	}
 
-	pe := config.NewProcessEndpoints(cnfConfig.GetBackend(), cnfConfig.Endpoints)
+	pe := config.NewProcessEndpoints(cnfConfig.GetBackend(), cnfConfig.Endpoints, configuration)
 	defer pe.Cleanup()
 
 	if err := pe.Process(); err != nil {

@@ -90,12 +90,6 @@ func (ice *IpamEndpoint) Name() string {
 
 // NewIpamEndpoint creates a IpamEndpoint
 func NewIpamEndpoint(configuration *common.NSConfiguration) *IpamEndpoint {
-	// ensure the env variables are processed
-	if configuration == nil {
-		configuration = &common.NSConfiguration{}
-	}
-	configuration.CompleteNSConfiguration()
-
 	ipam, err := ipam.New(configuration.IPAddress)
 	if err != nil {
 		panic(err.Error())

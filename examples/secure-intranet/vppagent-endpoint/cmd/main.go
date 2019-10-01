@@ -35,9 +35,9 @@ func main() {
 
 	config := initConfig()
 
-	configuration := &common.NSConfiguration{
+	configuration := (&common.NSConfiguration{
 		MechanismType: "mem",
-	}
+	}).FromEnv()
 
 	composite := endpoint.NewCompositeEndpoint(
 		endpoint.NewMonitorEndpoint(configuration),
@@ -46,8 +46,8 @@ func main() {
 		vppagent.NewClientMemifConnect(configuration),
 		vppagent.NewMemifConnect(configuration),
 		vppagent.NewXConnect(configuration),
-		vppagent.NewACL(configuration, config.getACLRulesConfig()),
-		vppagent.NewCommit(configuration, "localhost:9112", true),
+		vppagent.NewACL(config.getACLRulesConfig()),
+		vppagent.NewCommit("localhost:9113", true),
 	)
 
 	nsmEndpoint, err := endpoint.NewNSMEndpoint(context.Background(), configuration, composite)

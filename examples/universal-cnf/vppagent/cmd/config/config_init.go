@@ -35,7 +35,8 @@ type ProcessInitActions struct {
 }
 
 // NewProcessInitActions returns a new ProcessInitCommands struct
-func NewProcessInitActions(backend UniversalCNFBackend, initactions []*Action) *ProcessInitActions {
+func NewProcessInitActions(backend UniversalCNFBackend, initactions []*Action,
+	nsConfig *common.NSConfiguration) *ProcessInitActions {
 	pia := &ProcessInitActions{}
 	for _, a := range initactions {
 
@@ -49,11 +50,9 @@ func NewProcessInitActions(backend UniversalCNFBackend, initactions []*Action) *
 			labels := labelStringFromMap(c.Labels)
 
 			// Call the NS Client initiation
-			nsConfig := &common.NSConfiguration{
-				OutgoingNscName:   c.Name,
-				OutgoingNscLabels: labels,
-				Routes:            c.Routes,
-			}
+			nsConfig.OutgoingNscName = c.Name
+			nsConfig.OutgoingNscLabels = labels
+			nsConfig.Routes = c.Routes
 
 			nsmClient, err = client.NewNSMClient(context.TODO(), nsConfig)
 			if err != nil {
