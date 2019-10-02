@@ -17,6 +17,6 @@ spec:
           imagePullPolicy: IfNotPresent
           command: ['tail', '-f', '/dev/null']
 metadata:
-  name: simple-client
+  name: simple-client-ipv6
   annotations:
     ns.networkservicemesh.io: bridge-domain-ipv6?app=bridge-ipv6
