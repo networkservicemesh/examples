@@ -32,7 +32,8 @@ if [[ "$INSTALL_OP" != "delete" ]]; then
 fi
 
 echo "---------------Install hello-------------"
-${KUBEINSTALL} -f ${MFSTDIR}/vl3-hello.yaml
+#${KUBEINSTALL} -f ${MFSTDIR}/vl3-hello.yaml
+${KUBEINSTALL} -f ${MFSTDIR}/vl3-hello-kiali.yaml
 
 if [[ "$INSTALL_OP" != "delete" ]]; then
   sleep 10

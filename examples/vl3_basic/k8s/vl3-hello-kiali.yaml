@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloworld-v1
+  labels:
+    version: v1
+  annotations:
+    ns.networkservicemesh.io: vl3-service
+    sidecar.istio.io/inject: "true"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: helloworld
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: helloworld
+        version: v1
+        nsm/servicename: "helloworld"
+        nsm/serviceport: "5000"
+    spec:
+      containers:
+      - name: helloworld
+        image: docker.io/istio/examples-helloworld-v1
+        resources:
+          requests:
+            cpu: "100m"
+        imagePullPolicy: IfNotPresent #Always
+        ports:
+        - containerPort: 5000
+      - name: kiali
+        image: tiswanso/kali_testssl:latest
+        command: ["/bin/sleep","infinity"]
+        imagePullPolicy: IfNotPresent #Always
+
