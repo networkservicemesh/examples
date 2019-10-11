@@ -1,0 +1,22 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  selector:
+    matchLabels:
+      networkservicemesh.io/app: "p-gw-u"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        networkservicemesh.io/app: "p-gw-u"
+    spec:
+      containers:
+        - name: alpine
+          image: alpine:latest
+          command: ['tail', '-f', '/dev/null']
+metadata:
+  name: "p-gw-u"
+  namespace: default
+  annotations:
+    ns.networkservicemesh.io: 4g-network?app=sgi,4g-network?app=s5s8-u,4g-network?app=sxb
