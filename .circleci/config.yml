@@ -109,7 +109,7 @@ jobs:
       - run:
           name: Install kind
           command: |
-            GO111MODULE="on" go get -u sigs.k8s.io/kind@master
+            GO111MODULE="on" go get sigs.k8s.io/kind@v0.5.1
             kind version
       - checkout
       - run:
@@ -234,6 +234,7 @@ workflows:
             branches:
               only: master
           requires:
+            - "Test 4G Network Topology"
             - "Test Envoy"
             - "Test ICMP"
             - "Test Proxy"
@@ -261,7 +262,7 @@ workflows:
           description: "Envoy interceptor"
           nightly: "true"
       - test:
-          name: "[N] GW Routers"
+          name: "[N] Test GW Routers"
           example: "gw-routers"
           description: "GW Routers"
           nightly: "true"
