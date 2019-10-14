@@ -12,7 +12,7 @@ spec:
         networkservicemesh.io/app: "tdf-c"
     spec:
       containers:
-        - name: alpine
+        - name: tdf-c
           image: alpine:latest
           command: ['tail', '-f', '/dev/null']
 metadata:

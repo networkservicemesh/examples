@@ -12,7 +12,7 @@ spec:
         networkservicemesh.io/app: "hss"
     spec:
       containers:
-        - name: alpine
+        - name: hss
           image: alpine:latest
           command: ['tail', '-f', '/dev/null']
 metadata:

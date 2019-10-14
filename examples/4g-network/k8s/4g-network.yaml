@@ -6,84 +6,80 @@ metadata:
 spec:
   payload: IP
   matches:
-    # MME
     - match:
-    sourceSelector:
-      app: s1-mme
-    route:
-      - destination:
-        destinationSelector:
-          app: mme
+      sourceSelector:
+        app: s1-mme
+      route:
+        - destination:
+          destinationSelector:
+            app: mme
     - match:
-    sourceSelector:
-      app: s6a
-    route:
-      - destination:
-        destinationSelector:
-          app: mme
+      sourceSelector:
+        app: s6a
+      route:
+        - destination:
+          destinationSelector:
+            app: mme
     - match:
-    sourceSelector:
-      app: s11
-    route:
-      - destination:
-        destinationSelector:
-          app: mme
-    # P-GW-C
+      sourceSelector:
+        app: s11
+      route:
+        - destination:
+          destinationSelector:
+            app: mme
     - match:
-    sourceSelector:
-      app: s5s8-c
-    route:
-      - destination:
-        destinationSelector:
-          app: p-gw-c
+      sourceSelector:
+        app: s5s8-c
+      route:
+        - destination:
+          destinationSelector:
+            app: p-gw-c
     - match:
-    sourceSelector:
-      app: gx
-    route:
-      - destination:
-        destinationSelector:
-          app: p-gw-c
+      sourceSelector:
+        app: gx
+      route:
+        - destination:
+          destinationSelector:
+            app: p-gw-c
     - match:
-    sourceSelector:
-      app: sxb
-    route:
-      - destination:
-        destinationSelector:
-          app: p-gw-c
-    # S-GW-U
+      sourceSelector:
+        app: sxb
+      route:
+        - destination:
+          destinationSelector:
+            app: p-gw-c
     - match:
-    sourceSelector:
-      app: s1-u
-    route:
-      - destination:
-        destinationSelector:
-          app: s-gw-u
+      sourceSelector:
+        app: s1-u
+      route:
+        - destination:
+          destinationSelector:
+            app: s-gw-u
     - match:
-    sourceSelector:
-      app: sxa
-    route:
-      - destination:
-        destinationSelector:
-          app: s-gw-u
+      sourceSelector:
+        app: sxa
+      route:
+        - destination:
+          destinationSelector:
+            app: s-gw-u
     - match:
-    sourceSelector:
-      app: s5s8-u
-    route:
-      - destination:
-        destinationSelector:
-          app: s-gw-u
-    # TFD-U
+      sourceSelector:
+        app: s5s8-u
+      route:
+        - destination:
+          destinationSelector:
+            app: s-gw-u
     - match:
-    sourceSelector:
-      app: sgi
-    route:
-      - destination:
-        destinationSelector:
-          app: tdf-u
+      sourceSelector:
+        app: sgi
+      route:
+        - destination:
+          destinationSelector:
+            app: tdf-u
     - match:
-    sourceSelector:
-      app: sxc
-    route:
-      - destination:
-        destinationSelector:
-          app: tdf-u
+      sourceSelector:
+        app: sxc
+      route:
+        - destination:
+          destinationSelector:
+            app: tdf-u

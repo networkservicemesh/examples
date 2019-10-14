@@ -12,7 +12,7 @@ spec:
         networkservicemesh.io/app: "pcrf"
     spec:
       containers:
-        - name: alpine
+        - name: pcrf
           image: alpine:latest
           command: ['tail', '-f', '/dev/null']
 metadata:

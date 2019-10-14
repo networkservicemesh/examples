@@ -12,7 +12,7 @@ spec:
         networkservicemesh.io/app: "s-gw-c"
     spec:
       containers:
-        - name: alpine
+        - name: s-gw-c
           image: alpine:latest
           command: ['tail', '-f', '/dev/null']
 metadata:

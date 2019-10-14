@@ -12,7 +12,7 @@ spec:
         networkservicemesh.io/app: "p-gw-u"
     spec:
       containers:
-        - name: alpine
+        - name: p-gw-u
           image: alpine:latest
           command: ['tail', '-f', '/dev/null']
 metadata:
