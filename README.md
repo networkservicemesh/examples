@@ -39,7 +39,7 @@ make vagrant-start
 
 . ./scripts/vagrant.sh
 
-make k8s-infra-deploy
+make helm-init helm-install-nsm
 
 make k8s-proxy-save k8s-proxy-load-images
 
@@ -69,8 +69,10 @@ And then initialize the Kubernetes cluster access with:
 
 NSM's core components are started as DaemonSets. By default all the images are downloaded off the [official Dockerhub of the project](https://hub.docker.com/u/networkservicemesh).
 
+Note: Make sure that you've initialized helm before that. If not, use - `make helm-init`
+
 ```shell
-make k8s-infra-deploy
+make helm-install-nsm
 ```
 
 If there is a need to run a particular version of the NSM, checkout the code under `NSM_PATH` and then ensure the containers are built and loaded. Run these commands in `examples` and after the Kubernetes cluster is initialized:
