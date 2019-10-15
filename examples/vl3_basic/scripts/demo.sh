@@ -15,6 +15,7 @@ usage() {
   echo "                             default=$GOPATH/src/istio.io/istio/install/kubernetes/helm"
   echo "  --namespace=<namespace>    set the namespace to watch for NSM clients"
   echo "  --delete                   delete the installation"
+  echo "  --nowait                   don't wait for user input prior to moving to next step"
   echo ""
 }
 
@@ -48,6 +49,9 @@ for i in "$@"; do
         --delete)
             DELETE=true
             ;;
+        --nowait)
+            NOWAIT=true
+            ;;
         *)
             usage
             exit 1
@@ -69,7 +73,7 @@ clus2_IP=$(kubectl get node --kubeconfig ${KCONF_CLUS2} --selector='node-role.ku
 # include the magic
 ########################
 DEMOMAGIC=${DEMOMAGIC:-/Users/tiswanso/src/demo-magic/demo-magic.sh}
-. ${DEMOMAGIC} -d
+. ${DEMOMAGIC} -d ${NOWAIT:+-n}
 
 # hide the evidence
 clear
@@ -77,7 +81,10 @@ clear
 function pc {
     pe "$@"
     #pe "clear"
-    wait
+    echo "----DONE---- $@"
+    if [[ -z ${NOWAIT} ]]; then
+        wait
+    fi
     clear
 }
 
@@ -95,11 +102,20 @@ pc "${DELETE:+INSTALL_OP=delete} KCONF=${KCONF_CLUS1} examples/vl3_basic/scripts
 pe "# Install NSM in cluster 2"
 pc "${DELETE:+INSTALL_OP=delete} KCONF=${KCONF_CLUS2} examples/vl3_basic/scripts/nsm_install_interdomain.sh"
 
+if [[ -z ${DELETE} ]]; then
+    p "# Wait for NSM pods to be ready in cluster 1"
+    kubectl wait --kubeconfig ${KCONF_CLUS1} --timeout=150s --for condition=Ready -l app=nsmgr-daemonset -n nsm-system pod
+    kubectl wait --kubeconfig ${KCONF_CLUS1} --timeout=150s --for condition=Ready -l app=proxy-nsmgr-daemonset -n nsm-system pod
 
-pe "# Install vL3 in cluster 1"
+    p "# Wait for NSM pods to be ready in cluster 2"
+    kubectl wait --kubeconfig ${KCONF_CLUS2} --timeout=150s --for condition=Ready -l app=nsmgr-daemonset -n nsm-system pod
+    kubectl wait --kubeconfig ${KCONF_CLUS2} --timeout=150s --for condition=Ready -l app=proxy-nsmgr-daemonset -n nsm-system pod
+fi
+    
+pe "# Install vL3 + helloworld clients in cluster 1"
 pc "${DELETE:+INSTALL_OP=delete} REMOTE_IP=${clus2_IP} KCONF=${KCONF_CLUS1} examples/vl3_basic/scripts/vl3_interdomain.sh"
 
-pe "# Install vL3 in cluster 2"
+pe "# Install vL3 + helloworld clients in cluster 2"
 pc "${DELETE:+INSTALL_OP=delete} REMOTE_IP=${clus1_IP} KCONF=${KCONF_CLUS2} examples/vl3_basic/scripts/vl3_interdomain.sh"
 
 
@@ -109,4 +125,11 @@ pc "KUBECONFIG=${KCONF_CLUS1} ${NSMISTIODIR}/deployments/scripts/nsm_svc_reg_dep
 pe "# Install NSM Client App workload service registry for cluster 2"
 pc "KUBECONFIG=${KCONF_CLUS2} ${NSMISTIODIR}/deployments/scripts/nsm_svc_reg_deploy.sh --remotekubeconfig=${KCONF_CLUS2} --svcregkubeconfig=${SVCREGKUBECONFIG} ${DELETE:+--delete}"
 
-
+if [[ -z ${DELETE} ]]; then
+    # add / remove dummy svc to kind cluster due to Istio not updating listeners without this
+    kubectl create svc --kubeconfig ${SVCREGKUBECONFIG} clusterip foo --tcp=5678:8080 
+    kubectl delete svc --kubeconfig ${SVCREGKUBECONFIG} foo
+else
+    pe "Cleanup service registry cluster"
+    pc "kubectl delete svc helloworld --kubeconfig ${SVCREGKUBECONFIG}"
+fi

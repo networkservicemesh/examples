@@ -27,7 +27,7 @@ echo "---------------Install NSE-------------"
 ${KUBEINSTALL} -f ${MFSTDIR}/vl3-nse-ucnf.yaml
 
 if [[ "$INSTALL_OP" != "delete" ]]; then
-  sleep 45
+  sleep 20
   kubectl wait ${KCONF:+--kubeconfig $KCONF} --timeout=150s --for condition=Ready -l networkservicemesh.io/app=vl3-nse-ucnf pod
 fi
 
