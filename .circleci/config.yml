@@ -15,7 +15,7 @@ jobs:
       - run:
           name: Install golangci-lint
           command: |
-            export GOLANGCI_LINT_VER=1.18.0
+            export GOLANGCI_LINT_VER=1.20.1
             wget https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_LINT_VER}/golangci-lint-${GOLANGCI_LINT_VER}-linux-amd64.tar.gz
             tar -xvf golangci-lint-${GOLANGCI_LINT_VER}-linux-amd64.tar.gz
             sudo mv golangci-lint-${GOLANGCI_LINT_VER}-linux-amd64/golangci-lint /usr/local/bin/
@@ -94,12 +94,12 @@ jobs:
     working_directory: ~/project/examples
     steps:
       - run:
-          name: Update go to 1.12
+          name: Update go to 1.13
           working_directory: /tmp
           command: |
-            wget https://dl.google.com/go/go1.12.linux-amd64.tar.gz
+            wget https://dl.google.com/go/go1.13.linux-amd64.tar.gz
             sudo rm -rf /usr/local/go
-            sudo tar -C /usr/local -xzf go1.12.linux-amd64.tar.gz
+            sudo tar -C /usr/local -xzf go1.13.linux-amd64.tar.gz
       - run:
           name: Install kubectl
           command: |
@@ -109,7 +109,7 @@ jobs:
       - run:
           name: Install kind
           command: |
-            GO111MODULE="on" go get -u sigs.k8s.io/kind@master
+            GO111MODULE="on" go get sigs.k8s.io/kind@v0.5.1
             kind version
       - checkout
       - run:
@@ -137,7 +137,7 @@ jobs:
       - helm/install-helm-chart:
           chart: "../networkservicemesh/deployments/helm/nsm"
           values-to-override: |
-            "org=networkservicemesh,tag=<< parameters.nsmbranch >>,admission-webhook.org=networkservicemesh,admission-webhook.tag=<< parameters.nsmbranch >>,insecure=true"
+            "org=networkservicemesh,tag=<< parameters.nsmbranch >>,admission-webhook.org=networkservicemesh,admission-webhook.tag=<< parameters.nsmbranch >>,spire.enabled=false,insecure=true"
       - run:
           name: Build << parameters.example >> images
           command: |

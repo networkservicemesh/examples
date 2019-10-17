@@ -45,23 +45,29 @@ func resetVppAgent() error {
 		logrus.Errorf("can't dial grpc server: %v", err)
 		return err
 	}
+
 	defer func() { _ = conn.Close() }()
+
 	client := configurator.NewConfiguratorClient(conn)
+
 	logrus.Infof("Resetting vppagent..., with: %v", &configurator.Config{})
+
 	_, err = client.Update(context.Background(), &configurator.UpdateRequest{
 		Update:     &configurator.Config{},
 		FullResync: true,
 	})
+
 	if err != nil {
 		logrus.Errorf("failed to reset vppagent: %s", err)
 	}
+
 	logrus.Infof("Finished resetting vppagent...")
+
 	return nil
 }
 
 // SendDataChangeToVppAgent send the udpate to the VPP-Agent
 func sendDataChangeToVppAgent(dataChange *configurator.Config) error {
-
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
 
@@ -69,17 +75,21 @@ func sendDataChangeToVppAgent(dataChange *configurator.Config) error {
 		logrus.Error(err)
 		return err
 	}
+
 	tracer := opentracing.GlobalTracer()
 	conn, err := grpc.Dial(defaultVPPAgentEndpoint, grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(
 			otgrpc.OpenTracingClientInterceptor(tracer, otgrpc.LogPayloads())),
 		grpc.WithStreamInterceptor(
 			otgrpc.OpenTracingStreamClientInterceptor(tracer)))
+
 	if err != nil {
 		logrus.Errorf("can't dial grpc server: %v", err)
 		return err
 	}
+
 	defer func() { _ = conn.Close() }()
+
 	client := configurator.NewConfiguratorClient(conn)
 
 	logrus.Infof("Sending DataChange to vppagent: %v", dataChange)

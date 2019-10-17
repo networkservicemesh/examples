@@ -37,7 +37,6 @@ type IpamEndpoint struct {
 // Request implements the request handler
 func (ice *IpamEndpoint) Request(
 	ctx context.Context, request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
-
 	srcIP, err := ice.ipam.Allocate()
 	if err != nil {
 		return nil, err
@@ -75,11 +74,13 @@ func (ice *IpamEndpoint) Close(ctx context.Context, connection *connection.Conne
 	if err == nil {
 		ice.ipam.Free(addr)
 	}
+
 	if endpoint.Next(ctx) != nil {
 		if _, err := endpoint.Next(ctx).Close(ctx, connection); err != nil {
 			return &empty.Empty{}, nil
 		}
 	}
+
 	return &empty.Empty{}, nil
 }
 

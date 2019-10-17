@@ -37,7 +37,6 @@ type vppAgentBridgeComposite struct {
 
 func (vbc *vppAgentBridgeComposite) Request(ctx context.Context,
 	request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
-
 	err := vbc.insertVPPAgentInterface(request.GetConnection(), true, vbc.workspace)
 	if err != nil {
 		logrus.Error(err)
@@ -85,7 +84,6 @@ func (vbc *vppAgentBridgeComposite) Name() string {
 
 // vppAgentBridgeComposite creates a new VPP Agent composite
 func newVppAgentBridgeComposite(configuration *common.NSConfiguration) *vppAgentBridgeComposite {
-
 	bridgeDomain := &l2.BridgeDomain{
 		Name:                "brd",
 		Flood:               true,
