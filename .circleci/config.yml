@@ -173,6 +173,12 @@ workflows:
     jobs:
       - sanity-check
       - test:
+          name: "Test 4G Network Topology"
+          example: "4g-network"
+          description: "4G Network Topology example"
+          requires:
+            - sanity-check
+      - test:
           name: "Test Envoy"
           example: "envoy_interceptor"
           description: "Envoy interceptor"
@@ -228,6 +234,7 @@ workflows:
             branches:
               only: master
           requires:
+            - "Test 4G Network Topology"
             - "Test Envoy"
             - "Test ICMP"
             - "Test Proxy"
@@ -245,12 +252,17 @@ workflows:
                 - master
     jobs:
       - test:
+          name: "[N] Test 4G Network Topology"
+          example: "4g-network"
+          description: "4G Network Topology example"
+          nightly: "true"
+      - test:
           name: "[N] Test Envoy"
           example: "envoy_interceptor"
           description: "Envoy interceptor"
           nightly: "true"
       - test:
-          name: "[N] GW Routers"
+          name: "[N] Test GW Routers"
           example: "gw-routers"
           description: "GW Routers"
           nightly: "true"

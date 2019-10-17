@@ -1,0 +1,22 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  selector:
+    matchLabels:
+      networkservicemesh.io/app: "tdf-c"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        networkservicemesh.io/app: "tdf-c"
+    spec:
+      containers:
+        - name: tdf-c
+          image: alpine:latest
+          command: ['tail', '-f', '/dev/null']
+metadata:
+  name: "tdf-c"
+  namespace: default
+  annotations:
+    ns.networkservicemesh.io: 4g-network?app=sxc
