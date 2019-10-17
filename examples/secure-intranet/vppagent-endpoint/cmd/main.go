@@ -56,6 +56,7 @@ func main() {
 	}
 
 	_ = nsmEndpoint.Start()
+
 	defer func() { _ = nsmEndpoint.Delete() }()
 
 	<-c

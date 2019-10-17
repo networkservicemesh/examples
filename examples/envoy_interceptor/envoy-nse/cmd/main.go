@@ -25,7 +25,6 @@ import (
 )
 
 func main() {
-
 	// Capture signals to cleanup before exiting
 	c := tools.NewOSSignalChannel()
 	configuration := common.FromEnv()
@@ -42,6 +41,7 @@ func main() {
 	}
 
 	_ = nsmEndpoint.Start()
+
 	defer func() { _ = nsmEndpoint.Delete() }()
 
 	// Capture signals to cleanup before exiting

@@ -51,9 +51,8 @@ func getDataChange(conn *connection.Connection, bd *l2.BridgeDomain, ifName, bas
 	}
 }
 
-func (vxc *vppAgentBridgeComposite) insertVPPAgentInterface(conn *connection.Connection,
+func (vbc *vppAgentBridgeComposite) insertVPPAgentInterface(conn *connection.Connection,
 	connect bool, baseDir string) error {
-
 	ifName := "client-" + conn.GetId()
 
 	SocketDir := path.Dir(path.Join(baseDir, conn.GetMechanism().GetSocketFilename()))
@@ -62,22 +61,23 @@ func (vxc *vppAgentBridgeComposite) insertVPPAgentInterface(conn *connection.Con
 	}
 
 	if connect {
-		vxc.bridgeDomain.Interfaces = append(vxc.bridgeDomain.Interfaces, &l2.BridgeDomain_Interface{
+		vbc.bridgeDomain.Interfaces = append(vbc.bridgeDomain.Interfaces, &l2.BridgeDomain_Interface{
 			Name: ifName,
 		})
 	} else {
-		for k, v := range vxc.bridgeDomain.Interfaces {
+		for k, v := range vbc.bridgeDomain.Interfaces {
 			if v.Name == ifName {
-				vxc.bridgeDomain.Interfaces = append(vxc.bridgeDomain.Interfaces[:k], vxc.bridgeDomain.Interfaces[k+1:]...)
+				vbc.bridgeDomain.Interfaces = append(vbc.bridgeDomain.Interfaces[:k], vbc.bridgeDomain.Interfaces[k+1:]...)
 				break
 			}
 		}
 	}
 
-	err := sendDataChangeToVppAgent(getDataChange(conn, vxc.bridgeDomain, ifName, baseDir))
+	err := sendDataChangeToVppAgent(getDataChange(conn, vbc.bridgeDomain, ifName, baseDir))
 	if err != nil {
 		logrus.Error(err)
 		return err
 	}
+
 	return nil
 }

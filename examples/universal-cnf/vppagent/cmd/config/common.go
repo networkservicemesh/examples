@@ -17,10 +17,12 @@ package config
 
 func labelStringFromMap(labelMap map[string]string) string {
 	labelString := ""
+
 	for k, v := range labelMap {
 		if len(labelString) > 0 {
 			labelString += ","
 		}
+
 		labelString = labelString + k + "=" + v
 	}
 

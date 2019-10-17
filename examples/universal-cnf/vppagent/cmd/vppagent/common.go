@@ -23,8 +23,7 @@ import (
 )
 
 func getBaseDir() string {
-
-	// TODO: figure out a better way to get the baseDir
+	// figure out a better way to get the baseDir
 	baseDir, ok := os.LookupEnv(common.WorkspaceEnv)
 	if !ok {
 		logrus.Fatalf("Failed getting %s", common.WorkspaceEnv)

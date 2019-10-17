@@ -68,22 +68,28 @@ func (a *Action) Process(ctx context.Context, backend UniversalCNFBackend, nsmcl
 	command := a.Command
 	if command != nil && len(command.Name) > 0 {
 		logrus.Infof("Executing %v", command)
-		out, err := exec.Command(command.Name, command.Args...).Output()
+
+		out, err := exec.Command(command.Name, command.Args...).Output() // #nosec
 		logrus.Infof("Result %s", out)
+
 		if err != nil {
 			logrus.Errorf("Command execution failed with: %v", err)
 		}
 	}
+
 	client := a.Client
 	if client != nil && nsmclient != nil {
 		logrus.Infof("Running client %+v", client)
+
 		if a.DPConfig == nil {
 			a.DPConfig = &vpp.ConfigData{}
 		}
+
 		if err := client.Process(ctx, backend, a.DPConfig, nsmclient); err != nil {
 			logrus.Errorf("Error running the client: %v", err)
 		}
 	}
+
 	if err := backend.ProcessDPConfig(a.DPConfig); err != nil {
 		logrus.Errorf("Error processing dpconfig: %+v", a.DPConfig)
 	}
@@ -150,12 +156,12 @@ func (c *UniversalCNFConfig) InitConfig(configpath string) error {
 
 // InitConfigFromRawYaml init CNF config from a byte slice
 func (c *UniversalCNFConfig) InitConfigFromRawYaml(rawyaml []byte) error {
-
 	err := yaml.UnmarshalStrict(rawyaml, &c)
 	if err != nil {
 		logrus.Errorf("error: %v", err)
 		return err
 	}
+
 	return nil
 }
 

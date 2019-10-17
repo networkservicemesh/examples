@@ -44,13 +44,13 @@ func getIptablesScript() string {
 	if script, ok := os.LookupEnv(iptablesScriptEnv); ok {
 		return script
 	}
+
 	return defaultIptablesScript
 }
 
 // Request implements the request handler
 func (ie *IptablesEndpoint) Request(ctx context.Context,
 	request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
-
 	incomingConnection := request.GetConnection()
 	logrus.Infof("Iptables UpdateConnection: %v", incomingConnection)
 	ie.invoke()
@@ -69,7 +69,9 @@ func (ie *IptablesEndpoint) Close(ctx context.Context, connection *connection.Co
 	if endpoint.Next(ctx) != nil {
 		return endpoint.Next(ctx).Close(ctx, connection)
 	}
+
 	ie.invoke()
+
 	return &empty.Empty{}, nil
 }
 
@@ -80,12 +82,15 @@ func (ie *IptablesEndpoint) Name() string {
 
 func (ie *IptablesEndpoint) invoke() {
 	var out bytes.Buffer
+
 	cmd := exec.Command(ie.script, ie.arguments...) // #nosec
 	cmd.Stdout = &out
 	err := cmd.Run()
+
 	if err != nil {
 		logrus.Error(err)
 	}
+
 	logrus.Infof("%v", out)
 }
 
