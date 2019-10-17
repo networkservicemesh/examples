@@ -28,10 +28,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
+	"github.com/networkservicemesh/networkservicemesh/pkg/tools/jaeger"
+	"github.com/networkservicemesh/networkservicemesh/pkg/tools/spanhelper"
 	"github.com/networkservicemesh/networkservicemesh/sdk/client"
 	"github.com/networkservicemesh/networkservicemesh/sdk/common"
-	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 )
 
@@ -54,6 +54,7 @@ func nsmDirector(req *http.Request) {
 
 	// Convert the request headers to labels
 	state.client.OutgoingNscLabels = make(map[string]string)
+
 	for name, headers := range req.Header {
 		name = strings.ToLower(name)
 		if strings.HasPrefix(name, proxyHeaderPrefix) {
@@ -98,22 +99,28 @@ func proxyHost() string {
 	if !ok {
 		proxyHost = defaultProxyHost
 	}
+
 	return proxyHost
 }
 
 func main() {
 	// Init the tracer
-	tracer, closer := tools.InitJaeger("nsc")
-	opentracing.SetGlobalTracer(tracer)
+	closer := jaeger.InitJaeger("vppagent-dataplane")
+
 	defer func() { _ = closer.Close() }()
+
+	span := spanhelper.FromContext(context.Background(), "Start.VPPAgent.Dataplane")
+	defer span.Finish()
 
 	// Create the NSM client
 	state.interfaceID = 0
 	configuration := common.FromEnv()
 	client, err := client.NewNSMClient(context.Background(), configuration)
+
 	if err != nil {
 		logrus.Fatalf("Unable to create the NSM client %v", err)
 	}
+
 	state.client = client
 
 	// Create the reverse proxy
@@ -122,6 +129,7 @@ func main() {
 
 	logrus.Infof("Listen and Serve on %v", proxyHost())
 	err = http.ListenAndServe(proxyHost(), reverseProxy)
+
 	if err != nil {
 		logrus.Errorf("Listen and serve failed with error: %v", err)
 	}

@@ -21,9 +21,10 @@ import (
 
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/local/connection"
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
+	"github.com/networkservicemesh/networkservicemesh/pkg/tools/jaeger"
+	"github.com/networkservicemesh/networkservicemesh/pkg/tools/spanhelper"
 	"github.com/networkservicemesh/networkservicemesh/sdk/client"
 	"github.com/networkservicemesh/networkservicemesh/sdk/common"
-	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 )
 
@@ -41,16 +42,20 @@ func (nscb *nsClientBackend) New() error {
 		logrus.Fatal(err)
 		return err
 	}
+
 	logrus.Infof("workspace: %s", nscb.workspace)
+
 	return nil
 }
 
 func (nscb *nsClientBackend) Connect(connection *connection.Connection) error {
 	logrus.Infof("nsClientBackend received: %v", connection)
+
 	err := CreateVppInterface(connection, nscb.workspace, nscb.vppAgentEndpoint)
 	if err != nil {
 		logrus.Errorf("VPPAgent failed creating the requested interface with: %v", err)
 	}
+
 	return err
 }
 
@@ -58,9 +63,13 @@ func main() {
 	// Capture signals to cleanup before exiting
 	c := tools.NewOSSignalChannel()
 
-	tracer, closer := tools.InitJaeger("nsc")
-	opentracing.SetGlobalTracer(tracer)
+	// Init the tracer
+	closer := jaeger.InitJaeger("vppagent-dataplane")
+
 	defer func() { _ = closer.Close() }()
+
+	span := spanhelper.FromContext(context.Background(), "Start.VPPAgent.Dataplane")
+	defer span.Finish()
 
 	workspace, ok := os.LookupEnv(common.WorkspaceEnv)
 	if !ok {
@@ -71,8 +80,10 @@ func main() {
 		workspace:        workspace,
 		vppAgentEndpoint: defaultVPPAgentEndpoint,
 	}
+
 	configuration := common.FromEnv()
 	outgoingClient, err := client.NewNSMClient(context.TODO(), configuration)
+
 	if err != nil {
 		logrus.Fatalf("Unable to create the NSM client %v", err)
 	}
@@ -85,6 +96,7 @@ func main() {
 	var outgoingConnection *connection.Connection
 	outgoingConnection, err = outgoingClient.ConnectRetry(context.Background(), "if1", "mem",
 		"Primary interface", client.ConnectionRetry, client.RequestDelay)
+
 	if err != nil {
 		logrus.Fatalf("Unable to connect %v", err)
 	}
@@ -95,7 +107,9 @@ func main() {
 	}
 
 	logrus.Info("nsm client: initialization is completed successfully, wait for Ctrl+C...")
+
 	var wg sync.WaitGroup
+
 	wg.Add(1)
 
 	<-c
