@@ -41,7 +41,6 @@ func (b *UniversalCNFVPPAgentBackend) NewDPConfig() *vpp.ConfigData {
 
 // NewUniversalCNFBackend initializes the VPP CNF backend
 func (b *UniversalCNFVPPAgentBackend) NewUniversalCNFBackend() error {
-
 	b.EndpointIfID = make(map[string]int)
 
 	if err := ResetVppAgent(); err != nil {
@@ -54,7 +53,6 @@ func (b *UniversalCNFVPPAgentBackend) NewUniversalCNFBackend() error {
 // ProcessClient runs the client code for VPP CNF
 func (b *UniversalCNFVPPAgentBackend) ProcessClient(
 	dpconfig interface{}, ifName string, conn *connection.Connection) error {
-
 	vppconfig, ok := dpconfig.(*vpp.ConfigData)
 	if !ok {
 		return fmt.Errorf("unable to convert dpconfig to vppconfig	")
@@ -92,6 +90,7 @@ func (b *UniversalCNFVPPAgentBackend) ProcessClient(
 		}
 		vppconfig.Routes = append(vppconfig.Routes, route)
 	}
+
 	return nil
 }
 
@@ -139,6 +138,7 @@ func (b *UniversalCNFVPPAgentBackend) ProcessEndpoint(
 		}
 		vppconfig.Routes = append(vppconfig.Routes, route)
 	}
+
 	return nil
 }
 
@@ -159,9 +159,11 @@ func (b *UniversalCNFVPPAgentBackend) ProcessDPConfig(dpconfig interface{}) erro
 	if !ok {
 		return fmt.Errorf("unable to convert dpconfig to vppconfig	")
 	}
+
 	err := SendVppConfigToVppAgent(vppconfig, true)
 	if err != nil {
 		logrus.Errorf("Updating the VPP config failed with: %v", err)
 	}
+
 	return err
 }

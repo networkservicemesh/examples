@@ -47,6 +47,7 @@ func main() {
 	if err := nsmEndpoint.Start(); err != nil {
 		logrus.Fatalf("Unable to start the endpoint: %v", err)
 	}
+
 	defer func() { _ = nsmEndpoint.Delete() }()
 
 	<-c

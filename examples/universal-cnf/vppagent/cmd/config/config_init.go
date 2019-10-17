@@ -38,9 +38,10 @@ type ProcessInitActions struct {
 func NewProcessInitActions(backend UniversalCNFBackend, initactions []*Action,
 	nsConfig *common.NSConfiguration) *ProcessInitActions {
 	pia := &ProcessInitActions{}
-	for _, a := range initactions {
 
+	for _, a := range initactions {
 		var nsmClient *client.NsmClient
+
 		var err error
 
 		if a.Client != nil {

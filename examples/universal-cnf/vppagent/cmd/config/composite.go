@@ -38,7 +38,6 @@ type UniversalCNFEndpoint struct {
 // Request implements the request handler
 func (uce *UniversalCNFEndpoint) Request(ctx context.Context,
 	request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
-
 	conn := request.GetConnection()
 
 	if uce.endpoint.Action == nil {
@@ -64,6 +63,7 @@ func (uce *UniversalCNFEndpoint) Request(ctx context.Context,
 	if endpoint.Next(ctx) != nil {
 		return endpoint.Next(ctx).Request(ctx, request)
 	}
+
 	return request.GetConnection(), nil
 }
 
@@ -74,6 +74,7 @@ func (uce *UniversalCNFEndpoint) Close(ctx context.Context, connection *connecti
 	if endpoint.Next(ctx) != nil {
 		return endpoint.Next(ctx).Close(ctx, connection)
 	}
+
 	return &empty.Empty{}, nil
 }
 
@@ -85,8 +86,8 @@ func (uce *UniversalCNFEndpoint) Name() string {
 // NewUniversalCNFEndpoint creates a MonitorEndpoint
 func NewUniversalCNFEndpoint(backend UniversalCNFBackend, endpoint *Endpoint,
 	nsConfig *common.NSConfiguration) *UniversalCNFEndpoint {
-
 	var nsmClient *client.NsmClient
+
 	var err error
 
 	if endpoint.Action != nil && endpoint.Action.Client != nil {
@@ -99,6 +100,7 @@ func NewUniversalCNFEndpoint(backend UniversalCNFBackend, endpoint *Endpoint,
 		nsConfig.OutgoingNscName = c.Name
 		nsConfig.OutgoingNscLabels = labels
 		nsmClient, err = client.NewNSMClient(context.TODO(), nsConfig)
+
 		if err != nil {
 			logrus.Errorf("Unable to create the NSM client %v", err)
 		}

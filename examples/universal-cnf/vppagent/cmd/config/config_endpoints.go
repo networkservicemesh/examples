@@ -44,7 +44,6 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint,
 	result := &ProcessEndpoints{}
 
 	for _, e := range endpoints {
-
 		configuration := &common.NSConfiguration{
 			NsmServerSocket:    nsconfig.NsmServerSocket,
 			NsmClientSocket:    nsconfig.NsmClientSocket,
@@ -83,6 +82,7 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint,
 				compositeEndpoints = append(compositeEndpoints, endpoint.NewCustomFuncEndpoint("route", routeAddr))
 			}
 		}
+
 		compositeEndpoints = append(compositeEndpoints, NewUniversalCNFEndpoint(backend, e, nsconfig))
 		// Compose the Endpoint
 		composite := endpoint.NewCompositeEndpoint(compositeEndpoints...)
@@ -92,14 +92,13 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint,
 			NSComposite:     composite,
 			Endpoint:        e,
 		})
-
 	}
+
 	return result
 }
 
 // Process iterates over the init commands and applies them
 func (pe *ProcessEndpoints) Process() error {
-
 	for _, e := range pe.Endpoints {
 		nsEndpoint, err := endpoint.NewNSMEndpoint(context.TODO(), e.NSConfiguration, e.NSComposite)
 		if err != nil {
@@ -110,6 +109,7 @@ func (pe *ProcessEndpoints) Process() error {
 		_ = nsEndpoint.Start()
 		e.Cleanup = func() { _ = nsEndpoint.Delete() }
 	}
+
 	return nil
 }
 
