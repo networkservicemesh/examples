@@ -105,11 +105,11 @@ func proxyHost() string {
 
 func main() {
 	// Init the tracer
-	closer := jaeger.InitJaeger("vppagent-dataplane")
+	closer := jaeger.InitJaeger("vppagent-forwarder")
 
 	defer func() { _ = closer.Close() }()
 
-	span := spanhelper.FromContext(context.Background(), "Start.VPPAgent.Dataplane")
+	span := spanhelper.FromContext(context.Background(), "Start.VPPAgent.Forwarder")
 	defer span.Finish()
 
 	// Create the NSM client
