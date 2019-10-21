@@ -8,7 +8,7 @@ for nsc in $(kubectl get pods -o=name | grep simple-client | sed 's@.*/@@'); do
     echo "===== >>>>> PROCESSING ${nsc}  <<<<< ==========="
     for i in {1..10}; do
         echo Try ${i}
-        for ip in $(kubectl exec -it "${nsc}" -- ip addr| grep inet | awk '{print $2}'); do
+        for ip in $(kubectl exec -n default -it "${nsc}" -- ip addr| grep inet | awk '{print $2}'); do
             if [[ "${ip}" == 10.60.3.* ]];then
                 lastSegment=$(echo "${ip}" | cut -d . -f 4 | cut -d / -f 1)
                 nextOp=$((lastSegment + 1))
@@ -17,7 +17,7 @@ for nsc in $(kubectl get pods -o=name | grep simple-client | sed 's@.*/@@'); do
             fi
 
             if [ -n "${targetIp}" ]; then
-                if kubectl exec -it "${nsc}" -- ping -A -c 10 "${targetIp}" ; then
+                if kubectl exec -n default -it "${nsc}" -- ping -A -c 10 "${targetIp}" ; then
                     echo "NSC ${nsc} with IP ${ip} pinging ${endpointName} TargetIP: ${targetIp} successful"
                     PingSuccess="true"
                 else
@@ -26,7 +26,7 @@ for nsc in $(kubectl get pods -o=name | grep simple-client | sed 's@.*/@@'); do
                 fi
 
                 targetIp="10.60.2.2"
-                if kubectl exec -it "${nsc}" -- ping -A -c 10 "${targetIp}" ; then
+                if kubectl exec -n default -it "${nsc}" -- ping -A -c 10 "${targetIp}" ; then
                     echo "NSC ${nsc} with IP ${ip} pinging ${endpointName} TargetIP: ${targetIp} successful"
                     PingSuccess="true"
                 else
@@ -47,9 +47,9 @@ for nsc in $(kubectl get pods -o=name | grep simple-client | sed 's@.*/@@'); do
         EXIT_VAL=1
         echo "+++++++==ERROR==ERROR=============================================================================+++++"
         echo "NSC ${nsc} failed ping to a vpn-gateway NetworkService"
-        kubectl get pod "${nsc}" -o wide
+        kubectl get pod -n default "${nsc}" -o wide
         echo "POD ${nsc} Network dump -------------------------------"
-        kubectl exec -ti "${nsc}" -- ip addr
+        kubectl exec -n default -ti "${nsc}" -- ip addr
         echo "+++++++==ERROR==ERROR=============================================================================+++++"
     fi
 
@@ -62,7 +62,7 @@ for nsc in $(kubectl get pods -o=name | grep -E "ucnf-client" | sed 's@.*/@@'); 
     echo "===== >>>>> PROCESSING ${nsc}  <<<<< ==========="
     for i in {1..10}; do
         echo Try ${i}
-        for ip in $(kubectl exec -it "${nsc}" -- vppctl show int addr | grep L3 | awk '{print $2}'); do
+        for ip in $(kubectl exec -n default -it "${nsc}" -- vppctl show int addr | grep L3 | awk '{print $2}'); do
             if [[ "${ip}" == 10.60.3.* ]];then
                 lastSegment=$(echo "${ip}" | cut -d . -f 4 | cut -d / -f 1)
                 nextOp=$((lastSegment + 1))
@@ -72,8 +72,8 @@ for nsc in $(kubectl get pods -o=name | grep -E "ucnf-client" | sed 's@.*/@@'); 
 
             if [ -n "${targetIp}" ]; then
                 # Prime the pump, its normal to get a packet loss due to arp
-                kubectl exec -it "${nsc}" -- vppctl ping "${targetIp}" repeat 10 > /dev/null 2>&1            
-                OUTPUT=$(kubectl exec -it "${nsc}" -- vppctl ping "${targetIp}" repeat 3)
+                kubectl exec -n default -it "${nsc}" -- vppctl ping "${targetIp}" repeat 10 > /dev/null 2>&1            
+                OUTPUT=$(kubectl exec -n default -it "${nsc}" -- vppctl ping "${targetIp}" repeat 3)
                 echo "${OUTPUT}"
                 RESULT=$(echo "${OUTPUT}"| grep "packet loss" | awk '{print $6}')
                 if [ "${RESULT}" = "0%" ]; then
@@ -86,8 +86,8 @@ for nsc in $(kubectl get pods -o=name | grep -E "ucnf-client" | sed 's@.*/@@'); 
                 fi
 
                 targetIp="10.60.2.2"
-                kubectl exec -it "${nsc}" -- vppctl ping "${targetIp}" repeat 10 > /dev/null 2>&1
-                OUTPUT=$(kubectl exec -it "${nsc}" -- vppctl ping "${targetIp}" repeat 3)
+                kubectl exec -n default -it "${nsc}" -- vppctl ping "${targetIp}" repeat 10 > /dev/null 2>&1
+                OUTPUT=$(kubectl exec -n default -it "${nsc}" -- vppctl ping "${targetIp}" repeat 3)
                 echo "${OUTPUT}"
                 RESULT=$(echo "${OUTPUT}"| grep "packet loss" | awk '{print $6}')
                 if [ "${RESULT}" = "0%" ]; then
@@ -113,11 +113,11 @@ for nsc in $(kubectl get pods -o=name | grep -E "ucnf-client" | sed 's@.*/@@'); 
         EXIT_VAL=1
         echo "+++++++==ERROR==ERROR=============================================================================+++++"
         echo "NSC ${nsc} failed to connect to an icmp-responder NetworkService"
-        kubectl get pod "${nsc}" -o wide
+        kubectl get pod -n default "${nsc}" -o wide
         echo "POD ${nsc} Network dump -------------------------------"
-        kubectl exec -ti "${nsc}" -- vppctl show int
-        kubectl exec -ti "${nsc}" -- vppctl show int addr
-        kubectl exec -ti "${nsc}" -- vppctl show memif
+        kubectl exec -n default -ti "${nsc}" -- vppctl show int
+        kubectl exec -n default -ti "${nsc}" -- vppctl show int addr
+        kubectl exec -n default -ti "${nsc}" -- vppctl show memif
         echo "+++++++==ERROR==ERROR=============================================================================+++++"
     fi
     unset PingSuccess

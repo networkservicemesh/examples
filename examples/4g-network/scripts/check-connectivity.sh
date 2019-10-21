@@ -8,9 +8,9 @@ ENDPOINTS="mme p-gw-c s-gw-u tdf-u"
 #  Ping all the things!
 EXIT_VAL=0
 for client in ${CLIENTS}; do
-    for nsc in $(kubectl get pods -o=name | grep -E "${client}" | sed 's@.*/@@'); do
+    for nsc in $(kubectl get pods -n default -o=name | grep -E "${client}" | sed 's@.*/@@'); do
         echo "===== >>>>> PROCESSING ${nsc}  <<<<< ==========="
-        for ip in $(kubectl exec -it -c "${client}" "${nsc}" -- ip addr| grep inet | awk '{print $2}'); do
+        for ip in $(kubectl exec -n default -it -c "${client}" "${nsc}" -- ip addr| grep inet | awk '{print $2}'); do
             if [[ "${ip}" == 10.60.*.* ]];then
                 firstSegment=$(echo "${ip}" | cut -d . -f 1-3)
                 lastSegment=$(echo "${ip}" | cut -d . -f 4 | cut -d / -f 1)
@@ -18,8 +18,8 @@ for client in ${CLIENTS}; do
                 targetIp="${firstSegment}.${nextOp}"
                 # Get the name of its corresponding endpoint pair
                 for endpoint in ${ENDPOINTS}; do
-                    for nse in $(kubectl get pods -o=name | grep -E "${endpoint}" | sed 's@.*/@@'); do
-                        for ip_e in $(kubectl exec -it -c "${endpoint}" "${nse}" -- ip addr| grep inet | awk '{print $2}'); do
+                    for nse in $(kubectl get pods -n default -o=name | grep -E "${endpoint}" | sed 's@.*/@@'); do
+                        for ip_e in $(kubectl exec -n default -it -c "${endpoint}" "${nse}" -- ip addr| grep inet | awk '{print $2}'); do
                             if [[ "${ip_e}" == "${targetIp}/30" ]];then
                                 echo "===== >>>>> ENDPOINT PAIR - ${nse}  <<<<< ==========="
                                 endpointName="${nse}"
@@ -30,7 +30,7 @@ for client in ${CLIENTS}; do
             fi
             # Do the actual pinging once we have the target IP address
             if [ -n "${targetIp}" ]; then
-                if kubectl exec -it -c "${client}" "${nsc}" -- ping -c 1 "${targetIp}" ; then
+                if kubectl exec -n default -it -c "${client}" "${nsc}" -- ping -c 1 "${targetIp}" ; then
                     echo "NSC ${nsc} with IP ${ip} pinging ${endpointName} TargetIP: ${targetIp} successful"
                     PingSuccess="true"
                 else
@@ -46,10 +46,10 @@ for client in ${CLIENTS}; do
             EXIT_VAL=1
             echo "+++++++==ERROR==ERROR=============================================================================+++++"
             echo "NSC ${nsc} failed to connect to the desired ${endpointName} NetworkService"
-            kubectl get pod "${nsc}" -o wide
+            kubectl get pod -n default "${nsc}" -o wide
             echo "POD ${nsc} Network dump -------------------------------"
-            kubectl exec -ti "${nsc}" -- ip addr
-            kubectl exec -ti "${nsc}" ip route
+            kubectl exec -n default -ti "${nsc}" -- ip addr
+            kubectl exec -n default -ti "${nsc}" ip route
             echo "+++++++==ERROR==ERROR=============================================================================+++++"
         fi
         unset PingSuccess

@@ -18,5 +18,6 @@ spec:
           command: ['tail', '-f', '/dev/null']
 metadata:
   name: simple-client
+  namespace: default
   annotations:
     ns.networkservicemesh.io: bridge-domain?app=bridge

@@ -33,6 +33,7 @@ spec:
             name: universal-cnf-router-right
 metadata:
   name: router-right
+  namespace: default
 ---
 apiVersion: v1
 kind: ConfigMap

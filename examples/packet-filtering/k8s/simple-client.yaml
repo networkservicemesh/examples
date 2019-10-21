@@ -32,3 +32,4 @@ spec:
               networkservicemesh.io/socket: "1"
 metadata:
   name: simple-client
+  namespace: default

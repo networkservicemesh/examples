@@ -33,6 +33,7 @@ spec:
             name: universal-cnf-gateway-left
 metadata:
   name: gateway-left
+  namespace: default
 ---
 apiVersion: v1
 kind: ConfigMap
