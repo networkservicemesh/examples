@@ -64,11 +64,11 @@ func main() {
 	c := tools.NewOSSignalChannel()
 
 	// Init the tracer
-	closer := jaeger.InitJaeger("vppagent-forwarder")
+	closer := jaeger.InitJaeger("vppagent-client")
 
 	defer func() { _ = closer.Close() }()
 
-	span := spanhelper.FromContext(context.Background(), "Start.VPPAgent.Forwarder")
+	span := spanhelper.FromContext(context.Background(), "Start.VPPAgent.Client")
 	defer span.Finish()
 
 	workspace, ok := os.LookupEnv(common.WorkspaceEnv)
