@@ -14,7 +14,7 @@ spec:
       containers:
         - name: s-gw-c
           image: alpine:latest
-          command: ['tail', '-f', '/dev/null']
+          command: ["tail", "-f", "/dev/null"]
 metadata:
   name: "s-gw-c"
   namespace: default

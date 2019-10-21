@@ -17,7 +17,7 @@ spec:
         - name: alpine-img
           image: alpine:latest
           imagePullPolicy: IfNotPresent
-          command: ['tail', '-f', '/dev/null']
+          command: ["tail", "-f", "/dev/null"]
       initContainers:
         - name: nsm-init-container
           image: networkservicemesh/nsm-init:master
