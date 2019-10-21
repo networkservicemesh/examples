@@ -47,7 +47,7 @@ data:
 
 UCNF is implemented following the Network Service Mesh (NSM) networking model, where there are point to point links established for each service consumption request. Each Network Service (NS) is composed of Endpoints. The composition is happening when the NS Clients request a particular NS. These requests might or might not be labelled and the NSM distributed infrastructure consults the pre-defined `NetworkService` descriptors where the routing rules are defined. A typical CNF will expose one or more NS through one or more Endpoints and will connect to other services and/or Endpoints.
 
-UCNF configuration is based on events and actions. The supported events are generated on initialization and upon Endpoint connection request. The available actions are: command line execution, Client and dataplane configuration.
+UCNF configuration is based on events and actions. The supported events are generated on initialization and upon Endpoint connection request. The available actions are: command line execution, Client and forwarder configuration.
 
 Here is a more detailed explanation of the supported event types:
  * The initialization event is the first event generated when UCNF starts. The actions associated with it will be executed before anything else in the system. This can typically be used to execute any pre-configured Clients or container wide commands.
@@ -57,7 +57,7 @@ Here is a more detailed explanation of the supported event types:
 The actions which UCNF supports are as follows:
  * Commands are command line execution snippets.
  * Client is a simple NS Client
- * Dataplane config is an implementation specific dataplane configuration. In its current version UCNF configures `vpp` management through the `vppagent`. It is a YAML version of the JSON configuration as explained in the [Ligato plugins documentation](https://docs.ligato.io/en/latest/plugins/vpp-plugins/#l2-plugin).
+ * Forwarder config is an implementation specific forwarder configuration. In its current version UCNF configures `vpp` management through the `vppagent`. It is a YAML version of the JSON configuration as explained in the [Ligato plugins documentation](https://docs.ligato.io/en/latest/plugins/vpp-plugins/#l2-plugin).
 
 ### The `config.yaml` format
 
@@ -70,7 +70,7 @@ The actions which UCNF supports are as follows:
         * `labels` - the labels to be sent with the NS connection request
         * `routes` - a list of IPv4/v6 route prefixes that the Client will announce to the connecting Endpoint
         * `ifname`- the name of the network interface to be created for this connection
-    * `dpconfig` - dataplane specific YAML configuration
+    * `dpconfig` - forwarder specific YAML configuration
  * `endpoints`
     * `name` - the name of the NS to be announced
     * `labels` - the labels to be assigned with this Endpoint

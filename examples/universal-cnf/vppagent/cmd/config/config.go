@@ -56,7 +56,7 @@ func (c *Client) Process(ctx context.Context,
 	return err
 }
 
-// Action is a struct to describe exec.Command, a Client initiation or a DataPlane configuration
+// Action is a struct to describe exec.Command, a Client initiation or a Forwarder configuration
 type Action struct {
 	Command  *Command
 	Client   *Client
