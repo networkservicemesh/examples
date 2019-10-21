@@ -30,7 +30,7 @@ spec:
               networkservicemesh.io/socket: 1
         - name: p-gw-c
           image: alpine:latest
-          command: ['tail', '-f', '/dev/null']
+          command: ["tail", "-f", "/dev/null"]
           imagePullPolicy: IfNotPresent
 metadata:
   name: p-gw-c
