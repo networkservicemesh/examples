@@ -17,3 +17,4 @@ FROM ${VPP_AGENT} as runtime
 COPY --from=build /go/bin/vppagent-endpoint /bin/vppagent-endpoint
 RUN rm /opt/vpp-agent/dev/etcd.conf; echo 'Endpoint: "0.0.0.0:9113"' > /opt/vpp-agent/dev/grpc.conf; echo "disabled: true" > /opt/vpp-agent/dev/linux-plugin.conf;echo "disabled: true" > /opt/vpp-agent/dev/telemetry.conf
 COPY ./examples/secure-intranet/vppagent-endpoint/etc/ /etc/
+COPY ./examples/secure-intranet/vppagent-endpoint/etc/supervisord/supervisord.conf /opt/vpp-agent/dev/supervisor.conf

@@ -25,6 +25,7 @@ NSM_PATH?=${TOP}/../networkservicemesh
 CLUSTER_RULES_PREFIX?=vagrant
 PREFIX?=k8s
 CONTAINER_BUILD_PREFIX?=docker
+VPP_AGENT?=ligato/vpp-agent:v2.3.0
 
 include examples/examples.mk
 

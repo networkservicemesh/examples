@@ -23,8 +23,9 @@ import (
 	vpp "github.com/ligato/vpp-agent/api/models/vpp"
 	interfaces "github.com/ligato/vpp-agent/api/models/vpp/interfaces"
 	l2 "github.com/ligato/vpp-agent/api/models/vpp/l2"
+	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection/mechanisms/memif"
 
-	"github.com/networkservicemesh/networkservicemesh/controlplane/api/local/connection"
+	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection"
 	"github.com/sirupsen/logrus"
 )
 
@@ -39,7 +40,7 @@ func getDataChange(conn *connection.Connection, bd *l2.BridgeDomain, ifName, bas
 					Link: &interfaces.Interface_Memif{
 						Memif: &interfaces.MemifLink{
 							Master:         true,
-							SocketFilename: path.Join(baseDir, conn.GetMechanism().GetSocketFilename()),
+							SocketFilename: path.Join(baseDir, memif.ToMechanism(conn.GetMechanism()).GetSocketFilename()),
 						},
 					},
 				},
@@ -55,7 +56,7 @@ func (vbc *vppAgentBridgeComposite) insertVPPAgentInterface(conn *connection.Con
 	connect bool, baseDir string) error {
 	ifName := "client-" + conn.GetId()
 
-	SocketDir := path.Dir(path.Join(baseDir, conn.GetMechanism().GetSocketFilename()))
+	SocketDir := path.Dir(path.Join(baseDir, memif.ToMechanism(conn.GetMechanism()).GetSocketFilename()))
 	if err := os.MkdirAll(SocketDir, os.ModePerm); err != nil {
 		return err
 	}

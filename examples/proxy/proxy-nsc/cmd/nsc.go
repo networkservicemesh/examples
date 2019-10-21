@@ -28,6 +28,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection/mechanisms/kernel"
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools/jaeger"
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools/spanhelper"
 	"github.com/networkservicemesh/networkservicemesh/sdk/client"
@@ -70,7 +71,7 @@ func nsmDirector(req *http.Request) {
 	ctx, cancelOp := context.WithTimeout(context.Background(), connectTimeout)
 	defer cancelOp()
 
-	outgoing, err := state.client.Connect(ctx, ifname, "kernel", "Primary interface")
+	outgoing, err := state.client.Connect(ctx, ifname, kernel.MECHANISM, "Primary interface")
 	if err != nil {
 		// cancel request
 		logrus.Errorf("Error: %v", err)
