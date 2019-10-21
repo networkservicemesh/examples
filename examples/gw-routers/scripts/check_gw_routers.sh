@@ -9,7 +9,7 @@ for gw in $(kubectl get pods -o=name | grep -E "gateway-left" | sed 's@.*/@@'); 
     echo "===== >>>>> PROCESSING ${gw}  <<<<< ==========="
     for i in {1..10}; do
         echo Try ${i}
-        for ip in $(kubectl exec -it "${gw}" -- vppctl show int addr | grep L3 | awk '{print $2}'); do
+        for ip in $(kubectl exec -n default -it "${gw}" -- vppctl show int addr | grep L3 | awk '{print $2}'); do
             if [[ "${ip}" == 10.60.1.* ]];then
                 lastSegment=$(echo "${ip}" | cut -d . -f 4 | cut -d / -f 1)
                 nextOp=$((lastSegment + 1))
@@ -19,8 +19,8 @@ for gw in $(kubectl get pods -o=name | grep -E "gateway-left" | sed 's@.*/@@'); 
 
             if [ -n "${targetIp}" ]; then
                 # Prime the pump, its normal to get a packet loss due to arp
-                kubectl exec -it "${gw}" -- vppctl ping "${targetIp}" repeat 5 > /dev/null 2>&1
-                OUTPUT=$(kubectl exec -it "${gw}" -- vppctl ping "${targetIp}" repeat 3)
+                kubectl exec -n default -it "${gw}" -- vppctl ping "${targetIp}" repeat 5 > /dev/null 2>&1
+                OUTPUT=$(kubectl exec -n default -it "${gw}" -- vppctl ping "${targetIp}" repeat 3)
                 echo "${OUTPUT}"
                 RESULT=$(echo "${OUTPUT}"| grep "packet loss" | awk '{print $6}')
                 if [ "${RESULT}" = "0%" ]; then
@@ -47,9 +47,9 @@ for gw in $(kubectl get pods -o=name | grep -E "gateway-left" | sed 's@.*/@@'); 
         echo "Left Gateway ${gw} failed to connect to gateway-left"
         kubectl get pod "${gw}" -o wide
         echo "POD ${gw} Network dump -------------------------------"
-        kubectl exec -ti "${gw}" -- vppctl show int
-        kubectl exec -ti "${gw}" -- vppctl show int addr
-        kubectl exec -ti "${gw}" -- vppctl show memif
+        kubectl exec -n default -ti "${gw}" -- vppctl show int
+        kubectl exec -n default -ti "${gw}" -- vppctl show int addr
+        kubectl exec -n default -ti "${gw}" -- vppctl show memif
         echo "+++++++==ERROR==ERROR=============================================================================+++++"
     fi
     unset PingSuccess
@@ -59,7 +59,7 @@ for gw in $(kubectl get pods -o=name | grep -E "gateway-right" | sed 's@.*/@@');
     echo "===== >>>>> PROCESSING ${gw}  <<<<< ==========="
     for i in {1..10}; do
         echo Try ${i}
-        for ip in $(kubectl exec -it "${gw}" -- vppctl show int addr | grep L3 | awk '{print $2}'); do
+        for ip in $(kubectl exec -n default -it "${gw}" -- vppctl show int addr | grep L3 | awk '{print $2}'); do
             if [[ "${ip}" == 10.60.3.* ]];then
                 lastSegment=$(echo "${ip}" | cut -d . -f 4 | cut -d / -f 1)
                 nextOp=$((lastSegment - 1))
@@ -68,7 +68,7 @@ for gw in $(kubectl get pods -o=name | grep -E "gateway-right" | sed 's@.*/@@');
             fi
 
             if [ -n "${targetIp}" ]; then
-                OUTPUT=$(kubectl exec -it "${gw}" -- vppctl ping "${targetIp}" repeat 3)
+                OUTPUT=$(kubectl exec -n default -it "${gw}" -- vppctl ping "${targetIp}" repeat 3)
                 echo "${OUTPUT}"
                 RESULT=$(echo "${OUTPUT}"| grep "packet loss" | awk '{print $6}')
                 if [ "${RESULT}" = "0%" ]; then
@@ -95,9 +95,9 @@ for gw in $(kubectl get pods -o=name | grep -E "gateway-right" | sed 's@.*/@@');
         echo "Right Gateway ${gw} failed to connect to gateway-left"
         kubectl get pod "${gw}" -o wide
         echo "POD ${gw} Network dump -------------------------------"
-        kubectl exec -ti "${gw}" -- vppctl show int
-        kubectl exec -ti "${gw}" -- vppctl show int addr
-        kubectl exec -ti "${gw}" -- vppctl show memif
+        kubectl exec -n default -ti "${gw}" -- vppctl show int
+        kubectl exec -n default -ti "${gw}" -- vppctl show int addr
+        kubectl exec -n default -ti "${gw}" -- vppctl show memif
         echo "+++++++==ERROR==ERROR=============================================================================+++++"
     fi
     unset PingSuccess

@@ -31,3 +31,4 @@ spec:
               networkservicemesh.io/socket: 1
 metadata:
   name: bridge-domain-ipv6
+  namespace: default
