@@ -8,9 +8,10 @@ import (
 	"github.com/ligato/vpp-agent/api/configurator"
 	"github.com/ligato/vpp-agent/api/models/vpp"
 	vpp_interfaces "github.com/ligato/vpp-agent/api/models/vpp/interfaces"
+	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection/mechanisms/memif"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
-	"github.com/networkservicemesh/networkservicemesh/controlplane/api/local/connection"
+	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection"
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
@@ -30,7 +31,7 @@ func CreateVppInterface(nscConnection *connection.Connection, baseDir, vppAgentE
 		logrus.Errorf("can't dial grpc server: %v", err)
 		return err
 	}
-	fullyQualifiedSocketFilename := path.Join(baseDir, nscConnection.GetMechanism().GetSocketFilename())
+	fullyQualifiedSocketFilename := path.Join(baseDir, memif.ToMechanism(nscConnection.GetMechanism()).GetSocketFilename())
 	dataChange := &configurator.Config{
 		VppConfig: &vpp.ConfigData{
 			Interfaces: []*vpp_interfaces.Interface{

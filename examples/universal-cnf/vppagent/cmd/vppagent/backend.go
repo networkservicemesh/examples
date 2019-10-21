@@ -25,7 +25,8 @@ import (
 	vpp "github.com/ligato/vpp-agent/api/models/vpp"
 	interfaces "github.com/ligato/vpp-agent/api/models/vpp/interfaces"
 	vpp_l3 "github.com/ligato/vpp-agent/api/models/vpp/l3"
-	"github.com/networkservicemesh/networkservicemesh/controlplane/api/local/connection"
+	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection"
+	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection/mechanisms/memif"
 	"github.com/sirupsen/logrus"
 )
 
@@ -62,7 +63,7 @@ func (b *UniversalCNFVPPAgentBackend) ProcessClient(
 
 	srcIP := conn.GetContext().GetIpContext().GetSrcIpAddr()
 	dstIP, _, _ := net.ParseCIDR(conn.GetContext().GetIpContext().GetDstIpAddr())
-	socketFilename := path.Join(getBaseDir(), conn.GetMechanism().GetSocketFilename())
+	socketFilename := path.Join(getBaseDir(), memif.ToMechanism(conn.GetMechanism()).GetSocketFilename())
 
 	ipAddresses := []string{}
 	if len(srcIP) > 4 {
@@ -105,7 +106,7 @@ func (b *UniversalCNFVPPAgentBackend) ProcessEndpoint(
 
 	srcIP, _, _ := net.ParseCIDR(conn.GetContext().GetIpContext().GetSrcIpAddr())
 	dstIP := conn.GetContext().GetIpContext().GetDstIpAddr()
-	socketFilename := path.Join(getBaseDir(), conn.GetMechanism().GetSocketFilename())
+	socketFilename := path.Join(getBaseDir(), memif.ToMechanism(conn.GetMechanism()).GetSocketFilename())
 
 	ipAddresses := []string{}
 	if len(dstIP) > 4 {

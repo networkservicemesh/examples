@@ -28,10 +28,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
+	"github.com/networkservicemesh/networkservicemesh/pkg/tools/jaeger"
 	"github.com/networkservicemesh/networkservicemesh/sdk/client"
 	"github.com/networkservicemesh/networkservicemesh/sdk/common"
-	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 )
 
@@ -103,8 +102,7 @@ func proxyHost() string {
 
 func main() {
 	// Init the tracer
-	tracer, closer := tools.InitJaeger("nsc")
-	opentracing.SetGlobalTracer(tracer)
+	closer := jaeger.InitJaeger("nsc")
 	defer func() { _ = closer.Close() }()
 
 	// Create the NSM client
