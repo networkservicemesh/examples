@@ -28,6 +28,7 @@ RUN apk --no-cache add \
 # copy the config files for envoy, and the startup files for supervisord
 COPY ./examples/envoy_interceptor/envoy-nse/etc/ /etc/
 COPY ./examples/envoy_interceptor/envoy-nse/usr/ /usr/
+COPY ./examples/envoy_interceptor/envoy-nse/etc/supervisor/supervisord.conf /opt/vpp-agent/dev/supervisor.conf
 
 COPY --from=build /go/bin/nse /usr/bin/nse
 

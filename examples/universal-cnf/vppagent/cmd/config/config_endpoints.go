@@ -18,7 +18,8 @@ package config
 import (
 	"context"
 
-	"github.com/networkservicemesh/networkservicemesh/controlplane/api/local/networkservice"
+	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection/mechanisms/memif"
+	"github.com/networkservicemesh/networkservicemesh/controlplane/api/networkservice"
 
 	"github.com/networkservicemesh/networkservicemesh/sdk/common"
 	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
@@ -52,7 +53,7 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint,
 			OutgoingNscName:    nsconfig.OutgoingNscName,
 			AdvertiseNseLabels: labelStringFromMap(e.Labels),
 			OutgoingNscLabels:  nsconfig.OutgoingNscLabels,
-			MechanismType:      "mem",
+			MechanismType:      memif.MECHANISM,
 			IPAddress:          nsconfig.IPAddress,
 			Routes:             nil,
 		}

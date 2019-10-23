@@ -19,7 +19,8 @@ import (
 	"os"
 	"sync"
 
-	"github.com/networkservicemesh/networkservicemesh/controlplane/api/local/connection"
+	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection"
+	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection/mechanisms/memif"
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools/jaeger"
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools/spanhelper"
@@ -94,7 +95,7 @@ func main() {
 	}
 
 	var outgoingConnection *connection.Connection
-	outgoingConnection, err = outgoingClient.ConnectRetry(context.Background(), "if1", "mem",
+	outgoingConnection, err = outgoingClient.ConnectRetry(context.Background(), "if1", memif.MECHANISM,
 		"Primary interface", client.ConnectionRetry, client.RequestDelay)
 
 	if err != nil {
