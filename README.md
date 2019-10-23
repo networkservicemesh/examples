@@ -39,7 +39,7 @@ make vagrant-start
 
 . ./scripts/vagrant.sh
 
-make helm-init helm-install-nsm
+SPIRE_ENABLED=false INSECURE=true make helm-init helm-install-nsm
 
 make k8s-proxy-save k8s-proxy-load-images
 
