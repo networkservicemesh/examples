@@ -6,7 +6,7 @@ PODS = router-left router-right gateway-left gateway-right
 NETWORK_SERVICES = gw-routers
 CHECK = scripts/check_gw_routers.sh
 
-export VPP_AGENT=ligato/vpp-agent:v2.1.1
+export VPP_AGENT=ligato/vpp-agent:v2.3.0
 
 # should not fail go linter
 FAIL_GOLINT =
