@@ -32,6 +32,7 @@ spec:
             name: universal-cnf-client
 metadata:
   name: ucnf-client
+  namespace: default
 ---
 apiVersion: v1
 kind: ConfigMap

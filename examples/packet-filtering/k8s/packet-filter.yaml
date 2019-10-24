@@ -33,6 +33,7 @@ spec:
             name: universal-cnf-packet-filter
 metadata:
   name: packet-filter
+  namespace: default
 ---
 apiVersion: v1
 kind: ConfigMap

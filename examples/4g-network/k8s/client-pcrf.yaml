@@ -14,7 +14,7 @@ spec:
       containers:
         - name: pcrf
           image: alpine:latest
-          command: ['tail', '-f', '/dev/null']
+          command: ["tail", "-f", "/dev/null"]
 metadata:
   name: "pcrf"
   namespace: default

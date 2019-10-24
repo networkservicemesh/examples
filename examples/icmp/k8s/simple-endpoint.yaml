@@ -31,6 +31,7 @@ spec:
               networkservicemesh.io/socket: 1
         - name: alpine
           image: alpine:latest
-          command: ['tail', '-f', '/dev/null']
+          command: ["tail", "-f", "/dev/null"]
 metadata:
   name: simple-endpoint
+  namespace: default

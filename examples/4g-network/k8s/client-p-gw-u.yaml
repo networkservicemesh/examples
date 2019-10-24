@@ -14,7 +14,7 @@ spec:
       containers:
         - name: p-gw-u
           image: alpine:latest
-          command: ['tail', '-f', '/dev/null']
+          command: ["tail", "-f", "/dev/null"]
 metadata:
   name: "p-gw-u"
   namespace: default

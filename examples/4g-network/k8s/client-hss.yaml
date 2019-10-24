@@ -14,7 +14,7 @@ spec:
       containers:
         - name: hss
           image: alpine:latest
-          command: ['tail', '-f', '/dev/null']
+          command: ["tail", "-f", "/dev/null"]
 metadata:
   name: "hss"
   namespace: default

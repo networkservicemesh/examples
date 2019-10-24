@@ -17,7 +17,7 @@ spec:
         - name: alpine-img
           image: alpine:latest
           imagePullPolicy: IfNotPresent
-          command: ['tail', '-f', '/dev/null']
+          command: ["tail", "-f", "/dev/null"]
 metadata:
   name: simple-client
   annotations:

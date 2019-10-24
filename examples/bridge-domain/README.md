@@ -30,7 +30,7 @@ kubectl get pods -l networkservicemesh.io/app=simple-client
 
 # Test;
 p=<select-a-simple-client-pod>
-kubectl exec -it -c alpine-img $p sh
+kubectl exec -n default -it -c alpine-img $p sh
 # Inside the container;
 ifconfig
 ping 10.60.1.1
@@ -49,7 +49,7 @@ kubectl get pods -l networkservicemesh.io/app=simple-client-ipv6
 
 # Test;
 p=<select-a-simple-client-pod>
-kubectl exec -it -c alpine-img $p sh
+kubectl exec -n default -it -c alpine-img $p sh
 # Inside the container;
 ifconfig
 ping 1200::1

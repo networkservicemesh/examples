@@ -30,7 +30,7 @@ spec:
               networkservicemesh.io/socket: 1
         - name: mme
           image: alpine:latest
-          command: ['tail', '-f', '/dev/null']
+          command: ["tail", "-f", "/dev/null"]
           imagePullPolicy: IfNotPresent
 metadata:
   name: mme
