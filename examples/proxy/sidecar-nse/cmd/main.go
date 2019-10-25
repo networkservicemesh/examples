@@ -32,6 +32,7 @@ func main() {
 	composite := endpoint.NewCompositeEndpoint(
 		endpoint.NewMonitorEndpoint(configuration),
 		endpoint.NewConnectionEndpoint(configuration),
+		NewIfnameEndpoint(configuration),
 		endpoint.NewIpamEndpoint(configuration),
 	)
 

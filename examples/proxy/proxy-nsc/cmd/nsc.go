@@ -61,6 +61,8 @@ func nsmDirector(req *http.Request) {
 		if strings.HasPrefix(name, proxyHeaderPrefix) {
 			name = strings.TrimPrefix(name, proxyHeaderPrefix)
 			state.client.OutgoingNscLabels[name] = strings.ToLower(headers[0])
+
+			logrus.Infof("Adding label %s = %v", name, state.client.OutgoingNscLabels[name])
 		}
 	}
 

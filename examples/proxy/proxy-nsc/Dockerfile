@@ -9,7 +9,7 @@ WORKDIR /root/networkservicemesh/
 RUN go mod download
 
 ADD [".","/root/networkservicemesh"]
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags '-extldflags "-static"' -o /go/bin/proxy-nsc ./examples/proxy/proxy-nsc/cmd/nsc.go
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags '-extldflags "-static"' -o /go/bin/proxy-nsc ./examples/proxy/proxy-nsc/cmd/...
 
 FROM alpine as runtime
 COPY --from=build /go/bin/proxy-nsc /bin/proxy-nsc
