@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       networkservicemesh.io/app: "icmp-responder"

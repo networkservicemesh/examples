@@ -5,7 +5,7 @@ spec:
   selector:
     matchLabels:
       networkservicemesh.io/app: "simple-client"
-  replicas: 4
+  replicas: 1
   template:
     metadata:
       labels:
@@ -19,4 +19,4 @@ metadata:
   name: "simple-client"
   namespace: default
   annotations:
-    ns.networkservicemesh.io: icmp-responder?app=simple-client
+    ns.networkservicemesh.io: icmp-responder?app=simple-client&ifname=responder0
