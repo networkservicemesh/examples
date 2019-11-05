@@ -20,6 +20,7 @@ spec:
         version: v1
         nsm/servicename: "helloworld"
         nsm/serviceport: "5000"
+        nsm/role: client
     spec:
       containers:
       - name: helloworld

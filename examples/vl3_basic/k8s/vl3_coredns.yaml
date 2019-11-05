@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nsm-dns-cfg
+data:
+  Corefile: |
+    .:53 {
+        log
+        kubernetes cluster.local in-addr.arpa ip6.arpa {
+           pods insecure
+           upstream
+           kubeconfig /etc/kubeconfigs/remote1 kubernetes-admin@kubernetes
+           labels nsm/role=client
+           fallthrough cluster.local in-addr.arpa ip6.arpa
+        }
+    }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nsm-dns
+  labels:
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nsm-dns
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: nsm-dns
+        version: v1
+    spec:
+      containers:
+      - name: coredns
+        image: k8s.gcr.io/coredns:1.2.6
+        imagePullPolicy: IfNotPresent
+        args:
+        - -conf
+        - /etc/coredns/Corefile
+        ports:
+        - containerPort: 53
+          name: dns
+          protocol: UDP
+        - containerPort: 53
+          name: dns-tcp
+          protocol: TCP
+        - containerPort: 9153
+          name: metrics
+          protocol: TCP
+        volumeMounts:
+        - name: nsm-coredns-volume
+          mountPath: /etc/coredns
+        - name: nsm-kubeconfigs
+          mountPath: /etc/kubeconfigs
+      volumes:
+      - name: nsm-coredns-volume
+        configMap:
+          name: nsm-dns-cfg
+      - name: nsm-kubeconfigs
+        secret:
+          secretName: nsm-kubeconfigs
