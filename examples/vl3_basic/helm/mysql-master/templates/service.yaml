@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mysql-master.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "mysql-master.name" . }}
+    helm.sh/chart: {{ include "mysql-master.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      name: mysql
+  selector:
+    app.kubernetes.io/name: {{ include "mysql-master.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}

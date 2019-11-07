@@ -11,12 +11,15 @@ usage() {
   echo "  Optional OPTIONS:"
   echo ""
   echo "  --namespace=<namespace>    set the namespace to watch for NSM clients"
+  echo "  --mysql                    add mysql replication deployment to demo"
   echo "  --delete                   delete the installation"
   echo "  --nowait                   don't wait for user input prior to moving to next step"
   echo ""
 }
 
 NSMISTIODIR=${GOPATH}/src/github.com/nsm-istio
+sdir=$(dirname ${0})
+HELMDIR=${sdir}/../helm
 
 for i in "$@"; do
     case $i in
@@ -37,6 +40,9 @@ for i in "$@"; do
             ;;
         --delete)
             DELETE=true
+            ;;
+        --mysql)
+            MYSQL=true
             ;;
         --nowait)
             NOWAIT=true
@@ -105,6 +111,31 @@ pc "${DELETE:+INSTALL_OP=delete} REMOTE_IP=${clus2_IP} KCONF=${KCONF_CLUS1} exam
 pe "# Install vL3 + helloworld clients in cluster 2"
 pc "${DELETE:+INSTALL_OP=delete} REMOTE_IP=${clus1_IP} KCONF=${KCONF_CLUS2} examples/vl3_basic/scripts/vl3_interdomain.sh"
 
+if [[ -n ${MYSQL} ]]; then
+    INSTALL_OP=apply
+    if [ "${DELETE}" == "true" ]; then
+        INSTALL_OP=delete
+    fi
+    pe "# Install Mysql replica master as vL3 client in cluster 1"
+    pc "helm template ${HELMDIR}/mysql-master -n vl3 | kubectl ${INSTALL_OP} --kubeconfig ${KCONF_CLUS1} -f -"
+    if [[ "${DELETE}" != "true" ]]; then
+        p "# Wait for mysql master to come up"
+        kubectl wait --kubeconfig ${KCONF_CLUS1} --timeout=150s --for condition=Ready -l app.kubernetes.io/name=mysql-master pod
+        p "# Get mysql master vL3 IP"
+        masterPod=$(kubectl get pods --kubeconfig ${KCONF_CLUS1} -l  app.kubernetes.io/name=mysql-master -o jsonpath="{.items[0].metadata.name}")
+        masterIP=$(kubectl exec -t ${masterPod} -c kiali --kubeconfig ${KCONF_CLUS1} -- ip a show dev nsm0 | grep inet | awk '{ print $2 }' | cut -d '/' -f 1)
+    else
+        masterIP="1.1.1.1"
+    fi
+    pe "# Install Mysql replica slave as vL3 client in cluster 2"
+    pc "helm template ${HELMDIR}/mysql-slave -n vl3 --set mysql.replicationMaster=${masterIP} | kubectl ${INSTALL_OP} --kubeconfig ${KCONF_CLUS2} -f -"
+    if [[ "${DELETE}" != "true" ]]; then
+        p "# Wait for mysql slave to come up"
+        kubectl wait --kubeconfig ${KCONF_CLUS2} --timeout=150s --for condition=Ready -l app.kubernetes.io/name=mysql-slave pod
+    fi
+
+fi
+
 
 pe "# Install NSM Client App workload service registry for cluster 1"
 pc "KUBECONFIG=${KCONF_CLUS1} ${NSMISTIODIR}/deployments/scripts/nsm_svc_reg_deploy.sh --remotekubeconfig=${KCONF_CLUS1} --svcregkubeconfig=${KCONF_CLUS2} ${DELETE:+--delete}"
@@ -118,7 +149,7 @@ if [[ -z ${DELETE} ]]; then
     #kubectl delete svc --kubeconfig ${SVCREGKUBECONFIG} foo
     echo ""
 else
-    pe "Cleanup service registry cluster"
+    pe "#Cleanup service registry cluster"
     pc "kubectl delete svc helloworld --kubeconfig ${KCONF_CLUS1}"
     pc "kubectl delete svc helloworld --kubeconfig ${KCONF_CLUS2}"
 fi

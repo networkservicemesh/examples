@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mysql-master.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "mysql-master.name" . }}
+    helm.sh/chart: {{ include "mysql-master.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  annotations:
+    ns.networkservicemesh.io: {{ .Values.nsm.ns }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "mysql-master.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "mysql-master.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        nsm/servicename: {{ .Values.nsm.servicename }}
+        nsm/serviceport: {{ .Values.nsm.serviceport | quote }}
+        nsm/role: client
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: mysql
+              containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: {{ .Values.mysql.rootPassword | quote }}
+            - name: MYSQL_REPLICATION_USER
+              value: {{ .Values.mysql.replicationUser | quote }}
+            - name: MYSQL_REPLICATION_PASSWORD
+              value: {{ .Values.mysql.replicationPassword | quote }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+        - name: kiali
+          image: tiswanso/kali_testssl:latest
+          command: ["/bin/sleep","infinity"]
+          imagePullPolicy: IfNotPresent #Always
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
