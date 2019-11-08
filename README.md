@@ -81,6 +81,14 @@ If there is a need to run a particular version of the NSM, checkout the code und
 make k8s-save k8s-load-images
 ```
 
+## Updating dependencies on the [networkservicemesh/](https://github.com/networkservicemesh/networkservicemesh) repo
+
+examples/ uses go modules for its dependencies.  Many of these are against the [networkservicemesh/](https://github.com/networkservicemesh/networkservicemesh) repo.
+
+Two convenience scripts are provided for updating these dependencies:
+
+* [scripts/update_networkservicemesh.sh](https://github.com/networkservicemesh/examples/blob/master/scripts/update_networkservicemesh.sh) - which will update examples/ to depending on the HEAD of master of the [networkservicemesh/](https://github.com/networkservicemesh/networkservicemesh) repo
+* [scripts/local_networkservicemesh.sh](https://github.com/networkservicemesh/examples/blob/master/scripts/local_networkservicemesh.sh) - which will update examples/ to depend on your local copy of the [networkservicemesh/](https://github.com/networkservicemesh/networkservicemesh) repo ( presumed to be at ../networkservicemesh )
 ## Adding more examples
 
 Please refer to [examples/README.md](examples/README.md)
