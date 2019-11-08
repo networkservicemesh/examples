@@ -64,7 +64,7 @@ $ examples/vl3_basic/scripts/demo_vl3_single.sh --kconf_clus1=<path to your kube
 #### Validate vl3 helloworld client inter-connectivity
 
 ```
-./examples/vl3_basic/scripts/check_vl3.sh
+KCONF=<path to your kubeconfig> ./examples/vl3_basic/scripts/check_vl3.sh
 ```
 
 #### Cleanup example
