@@ -32,19 +32,33 @@ performs the following:
 1. This currently only works with a custom version of the NSM installation.
 
 ```bash
+$ cd $GOPATH/src/github.com/
+$ mkdir networkservicemesh
+$ cd networkservicemesh
 $ git clone https://github.com/tiswanso/networkservicemesh
 $ cd networkservicemesh
 $ git checkout vl3_interdomain
-$ helm template deployments/helm/nsm-monitoring --namespace nsm-system --set monSvcType=NodePort --set org=tiswanso,tag=vl3-inter-domain | kubectl apply -f
-$ kubednsip=$(kubectl get svc -n kube-system | grep kube-dns | awk '{ print $3 }')
-$ helm template deployments/helm/nsm --namespace nsm-system --set global.JaegerTracing=true --set org=tiswanso --set tag=vl3-inter-domain --set pullPolicy=Always --set admission-webhook.org=tiswanso --set admission-webhook.tag=vl3-inter-domain --set admission-webhook.pullPolicy=Always --set global.NSRegistrySvc=true --set global.NSMApiSvc=true --set global.NSMApiSvcPort=30501 --set global.NSMApiSvcAddr="0.0.0.0:30501" --set global.NSMApiSvcType=NodePort --set global.ExtraDnsServers=${kubednsip} | kubectl apply -f -
+$
+$ cd $GOPATH/src/github.com/networkservicemesh
+$ git clone https://github.com/tiswanso/examples
+$ cd examples
+$ git checkout <this branch >
 ```
+
+2. The `demo_*.sh` scripts in this repo work with `demo-magic` which has a dependency on `pv` (ie. `brew install pv`)
 
 ### Usage
 
+#### Helloworld example
+
 ```
-$ kubectl apply -f examples/vl3_basic/k8s/vl3-nse-ucnf.yaml
-$ kubectl apply -f examples/vl3_basic/k8s/vl3-hello.yaml
+$ examples/vl3_basic/scripts/demo_vl3_single.sh --kconf_clus1=<path to your kubeconfig> --hello
+```
+
+#### Mysql example
+
+```
+$ examples/vl3_basic/scripts/demo_vl3_single.sh --kconf_clus1=<path to your kubeconfig> --mysql
 ```
 
 #### Validate vl3 helloworld client inter-connectivity
@@ -52,6 +66,13 @@ $ kubectl apply -f examples/vl3_basic/k8s/vl3-hello.yaml
 ```
 ./examples/vl3_basic/scripts/check_vl3.sh
 ```
+
+#### Cleanup example
+
+```
+$ examples/vl3_basic/scripts/demo_vl3_single.sh --kconf_clus1=<path to your kubeconfig> --mysql --hello --nowait --delete
+```
+
 
 ## Multiple Domain Usage
 

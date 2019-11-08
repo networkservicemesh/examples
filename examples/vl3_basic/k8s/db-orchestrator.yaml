@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-orchestrator
+  labels:
+    version: v1
+  annotations:
+    ns.networkservicemesh.io: vl3-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db-orchestrator
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: db-orchestrator
+        version: v1
+    spec:
+      containers:
+      - name: orchestrator
+        image: tiswanso/orchestrator:latest
+        imagePullPolicy: IfNotPresent #Always
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+          - name: ORC_TOPOLOGY_USER
+            value: root
+          - name: ORC_TOPOLOGY_PASSWORD
+            value: test
+          - name: ORC_DB_HOST
+            value: vl3-mysql-master
+          - name: ORC_USER
+            value: root
+          - name: ORC_PASSWORD
+            value: test

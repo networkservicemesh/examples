@@ -28,3 +28,7 @@ helm template ${NSMDIR}/deployments/helm/nsm --namespace nsm-system --set global
 echo "------------Installing proxy NSM-----------"
 helm template ${NSMDIR}/deployments/helm/proxy-nsmgr --namespace nsm-system --set global.JaegerTracing=true --set org=${HUB},tag=${TAG} --set pullPolicy=Always --set global.NSMApiSvc=true --set global.NSMApiSvcPort=30501 --set global.NSMApiSvcAddr="0.0.0.0:30501" | kubectl ${INSTALL_OP} ${KCONF:+--kubeconfig $KCONF} -f -
 
+#if [[ "${INSTALL_OP}" == "delete" ]]; then
+#  echo "------------- Delete nsm-system ns ----------------"
+#  kubectl delete ns nsm-system ${KCONF:+--kubeconfig $KCONF}
+#fi
