@@ -8,7 +8,7 @@ cd "${DIR}"
 
 set -euo pipefail
 
-BRANCH=${1:-master}
+BRANCH=${1:-release-0.2}
 
 if [ -d $BRANCH ]
 then
