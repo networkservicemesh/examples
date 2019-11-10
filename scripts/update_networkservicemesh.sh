@@ -8,7 +8,7 @@ cd "${DIR}"
 
 set -euo pipefail
 
-BRANCH=master
+BRANCH=${1:-master}
 
 V=$(
         go mod download -json "github.com/networkservicemesh/networkservicemesh/controlplane/api@${BRANCH}" |
