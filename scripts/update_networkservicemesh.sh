@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -x
 # Original script by Andy Bursavich:
 # https://github.com/kubernetes/kubernetes/issues/79384#issuecomment-521493597
 
@@ -10,10 +10,15 @@ set -euo pipefail
 
 BRANCH=${1:-master}
 
-V=$(
-        go mod download -json "github.com/networkservicemesh/networkservicemesh/controlplane/api@${BRANCH}" |
-        sed -n 's|.*"Version": "\(.*\)".*|\1|p'
-    )
+if [ -d $BRANCH ]
+then
+  LOCALPATH=$BRANCH
+else
+  V=$(
+          go mod download -json "github.com/networkservicemesh/networkservicemesh/controlplane/api@${BRANCH}" |
+          sed -n 's|.*"Version": "\(.*\)".*|\1|p'
+      )
+fi
 
 MODS=()
 while IFS='' read -r line
@@ -23,6 +28,11 @@ done < <( grep "github.com/networkservicemesh/networkservicemesh" go.mod  | awk 
 
 
 for MOD in "${MODS[@]}"; do
-  go mod edit "-replace=${MOD}=${MOD}@${V}"
+  if [ -z ${LOCALPATH+x} ]
+  then
+    go mod edit "-replace=${MOD}=${MOD}@${V}"
+  else
+    go mod edit -replace="${MOD}"="${MOD/github.com\/networkservicemesh\/networkservicemesh/$LOCALPATH}"
+  fi
 done
 go mod tidy
