@@ -85,10 +85,10 @@ make k8s-save k8s-load-images
 
 examples/ uses go modules for its dependencies.  Many of these are against the [networkservicemesh/](https://github.com/networkservicemesh/networkservicemesh) repo.
 
-Two convenience scripts are provided for updating these dependencies:
+A convenience script is provided for updating these dependencies [scripts/update_networkservicemesh.sh](https://github.com/networkservicemesh/examples/blob/master/scripts/update_networkservicemesh.sh) - which will update `examples/` dependencies to the [networkservicemesh/](https://github.com/networkservicemesh/networkservicemesh) repo. The default is the HEAD of the `master` branch, but this can be changed by passing a argument at the command line to the script:
 
-* [scripts/update_networkservicemesh.sh](https://github.com/networkservicemesh/examples/blob/master/scripts/update_networkservicemesh.sh) - which will update examples/ to depending on the HEAD of master of the [networkservicemesh/](https://github.com/networkservicemesh/networkservicemesh) repo
-* [scripts/local_networkservicemesh.sh](https://github.com/networkservicemesh/examples/blob/master/scripts/local_networkservicemesh.sh) - which will update examples/ to depend on your local copy of the [networkservicemesh/](https://github.com/networkservicemesh/networkservicemesh) repo ( presumed to be at ../networkservicemesh )
+ `./scripts/update_networkservicemesh.sh [<branch>|<local path>]`
+
 ## Adding more examples
 
 Please refer to [examples/README.md](examples/README.md)
