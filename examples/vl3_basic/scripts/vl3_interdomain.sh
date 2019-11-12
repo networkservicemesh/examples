@@ -48,7 +48,7 @@ if [[ "${INSTALL_OP}" == "delete" ]]; then
 else
     if [[ -n ${REMOTE_IP} ]]; then
         kubectl create ${KCONF:+--kubeconfig $KCONF} ${CFGMAP} --from-literal=remote.ip_list=${REMOTE_IP}
-        VL3_NSEMFST=MFSTDIR=${MFSTDIR}/vl3-nse-ucnf.yaml
+        VL3_NSEMFST=${MFSTDIR}/vl3-nse-ucnf.yaml
     fi
 fi
 

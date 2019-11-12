@@ -42,6 +42,10 @@ spec:
               value: {{ .Values.mysql.replicationMaster | quote }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
+        - name: kiali
+          image: tiswanso/kali_testssl:latest
+          command: ["/bin/sleep","infinity"]
+          imagePullPolicy: IfNotPresent #Always
     {{- with .Values.nodeSelector }}
       nodeSelector:
 {{ toYaml . | indent 8 }}

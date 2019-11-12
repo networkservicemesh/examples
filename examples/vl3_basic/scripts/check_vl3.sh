@@ -21,7 +21,7 @@ nscs=$(kubectl get pods ${KCONF:+--kubeconfig $KCONF} -o=name | grep helloworld 
 for nsc in $nscs; do
     echo "===== >>>>> PROCESSING ${nsc}  <<<<< ==========="
     for ip in $(kubectl exec -it "${nsc}" ${KCONF:+--kubeconfig $KCONF} -- ip addr| grep inet | awk '{print $2}'); do
-        if [[ "${ip}" == 10.60.*.* ]];then
+        if [[ "${ip}" == 172.31.*.* ]];then
             ip=$(echo "${ip}" | cut -d / -f 1)
             hello_ips+=(${ip})
         fi

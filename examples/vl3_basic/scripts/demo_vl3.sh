@@ -12,6 +12,7 @@ usage() {
   echo ""
   echo "  --namespace=<namespace>    set the namespace to watch for NSM clients"
   echo "  --mysql                    add mysql replication deployment to demo"
+  echo "  --svcreg                   install NSM-dns service registry"
   echo "  --delete                   delete the installation"
   echo "  --nowait                   don't wait for user input prior to moving to next step"
   echo ""
@@ -43,6 +44,9 @@ for i in "$@"; do
             ;;
         --mysql)
             MYSQL=true
+            ;;
+        --svcreg)
+            SVCREG=true
             ;;
         --nowait)
             NOWAIT=true
@@ -139,11 +143,13 @@ if [[ -n ${MYSQL} ]]; then
 
 fi
 
-pe "# Install NSM Client App workload service registry for cluster 1"
-pc "KUBECONFIG=${KCONF_CLUS1} ${NSMISTIODIR}/deployments/scripts/nsm_svc_reg_deploy.sh --remotekubeconfig=${KCONF_CLUS1} --svcregkubeconfig=${KCONF_CLUS2} ${DELETE:+--delete}"
+if [[ "${SVCREG}" == "true" ]]; then
+    pe "# Install NSM Client App workload service registry for cluster 1"
+    pc "KUBECONFIG=${KCONF_CLUS1} ${NSMISTIODIR}/deployments/scripts/nsm_svc_reg_deploy.sh --remotekubeconfig=${KCONF_CLUS1} --svcregkubeconfig=${KCONF_CLUS2} ${DELETE:+--delete}"
 
-pe "# Install NSM Client App workload service registry for cluster 2"
-pc "KUBECONFIG=${KCONF_CLUS2} ${NSMISTIODIR}/deployments/scripts/nsm_svc_reg_deploy.sh --remotekubeconfig=${KCONF_CLUS2} --svcregkubeconfig=${KCONF_CLUS1} ${DELETE:+--delete}"
+    pe "# Install NSM Client App workload service registry for cluster 2"
+    pc "KUBECONFIG=${KCONF_CLUS2} ${NSMISTIODIR}/deployments/scripts/nsm_svc_reg_deploy.sh --remotekubeconfig=${KCONF_CLUS2} --svcregkubeconfig=${KCONF_CLUS1} ${DELETE:+--delete}"
+fi
 
 if [[ -z ${DELETE} ]]; then
     # add / remove dummy svc to kind cluster due to Istio not updating listeners without this
