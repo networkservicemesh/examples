@@ -329,9 +329,9 @@ $ GKE_PROJECT_ID=<your project ID> make gke-start
    Do this via gcloud console's VPC Firewall rules or the below commands:
 
 ```bash
-$ gcloud compute firewall-rules create proxynsmgr-svc --allow=tcp:30500-30599 --direction=INGRESS --priority=900 --source-ranges="0.0.0.0/0"
+$ gcloud compute firewall-rules create proxynsmgr-svc --allow=tcp:30500-30599 --direction=INGRESS --priority=900 --source-ranges="0.0.0.0/0" --project <your proj>
 $ # to validate the rule creation
-$ gcloud compute firewall-rules list
+$ gcloud compute firewall-rules list --project <your proj>
 ```
 
 1. copy kubeconfig to a separate file for use with scripts

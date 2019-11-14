@@ -30,11 +30,11 @@ for i in "$@"; do
             ;;
         --kconf_clus1=?*)
             KCONF_CLUS1=${i#*=}
-            echo "setting KCONF_CLUS1=${KCONF_CLUS1}" 
+            echo "setting cluster 1=${KCONF_CLUS1}" 
             ;;
         --kconf_clus2=?*)
             KCONF_CLUS2=${i#*=}
-            echo "setting KCONF_CLUS2=${KCONF_CLUS2}" 
+            echo "setting cluster 2=${KCONF_CLUS2}" 
             ;;
         --namespace=?*)
             NAMESPACE=${i#*=}
@@ -95,28 +95,57 @@ function pc {
     clear
 }
 
+echo
+p "# --------------------- NSM Installation + Inter-domain Setup ------------------------"
 
-pe "# Install NSM in cluster 1"
+pe "# **** Install NSM in cluster 1"
 pc "${DELETE:+INSTALL_OP=delete} KCONF=${KCONF_CLUS1} examples/vl3_basic/scripts/nsm_install_interdomain.sh"
-
-pe "# Install NSM in cluster 2"
+echo
+pe "# **** Install NSM in cluster 2"
 pc "${DELETE:+INSTALL_OP=delete} KCONF=${KCONF_CLUS2} examples/vl3_basic/scripts/nsm_install_interdomain.sh"
-
+echo
 if [[ -z ${DELETE} ]]; then
-    p "# Wait for NSM pods to be ready in cluster 1"
+    p "# **** Wait for NSM pods to be ready in cluster 1"
+    kubectl wait --kubeconfig ${KCONF_CLUS1} --timeout=150s --for condition=Ready -l app=nsm-admission-webhook -n nsm-system pod
     kubectl wait --kubeconfig ${KCONF_CLUS1} --timeout=150s --for condition=Ready -l app=nsmgr-daemonset -n nsm-system pod
     kubectl wait --kubeconfig ${KCONF_CLUS1} --timeout=150s --for condition=Ready -l app=proxy-nsmgr-daemonset -n nsm-system pod
+    kubectl wait --kubeconfig ${KCONF_CLUS1} --timeout=150s --for condition=Ready -l app=nsm-vpp-plane -n nsm-system pod
 
-    p "# Wait for NSM pods to be ready in cluster 2"
+    echo
+    p "# **** Show NSM pods in cluster 1"
+    pc "kubectl get pods --kubeconfig ${KCONF_CLUS1} -n nsm-system -o wide"
+    echo
+    p "# **** Wait for NSM pods to be ready in cluster 2"
+    kubectl wait --kubeconfig ${KCONF_CLUS2} --timeout=150s --for condition=Ready -l app=nsm-admission-webhook -n nsm-system pod
     kubectl wait --kubeconfig ${KCONF_CLUS2} --timeout=150s --for condition=Ready -l app=nsmgr-daemonset -n nsm-system pod
     kubectl wait --kubeconfig ${KCONF_CLUS2} --timeout=150s --for condition=Ready -l app=proxy-nsmgr-daemonset -n nsm-system pod
+    kubectl wait --kubeconfig ${KCONF_CLUS2} --timeout=150s --for condition=Ready -l app=nsm-vpp-plane -n nsm-system pod
+
+    echo
+    p "# **** Show NSM pods in cluster 2"
+    pc "kubectl get pods --kubeconfig ${KCONF_CLUS2} -n nsm-system -o wide"
+    echo
 fi
 
-pe "# Install vL3 + helloworld clients in cluster 1"
-pc "${DELETE:+INSTALL_OP=delete} REMOTE_IP=${clus2_IP} KCONF=${KCONF_CLUS1} examples/vl3_basic/scripts/vl3_interdomain.sh ${HELLO:+--hello}"
+p "# --------------------- Virtual L3 Setup ------------------------"
 
-pe "# Install vL3 + helloworld clients in cluster 2"
+pe "# **** Install vL3 ${HELLO:+ + helloworld clients} in cluster 1"
+pc "${DELETE:+INSTALL_OP=delete} REMOTE_IP=${clus2_IP} KCONF=${KCONF_CLUS1} examples/vl3_basic/scripts/vl3_interdomain.sh ${HELLO:+--hello}"
+pc "kubectl get pods --kubeconfig ${KCONF_CLUS1} -o wide"
+echo
+pe "# **** Install vL3 ${HELLO:+ + helloworld clients} in cluster 2"
 pc "${DELETE:+INSTALL_OP=delete} REMOTE_IP=${clus1_IP} KCONF=${KCONF_CLUS2} examples/vl3_basic/scripts/vl3_interdomain.sh ${HELLO:+--hello}"
+#pc "kubectl get pods --kubeconfig ${KCONF_CLUS2} -o wide"
+echo
+p "# **** Virtual L3 service definition (CRD) ***"
+pe "cat examples/vl3_basic/k8s/vl3-service.yaml"
+echo
+p "# **** Cluster 1 vL3 NSEs"
+pe "kubectl get pods --kubeconfig ${KCONF_CLUS1} -l networkservicemesh.io/app=vl3-nse-ucnf -o wide"
+echo
+p "# **** Cluster 2 vL3 NSEs"
+pc "kubectl get pods --kubeconfig ${KCONF_CLUS2} -l networkservicemesh.io/app=vl3-nse-ucnf -o wide"
+echo
 
 if [[ -n ${MYSQL} ]]; then
     INSTALL_OP=apply
@@ -124,21 +153,45 @@ if [[ -n ${MYSQL} ]]; then
         INSTALL_OP=delete
     fi
     pe "# Install Mysql replica master as vL3 client in cluster 1"
-    pc "helm template ${HELMDIR}/mysql-master -n vl3 | kubectl ${INSTALL_OP} --kubeconfig ${KCONF_CLUS1} -f -"
+    pe "helm template ${HELMDIR}/mysql-master -n vl3 | kubectl ${INSTALL_OP} --kubeconfig ${KCONF_CLUS1} -f -"
     if [[ "${DELETE}" != "true" ]]; then
+        p "# **** NSM service mapping info **** "
+        p "# NOTE: the vl3-mysql-master deployment has the annotation ns.networkservicemesh.io set to vl3-service"
+        pe "kubectl get deployment vl3-mysql-master --kubeconfig ${KCONF_CLUS1} -o json | jq '.metadata.annotations'"
+        echo
+
         p "# Wait for mysql master to come up"
-        kubectl wait --kubeconfig ${KCONF_CLUS1} --timeout=150s --for condition=Ready -l app.kubernetes.io/name=mysql-master pod
+        kubectl wait --kubeconfig ${KCONF_CLUS1} --timeout=300s --for condition=Ready -l app.kubernetes.io/name=mysql-master pod
         p "# Get mysql master vL3 IP"
+        pe "kubectl get pods --kubeconfig ${KCONF_CLUS1} -l  app.kubernetes.io/name=mysql-master -o wide"
+
+        echo
         masterPod=$(kubectl get pods --kubeconfig ${KCONF_CLUS1} -l  app.kubernetes.io/name=mysql-master -o jsonpath="{.items[0].metadata.name}")
         masterIP=$(kubectl exec -t ${masterPod} -c kiali --kubeconfig ${KCONF_CLUS1} -- ip a show dev nsm0 | grep inet | awk '{ print $2 }' | cut -d '/' -f 1)
+        echo
+        pe "kubectl exec -t ${masterPod} -c kiali --kubeconfig ${KCONF_CLUS1} -- ip a show dev nsm0"
+        p "# mysql master vL3 IP = ${masterIP}"
+        echo
     else
         masterIP="1.1.1.1"
     fi
-    pe "# Install Mysql replica slave as vL3 client in cluster 2"
-    pc "helm template ${HELMDIR}/mysql-slave -n vl3 --set mysql.replicationMaster=${masterIP} | kubectl ${INSTALL_OP} --kubeconfig ${KCONF_CLUS2} -f -"
+    pe "# **** Install Mysql replica slave as vL3 client in cluster 2"
+    pe "helm template ${HELMDIR}/mysql-slave -n vl3 --set mysql.replicationMaster=${masterIP} | kubectl ${INSTALL_OP} --kubeconfig ${KCONF_CLUS2} -f -"
+    echo
     if [[ "${DELETE}" != "true" ]]; then
+        p "# **** NSM service mapping info **** "
+        p "# NOTE: the vl3-mysql-slave deployment has the annotation ns.networkservicemesh.io set to vl3-service"
+        pe "kubectl get deployment vl3-mysql-slave --kubeconfig ${KCONF_CLUS2} -o json | jq '.metadata.annotations'"
+        echo
+        p "# **** NOTE: the vl3-mysql-slave is finding mysql-master at the NSM vL3 addr ${masterIP}"
+        pe "kubectl get pods --kubeconfig ${KCONFGKE} -l app.kubernetes.io/name=mysql-slave -o json | jq '.items[0].spec.containers[0].env'"
+        echo
+        #  | select(.name==\"MYSQL_MASTER_SERVICE_HOST\")
+
         p "# Wait for mysql slave to come up"
-        kubectl wait --kubeconfig ${KCONF_CLUS2} --timeout=150s --for condition=Ready -l app.kubernetes.io/name=mysql-slave pod
+        kubectl wait --kubeconfig ${KCONF_CLUS2} --timeout=300s --for condition=Ready -l app.kubernetes.io/name=mysql-slave pod
+        pc "kubectl get pods --kubeconfig ${KCONF_CLUS2} -l  app.kubernetes.io/name=mysql-slave -o wide"
+        echo
     fi
 
 fi
