@@ -42,6 +42,7 @@ function gatherdata_vpp_forwarder {
         
         gatherdata_vppctl_pod ${kconf} ${dp} ${NSMNAMESPACE} "sh mode"
         gatherdata_vppctl_pod ${kconf} ${dp} ${NSMNAMESPACE} "sh vxlan tunnel"
+        gatherdata_vppctl_pod ${kconf} ${dp} ${NSMNAMESPACE} "sh ip fib"
     done
 }
 
@@ -59,15 +60,15 @@ function gatherdata_vl3_nse {
     done
 }
 
-function gatherdata_kiali {
+function gatherdata_kali {
     local kconf=$1
     local pod=$2
-    echo "------pod data for ${pod} in ${kconf} (gathered using kiali container)---------"
+    echo "------pod data for ${pod} in ${kconf} (gathered using kali container)---------"
     echo "**** nsm0 interface info:"
-    kubectl exec -t ${pod} -c kiali --kubeconfig ${kconf} -- ip a show dev nsm0
+    kubectl exec -t ${pod} -c kali --kubeconfig ${kconf} -- ip a show dev nsm0
     echo 
     echo "**** Route info:"
-    kubectl exec -t ${pod} -c kiali --kubeconfig ${kconf} -- ip route
+    kubectl exec -t ${pod} -c kali --kubeconfig ${kconf} -- ip route
     echo
 }
 
@@ -78,7 +79,7 @@ function gatherdata_hello {
     for hellopod in $hellopods; do
         echo "---------------------------------------------------------------------"
         echo "------Helloworld pod data for ${hellopod} in ${kconf}---------"
-        gatherdata_kiali ${kconf} ${hellopod}
+        gatherdata_kali ${kconf} ${hellopod}
     done
 }
 
@@ -89,7 +90,7 @@ function gatherdata_mysql {
     for pod in $mysqlpods; do
         echo "---------------------------------------------------------------------"
         echo "------Mysql pod data for ${pod} in ${kconf}---------"
-        gatherdata_kiali ${kconf} ${pod}
+        gatherdata_kali ${kconf} ${pod}
     done
 }
 

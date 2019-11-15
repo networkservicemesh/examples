@@ -101,7 +101,7 @@ if [[ -n ${MYSQL} ]]; then
         kubectl wait --kubeconfig ${KCONF_CLUS1} --timeout=150s --for condition=Ready -l app.kubernetes.io/name=mysql-master pod
         p "# Get mysql master vL3 IP"
         masterPod=$(kubectl get pods --kubeconfig ${KCONF_CLUS1} -l  app.kubernetes.io/name=mysql-master -o jsonpath="{.items[0].metadata.name}")
-        masterIP=$(kubectl exec -t ${masterPod} -c kiali --kubeconfig ${KCONF_CLUS1} -- ip a show dev nsm0 | grep inet | awk '{ print $2 }' | cut -d '/' -f 1)
+        masterIP=$(kubectl exec -t ${masterPod} -c kali --kubeconfig ${KCONF_CLUS1} -- ip a show dev nsm0 | grep inet | awk '{ print $2 }' | cut -d '/' -f 1)
     else
         masterIP="1.1.1.1"
     fi

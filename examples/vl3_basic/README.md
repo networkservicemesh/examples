@@ -89,17 +89,17 @@ $ examples/vl3_basic/scripts/demo_vl3.sh --kconf_clus1=${KCONFAWS} --kconf_clus2
 
 1. Validation:
 
-   1. On each cluster exec into a helloworld pod's `kiali` container
+   1. On each cluster exec into a helloworld pod's `kali` container
 
       ```bash
       $ awsHello=$(kubectl get pods --kubeconfig ${KCONFAWS} -l "app=helloworld" -o jsonpath="{.items[0].metadata.name}")
       $ gkeHello=$(kubectl get pods --kubeconfig ${KCONFGKE} -l "app=helloworld" -o jsonpath="{.items[0].metadata.name}")
-      $ awsHelloIp=$(kubectl exec --kubeconfig ${KCONFAWS} -t ${awsHello} -c kiali -- ip a show dev nsm0 | grep inet | awk '{ print $2 }' | cut -d '/' -f 1)
-      $ gkeHelloIp=$(kubectl exec --kubeconfig ${KCONFGKE} -t ${gkeHello} -c kiali -- ip a show dev nsm0 | grep inet | awk '{ print $2 }' | cut -d '/' -f 1)
+      $ awsHelloIp=$(kubectl exec --kubeconfig ${KCONFAWS} -t ${awsHello} -c kali -- ip a show dev nsm0 | grep inet | awk '{ print $2 }' | cut -d '/' -f 1)
+      $ gkeHelloIp=$(kubectl exec --kubeconfig ${KCONFGKE} -t ${gkeHello} -c kali -- ip a show dev nsm0 | grep inet | awk '{ print $2 }' | cut -d '/' -f 1)
       $ # curl from aws to gke
-      $ kubectl exec --kubeconfig ${KCONFAWS} -t ${awsHello} -c kiali -- curl http://${gkeHelloIp}:5000/hello
+      $ kubectl exec --kubeconfig ${KCONFAWS} -t ${awsHello} -c kali -- curl http://${gkeHelloIp}:5000/hello
       $ # curl from gke to aws
-      $ kubectl exec --kubeconfig ${KCONFGKE} -t ${gkeHello} -c kiali -- curl http://${awsHelloIp}:5000/hello
+      $ kubectl exec --kubeconfig ${KCONFGKE} -t ${gkeHello} -c kali -- curl http://${awsHelloIp}:5000/hello
       ```
 
 ### Mysql Demo example

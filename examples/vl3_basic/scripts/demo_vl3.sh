@@ -79,7 +79,7 @@ fi
 ########################
 # include the magic
 ########################
-DEMOMAGIC=${DEMOMAGIC:-/Users/tiswanso/src/demo-magic/demo-magic.sh}
+DEMOMAGIC=${DEMOMAGIC:-${sdir}/demo-magic.sh}
 . ${DEMOMAGIC} -d ${NOWAIT:+-n}
 
 # hide the evidence
@@ -167,13 +167,16 @@ if [[ -n ${MYSQL} ]]; then
 
         echo
         masterPod=$(kubectl get pods --kubeconfig ${KCONF_CLUS1} -l  app.kubernetes.io/name=mysql-master -o jsonpath="{.items[0].metadata.name}")
-        masterIP=$(kubectl exec -t ${masterPod} -c kiali --kubeconfig ${KCONF_CLUS1} -- ip a show dev nsm0 | grep inet | awk '{ print $2 }' | cut -d '/' -f 1)
+        masterIP=$(kubectl exec -t ${masterPod} -c kali --kubeconfig ${KCONF_CLUS1} -- ip a show dev nsm0 | grep inet | awk '{ print $2 }' | cut -d '/' -f 1)
         echo
-        pe "kubectl exec -t ${masterPod} -c kiali --kubeconfig ${KCONF_CLUS1} -- ip a show dev nsm0"
+        pe "kubectl exec -t ${masterPod} -c kali --kubeconfig ${KCONF_CLUS1} -- ip a show dev nsm0"
         pc "# mysql master vL3 IP = ${masterIP}"
         echo
     else
         masterIP="1.1.1.1"
+    fi
+    if [[ "${DELETE}" != "true" ]]; then
+        sleep 30
     fi
     pe "# **** Install Mysql replica slave as vL3 client in cluster 2"
     pe "helm template ${HELMDIR}/mysql-slave -n vl3 --set mysql.replicationMaster=${masterIP} | kubectl ${INSTALL_OP} --kubeconfig ${KCONF_CLUS2} -f -"

@@ -12,7 +12,7 @@ spec:
         networkservicemesh.io/app: "vl3-client"
     spec:
       containers:
-        - name: kiali
+        - name: kali
           image: tiswanso/kali_testssl:latest
           command: ["/bin/sleep","infinity"]
           imagePullPolicy: IfNotPresent

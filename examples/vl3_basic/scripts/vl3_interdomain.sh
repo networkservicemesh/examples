@@ -65,7 +65,7 @@ fi
 if [[ "${HELLO}" == "true" ]]; then
     echo "---------------Install hello-------------"
     #${KUBEINSTALL} -f ${MFSTDIR}/vl3-hello.yaml
-    ${KUBEINSTALL} -f ${MFSTDIR}/vl3-hello-kiali.yaml
+    ${KUBEINSTALL} -f ${MFSTDIR}/vl3-hello-kali.yaml
 
     if [[ "$INSTALL_OP" != "delete" ]]; then
         sleep 10

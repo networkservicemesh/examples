@@ -31,7 +31,7 @@ spec:
         imagePullPolicy: IfNotPresent #Always
         ports:
         - containerPort: 5000
-      - name: kiali
+      - name: kali
         image: tiswanso/kali_testssl:latest
         command: ["/bin/sleep","infinity"]
         imagePullPolicy: IfNotPresent #Always
