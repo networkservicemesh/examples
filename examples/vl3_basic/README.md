@@ -80,7 +80,7 @@ $ examples/vl3_basic/scripts/demo_vl3_single.sh --kconf_clus1=<path to your kube
 
 1. Create an AWS EKS and GKE cluster using the below `Public Cloud` instructions.
 
-1. Use script to install inter-domain NSM & mysql DB replication.
+1. Use script to install inter-domain NSM & helloworld.
 
 ```bash
 $ cd $GOPATH/src/github.com/networkservicemesh/examples
@@ -92,10 +92,10 @@ $ examples/vl3_basic/scripts/demo_vl3.sh --kconf_clus1=${KCONFAWS} --kconf_clus2
    1. On each cluster exec into a helloworld pod's `kiali` container
 
       ```bash
-      $ awsHello=$(kubectl get pods --kubeconfig ${KCONFAWS} -l "app.kubernetes.io/name=mysql-master" -o jsonpath="{.items[0].metadata.name}")
-      $ gkeHello=$(kubectl get pods --kubeconfig ${KCONFGKE} -l "app.kubernetes.io/name=mysql-master" -o jsonpath="{.items[0].metadata.name}")
-      $ awsHelloIp=$(kubectl exec --kubeconfig ${KCONFAWS} -t ${awsHello} -c kiali -- bash -c "ip a | grep inet | awk '{print $2}'")
-      $ gkeHelloIp=$(kubectl exec --kubeconfig ${KCONFGKE} -t ${awsHello} -c kiali -- bash -c "ip a | grep inet | awk '{print $2}'")
+      $ awsHello=$(kubectl get pods --kubeconfig ${KCONFAWS} -l "app=helloworld" -o jsonpath="{.items[0].metadata.name}")
+      $ gkeHello=$(kubectl get pods --kubeconfig ${KCONFGKE} -l "app=helloworld" -o jsonpath="{.items[0].metadata.name}")
+      $ awsHelloIp=$(kubectl exec --kubeconfig ${KCONFAWS} -t ${awsHello} -c kiali -- ip a show dev nsm0 | grep inet | awk '{ print $2 }' | cut -d '/' -f 1)
+      $ gkeHelloIp=$(kubectl exec --kubeconfig ${KCONFGKE} -t ${gkeHello} -c kiali -- ip a show dev nsm0 | grep inet | awk '{ print $2 }' | cut -d '/' -f 1)
       $ # curl from aws to gke
       $ kubectl exec --kubeconfig ${KCONFAWS} -t ${awsHello} -c kiali -- curl http://${gkeHelloIp}:5000/hello
       $ # curl from gke to aws
@@ -121,6 +121,7 @@ and mysql-slave on the GKE cluster.  DB replication should be operational betwee
    1. On master use
    
    ```
+   masterPod=$(kubectl get pods --kubeconfig ${KCONFAWS} -l "app.kubernetes.io/name=mysql-master" -o jsonpath="{.items[0].metadata.name}")
    kubectl exec -it ${masterPod} -c mysql-master --kubeconfig ${KCONFAWS} bash
    root@vl3-mysql-master-687d5c7d94-8mt4h:/# mysql -u root -ptest
    mysql> show processlist;
@@ -136,6 +137,7 @@ and mysql-slave on the GKE cluster.  DB replication should be operational betwee
    1. On slave use `show slave status\G`:
 
    ```
+   slavePod=$(kubectl get pods --kubeconfig ${KCONFGKE} -l "app.kubernetes.io/name=mysql-slave" -o jsonpath="{.items[0].metadata.name}")
    kubectl exec -it ${slavePod} -c mysql-slave --kubeconfig ${KCONFGKE} bash
    root@vl3-mysql-slave-76b8d9c847-2zr5x:/# mysql -u root -ptest
    mysql> show slave status \G

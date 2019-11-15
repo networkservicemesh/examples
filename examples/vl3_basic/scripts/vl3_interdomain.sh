@@ -38,6 +38,9 @@ NSMDIR=${NSMDIR:-${sdir}/../../../../networkservicemesh}
 
 MFSTDIR=${MFSTDIR:-${sdir}/../k8s}
 VL3_NSEMFST=${MFSTDIR}/vl3-nse-ucnf-single.yaml
+if [[ -n ${REMOTE_IP} ]]; then
+    VL3_NSEMFST=${MFSTDIR}/vl3-nse-ucnf_deploy.yaml
+fi
 
 KUBEINSTALL="kubectl $INSTALL_OP ${KCONF:+--kubeconfig $KCONF}"
 
@@ -48,7 +51,6 @@ if [[ "${INSTALL_OP}" == "delete" ]]; then
 else
     if [[ -n ${REMOTE_IP} ]]; then
         kubectl create ${KCONF:+--kubeconfig $KCONF} ${CFGMAP} --from-literal=remote.ip_list=${REMOTE_IP}
-        VL3_NSEMFST=${MFSTDIR}/vl3-nse-ucnf.yaml
     fi
 fi
 

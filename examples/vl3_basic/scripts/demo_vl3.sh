@@ -170,7 +170,7 @@ if [[ -n ${MYSQL} ]]; then
         masterIP=$(kubectl exec -t ${masterPod} -c kiali --kubeconfig ${KCONF_CLUS1} -- ip a show dev nsm0 | grep inet | awk '{ print $2 }' | cut -d '/' -f 1)
         echo
         pe "kubectl exec -t ${masterPod} -c kiali --kubeconfig ${KCONF_CLUS1} -- ip a show dev nsm0"
-        p "# mysql master vL3 IP = ${masterIP}"
+        pc "# mysql master vL3 IP = ${masterIP}"
         echo
     else
         masterIP="1.1.1.1"
@@ -184,14 +184,14 @@ if [[ -n ${MYSQL} ]]; then
         pe "kubectl get deployment vl3-mysql-slave --kubeconfig ${KCONF_CLUS2} -o json | jq '.metadata.annotations'"
         echo
         p "# **** NOTE: the vl3-mysql-slave is finding mysql-master at the NSM vL3 addr ${masterIP}"
-        pe "kubectl get pods --kubeconfig ${KCONFGKE} -l app.kubernetes.io/name=mysql-slave -o json | jq '.items[0].spec.containers[0].env'"
+        pe "kubectl get pods --kubeconfig ${KCONF_CLUS2} -l app.kubernetes.io/name=mysql-slave -o json | jq '.items[0].spec.containers[0].env'"
         echo
         #  | select(.name==\"MYSQL_MASTER_SERVICE_HOST\")
 
         p "# Wait for mysql slave to come up"
         kubectl wait --kubeconfig ${KCONF_CLUS2} --timeout=300s --for condition=Ready -l app.kubernetes.io/name=mysql-slave pod
-        pc "kubectl get pods --kubeconfig ${KCONF_CLUS2} -l  app.kubernetes.io/name=mysql-slave -o wide"
-        echo
+        pc "kubectl get pods --kubeconfig ${KCONF_CLUS2} -l app.kubernetes.io/name=mysql-slave -o wide"
+        echo ""
     fi
 
 fi
