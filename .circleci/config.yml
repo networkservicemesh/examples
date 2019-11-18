@@ -166,7 +166,7 @@ jobs:
       CLUSTER_RULES_PREFIX: "kind"
 
 orbs:
-  helm: circleci/helm@0.1.2
+  helm: circleci/helm@0.2.1
 workflows:
   version: 2
   test-and-push:
