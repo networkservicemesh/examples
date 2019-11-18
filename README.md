@@ -42,8 +42,6 @@ In the `examples` repository folder, execute the following set of commands.  The
 ```shell
 make kind-start
 
-. ./scripts/kind.sh
-
 SPIRE_ENABLED=false INSECURE=true make helm-init helm-install-nsm
 
 make k8s-proxy-save k8s-proxy-load-images
@@ -65,9 +63,9 @@ By default, the cluster is deployed with `Kind` using the following `make` targe
 make kind-start
 ```
 
-And then initialize the Kubernetes cluster access with:
+Make sure you use the `kind-nsm` context:
 ```shell
-. ./scripts/kind.sh
+kubectl config use-context kind-nsm
 ```
 
 ### NSM infra deployment

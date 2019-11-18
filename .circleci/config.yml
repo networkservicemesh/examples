@@ -126,7 +126,7 @@ jobs:
           name: Start kind
           command: |
             make kind-start
-            echo 'export KUBECONFIG="$(kind get kubeconfig-path --name="nsm")"' >> $BASH_ENV
+            kubectl config use-context kind-nsm
       - run:
           name: Wait for kind to settle
           command: |
@@ -162,8 +162,6 @@ jobs:
             kubectl get nodes --all-namespaces
             kubectl get pods -o wide --all-namespaces
             kubectl describe pods --all-namespaces
-    environment:
-      CLUSTER_RULES_PREFIX: "kind"
 
 orbs:
   helm: circleci/helm@0.2.1
