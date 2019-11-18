@@ -22,7 +22,7 @@ SHELL:=/bin/bash
 default: all
 
 NSM_PATH?=${TOP}/../networkservicemesh
-CLUSTER_RULES_PREFIX?=vagrant
+CLUSTER_RULES_PREFIX?=kind
 PREFIX?=k8s
 CONTAINER_BUILD_PREFIX?=docker
 VPP_AGENT?=ligato/vpp-agent:v2.3.0
