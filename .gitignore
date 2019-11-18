@@ -23,5 +23,3 @@
 # For those that use vi
 *.swp
 *.swo
-
-scripts/vagrant/.kube/

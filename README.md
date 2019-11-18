@@ -1,6 +1,6 @@
 # Network Service Mesh Examples
 
-[![CircleCI Build Status](https://circleci.com/gh/networkservicemesh/examples/tree/master.svg?style=svg)](https://circleci.com/gh/networkservicemesh/examples/tree/master)
+[![CircleCI Build Status](https://circleci.com/gh/networkservicemesh/examples/tree/release-0.2.svg?style=svg)](https://circleci.com/gh/networkservicemesh/examples/tree/release-0.2)
 
 This repository contains examples and use-cases for Network Service Mesh. It is an independent way to deploy both NSM and a selection of examples, superimposed over the original `networkservicemesh` repository.
 
@@ -16,16 +16,21 @@ The repo host s number of example setups of NSM based applications. The quick wa
 
 ```shell
 $ make list
+	 4g-network                     4G Network Topology example
 	 bridge-domain                  A simple VPP bridge domain example
-	 envoy_interceptor              No description set
+	 envoy_interceptor              Run Envoy as a NS Endpoint
+	 gw-routers                     GW and Router - usecase for the CNF Testbed
 	 icmp                           Basic kernel interface ICMP reposnder
+	 packet-filtering               Packet filtering - usecase for the CNF Testbed
 	 proxy                          HTTP reverse proxy, which maps the HTTP requests to NSM Client requests
 	 secure-intranet                The *Sarah* Secure Intranet Connectivity implementation
+	 ucnf-icmp                      Basic ICMP reposnder based on the Universal CNF
+	 universal-cnf                  The Universal CNF
 	 vpp-icmp                       Basic memif interface ICMP reposnder with VPP
 
  Get the full description of the example by calling:
 
-	 make <example-name>-describe
+ 	 make <example-name>-describe
 ```
 
 As seen ont he last line, there is a possibility to run `make <example>-describe` and get a more detailed explanation of the particular application. Please consider installing `consolemd` (`pip install consolemd`) for a better console experience browsing the documentation.
@@ -35,9 +40,7 @@ As seen ont he last line, there is a possibility to run `make <example>-describe
 In the `examples` repository folder, execute the following set of commands.  These commands are for the proxy example.  Change the term "proxy" for other examples:
 
 ```shell
-make vagrant-start
-
-. ./scripts/vagrant.sh
+make kind-start
 
 SPIRE_ENABLED=false INSECURE=true make helm-init helm-install-nsm
 
@@ -50,19 +53,19 @@ make k8s-proxy-check
 
 ## More details
 
-The repo follows the main NSM development and deployment model based on `Vagrant`. Please refer to [NSM's QUICK-START.md](https://github.com/networkservicemesh/networkservicemesh/blob/master/docs/QUICK-START.md) for detailed instructions on how to set-up the development environment.
+The repo follows the main NSM development and deployment model based on `Kind`. Please refer to [NSM's QUICK-START.md](https://github.com/networkservicemesh/networkservicemesh/blob/release-0.2/docs/guide-quickstart.md) for detailed instructions on how to set-up the development environment.
 
 ### Cluster setup
 
-By default, the cluster is deployed with `Vagrant` using the following `make` target:
+By default, the cluster is deployed with `Kind` using the following `make` target:
 
 ```shell
-make vagrant-start
+make kind-start
 ```
 
-And then initialize the Kubernetes cluster access with:
+Make sure you use the `kind-nsm` context:
 ```shell
-. ./scripts/vagrant.sh
+kubectl config use-context kind-nsm
 ```
 
 ### NSM infra deployment
@@ -85,7 +88,7 @@ make k8s-save k8s-load-images
 
 examples/ uses go modules for its dependencies.  Many of these are against the [networkservicemesh/](https://github.com/networkservicemesh/networkservicemesh) repo.
 
-A convenience script is provided for updating these dependencies [scripts/update_networkservicemesh.sh](https://github.com/networkservicemesh/examples/blob/master/scripts/update_networkservicemesh.sh) - which will update `examples/` dependencies to the [networkservicemesh/](https://github.com/networkservicemesh/networkservicemesh) repo. The default is the HEAD of the `master` branch, but this can be changed by passing a argument at the command line to the script:
+A convenience script is provided for updating these dependencies [scripts/update_networkservicemesh.sh](https://github.com/networkservicemesh/examples/blob/release-0.2/scripts/update_networkservicemesh.sh) - which will update `examples/` dependencies to the [networkservicemesh/](https://github.com/networkservicemesh/networkservicemesh) repo. The default is the HEAD of the `master` branch, but this can be changed by passing a argument at the command line to the script:
 
  `./scripts/update_networkservicemesh.sh [<branch>|<local path>]`
 
