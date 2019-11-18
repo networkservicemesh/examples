@@ -1,6 +1,6 @@
 # Network Service Mesh Examples
 
-[![CircleCI Build Status](https://circleci.com/gh/networkservicemesh/examples/tree/master.svg?style=svg)](https://circleci.com/gh/networkservicemesh/examples/tree/master)
+[![CircleCI Build Status](https://circleci.com/gh/networkservicemesh/examples/tree/release-0.2.svg?style=svg)](https://circleci.com/gh/networkservicemesh/examples/tree/release-0.2)
 
 This repository contains examples and use-cases for Network Service Mesh. It is an independent way to deploy both NSM and a selection of examples, superimposed over the original `networkservicemesh` repository.
 
@@ -53,7 +53,7 @@ make k8s-proxy-check
 
 ## More details
 
-The repo follows the main NSM development and deployment model based on `Kind`. Please refer to [NSM's QUICK-START.md](https://github.com/networkservicemesh/networkservicemesh/blob/master/docs/guide-quickstart.md) for detailed instructions on how to set-up the development environment.
+The repo follows the main NSM development and deployment model based on `Kind`. Please refer to [NSM's QUICK-START.md](https://github.com/networkservicemesh/networkservicemesh/blob/release-0.2/docs/guide-quickstart.md) for detailed instructions on how to set-up the development environment.
 
 ### Cluster setup
 
@@ -88,7 +88,7 @@ make k8s-save k8s-load-images
 
 examples/ uses go modules for its dependencies.  Many of these are against the [networkservicemesh/](https://github.com/networkservicemesh/networkservicemesh) repo.
 
-A convenience script is provided for updating these dependencies [scripts/update_networkservicemesh.sh](https://github.com/networkservicemesh/examples/blob/master/scripts/update_networkservicemesh.sh) - which will update `examples/` dependencies to the [networkservicemesh/](https://github.com/networkservicemesh/networkservicemesh) repo. The default is the HEAD of the `master` branch, but this can be changed by passing a argument at the command line to the script:
+A convenience script is provided for updating these dependencies [scripts/update_networkservicemesh.sh](https://github.com/networkservicemesh/examples/blob/release-0.2/scripts/update_networkservicemesh.sh) - which will update `examples/` dependencies to the [networkservicemesh/](https://github.com/networkservicemesh/networkservicemesh) repo. The default is the HEAD of the `master` branch, but this can be changed by passing a argument at the command line to the script:
 
  `./scripts/update_networkservicemesh.sh [<branch>|<local path>]`
 
