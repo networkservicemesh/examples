@@ -176,12 +176,12 @@ workflows:
           description: "4G Network Topology example"
           requires:
             - sanity-check
-      - test:
-          name: "Test Bridge domain"
-          example: "bridge-domain"
-          description: "A simple VPP bridge domain example"
-          requires:
-            - sanity-check
+      # - test:
+      #     name: "Test Bridge domain"
+      #     example: "bridge-domain"
+      #     description: "A simple VPP bridge domain example"
+      #     requires:
+      #       - sanity-check
       - test:
           name: "Test Envoy"
           example: "envoy_interceptor"
@@ -239,6 +239,7 @@ workflows:
               only: master
           requires:
             - "Test 4G Network Topology"
+            # - "Test Bridge domain"
             - "Test Envoy"
             - "Test GW Routers"
             - "Test ICMP"
