@@ -177,6 +177,12 @@ workflows:
           requires:
             - sanity-check
       - test:
+          name: "Test Bridge domain"
+          example: "bridge-domain"
+          description: "A simple VPP bridge domain example"
+          requires:
+            - sanity-check
+      - test:
           name: "Test Envoy"
           example: "envoy_interceptor"
           description: "Envoy interceptor"
@@ -195,15 +201,15 @@ workflows:
           requires:
             - sanity-check
       - test:
-          name: "Test Proxy"
-          example: "proxy"
-          description: "Proxy"
+          name: "Test Packet Filtering"
+          example: "packet-filtering"
+          description: "Packet filtering"
           requires:
             - sanity-check
       - test:
-          name: "Test VPP ICMP"
-          example: "vpp-icmp"
-          description: "VPP ICMP"
+          name: "Test Proxy"
+          example: "proxy"
+          description: "Proxy"
           requires:
             - sanity-check
       - test:
@@ -219,9 +225,9 @@ workflows:
           requires:
             - sanity-check
       - test:
-          name: "Test Packet Filtering"
-          example: "packet-filtering"
-          description: "Packet Filtering"
+          name: "Test VPP ICMP"
+          example: "vpp-icmp"
+          description: "VPP ICMP"
           requires:
             - sanity-check
       - push-all:
@@ -237,7 +243,7 @@ workflows:
             - "Test ICMP"
             - "Test Proxy"
             - "Test VPP ICMP"
-            # - "Test Secure Intranet" temporarily disabled
+            - "Test Secure Intranet"
             - "Test UCNF ICMP"
             - "Test Packet Filtering"
   nightly-test:
@@ -255,6 +261,11 @@ workflows:
           description: "4G Network Topology example"
           nightly: "true"
       - test:
+          name: "[N] Test Bridge domain"
+          example: "bridge-domain"
+          description: "A simple VPP bridge domain example"
+          nightly: "true"
+      - test:
           name: "[N] Test Envoy"
           example: "envoy_interceptor"
           description: "Envoy interceptor"
@@ -270,14 +281,14 @@ workflows:
           description: "Simple ICMP"
           nightly: "true"
       - test:
+          name: "[N] Test Packet Filtering"
+          example: "packet-filtering"
+          description: "Packet Filtering"
+          nightly: "true"
+      - test:
           name: "[N] Test Proxy"
           example: "proxy"
           description: "Proxy"
-          nightly: "true"
-      - test:
-          name: "[N] Test VPP ICMP"
-          example: "vpp-icmp"
-          description: "VPP ICMP"
           nightly: "true"
       - test:
           name: "[N] Test Secure Intranet"
@@ -285,12 +296,12 @@ workflows:
           description: "Secure Intranet"
           nightly: "true"
       - test:
-          name: "[N] Test Packet Filtering"
-          example: "packet-filtering"
-          description: "Packet Filtering"
-          nightly: "true"
-      - test:
           name: "[N] Test UCNF ICMP"
           example: "ucnf-icmp"
           description: "UCNF ICMP"
+          nightly: "true"
+      - test:
+          name: "[N] Test VPP ICMP"
+          example: "vpp-icmp"
+          description: "VPP ICMP"
           nightly: "true"
