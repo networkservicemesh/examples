@@ -240,12 +240,13 @@ workflows:
           requires:
             - "Test 4G Network Topology"
             - "Test Envoy"
+            - "Test GW Routers"
             - "Test ICMP"
+            - "Test Packet Filtering"
             - "Test Proxy"
-            - "Test VPP ICMP"
             - "Test Secure Intranet"
             - "Test UCNF ICMP"
-            - "Test Packet Filtering"
+            - "Test VPP ICMP"
   nightly-test:
     triggers:
       - schedule:
