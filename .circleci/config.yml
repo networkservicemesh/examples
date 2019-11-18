@@ -84,7 +84,7 @@ jobs:
         type: string
       nsmbranch:
         type: string
-        default: "master"
+        default: "v0.2.0"
       nightly:
         type: string
         default: "false"
@@ -233,10 +233,10 @@ workflows:
       - push-all:
           name: "Push all"
           org: "networkservicemesh"
-          tag: "master"
+          tag: "v0.2.0"
           filters:
             branches:
-              only: master
+              only: release-0.2
           requires:
             - "Test 4G Network Topology"
             # - "Test Bridge domain"
