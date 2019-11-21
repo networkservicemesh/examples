@@ -1,0 +1,60 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      networkservicemesh.io/app: "nginx-nse"
+  template:
+    metadata:
+      labels:
+        networkservicemesh.io/app: "nginx-nse"
+        networkservicemesh.io/impl: "web-service"
+    spec:
+      containers:
+        - name: sidecar-nse
+          image: networkservicemesh/proxy-sidecar-nse:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ADVERTISE_NSE_NAME
+              value: "web-service"
+            - name: ADVERTISE_NSE_LABELS
+              value: "app=nginx,color=blue"
+            - name: TRACER_ENABLED
+              value: "true"
+            - name: IP_ADDRESS
+              value: "10.60.3.0/24"
+          resources:
+            limits:
+              networkservicemesh.io/socket: 1
+        - name: nginx
+          image: networkservicemesh/proxy-nginx
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /usr/share/nginx/html/index.html
+              subPath: index.html
+              name: index-html
+      volumes:
+        - name: index-html
+          configMap:
+            name: index-html-blue
+metadata:
+  name: nginx-blue
+  namespace: default
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: index-html-blue
+data:
+  index.html: |
+    <html>
+        <head><title>Network Service Mesh</title></head>
+    <body bgcolor="Blue">
+        <center>
+            <br><br><br><br><br><br><br><br><br><br>
+            <h1 style="color:White;">Welcome to NSM!</h1>
+        </center>
+    </body>
+    </html>

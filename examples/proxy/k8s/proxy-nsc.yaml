@@ -23,7 +23,9 @@ spec:
             - name: OUTGOING_NSC_NAME
               value: "web-service"
             - name: PROXY_HOST
-              value: ":8080"
+              value: "0.0.0.0:8080"
+          ports:
+            - containerPort: 8080
           resources:
             limits:
               networkservicemesh.io/socket: 1

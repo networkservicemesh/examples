@@ -7,7 +7,36 @@ spec:
   payload: IP
   matches:
     - match:
+      sourceSelector:
+        app: proxy
+        color: red
       route:
         - destination:
           destinationSelector:
-            app: nginx-nse
+            app: nginx
+            color: red
+    - match:
+      sourceSelector:
+        app: proxy
+        color: green
+      route:
+        - destination:
+          destinationSelector:
+            app: nginx
+            color: green
+    - match:
+      sourceSelector:
+        app: proxy
+        color: blue
+      route:
+        - destination:
+          destinationSelector:
+            app: nginx
+            color: blue
+    - match:
+      sourceSelector:
+        app: proxy
+      route:
+        - destination:
+          destinationSelector:
+            app: nginx
