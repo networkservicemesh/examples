@@ -6,13 +6,15 @@ BATCHES=${BATCHES:-1}
 function call_wget() {
     i="$1"
     nsc="$2"
-    args="$3"
+    color=$3
 
-    if kubectl exec -it "${nsc}" -- wget "${args}" -O /dev/null --timeout 5 "localhost:8080/huge.bin" >/dev/null 2>&1; then
-        echo "${i}. Proxy NSC accessiing 'web-service' successful"
+    html=$(kubectl exec -it "${nsc}" -- wget --header="NSM-Color: ${color}" -O - localhost:8080 2>/dev/null)
+
+    if echo ${html} | grep ${color} >/dev/null 2>&1 ; then
+        echo "${i}. Proxy NSC accessing 'web-service' successful"
         exit 0
     else
-        echo "Proxy NSC accessiing 'web-service' unsuccessful"
+        echo "Proxy NSC accessing 'web-service' unsuccessful"
         kubectl get pod "${nsc}" -o wide
         exit 1
     fi
@@ -24,7 +26,11 @@ for nsc in $(kubectl get pods -o=name | grep proxy-nsc | sed 's@.*/@@'); do
     # This loops and calls with "NSM-App: Firewall" header, directly into the gateway
     for ((i=1;i<=ITERATIONS;i=i+BATCHES)); do
         for ((j=i;j<i+BATCHES;++j)); do
-            call_wget ${j} "${nsc}" "--header='NSM-App: Firewall'" &
+            call_wget ${j} "${nsc}" "Red" &
+            pids[${j}]=$!
+            call_wget ${j} "${nsc}" "Green" &
+            pids[${j}]=$!
+            call_wget ${j} "${nsc}" "Blue" &
             pids[${j}]=$!
         done
         # wait for all pids

@@ -20,7 +20,7 @@ spec:
             - name: ADVERTISE_NSE_NAME
               value: "web-service"
             - name: ADVERTISE_NSE_LABELS
-              value: "app=nginx-nse"
+              value: "app=nginx,color=red"
             - name: TRACER_ENABLED
               value: "true"
             - name: IP_ADDRESS
@@ -31,6 +31,30 @@ spec:
         - name: nginx
           image: networkservicemesh/proxy-nginx
           imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /usr/share/nginx/html/index.html
+              subPath: index.html
+              name: index-html
+      volumes:
+        - name: index-html
+          configMap:
+            name: index-html-red
 metadata:
-  name: nginx-nse
+  name: nginx-red
   namespace: default
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: index-html-red
+data:
+  index.html: |
+    <html>
+        <head><title>Network Service Mesh</title></head>
+    <body bgcolor="Red">
+        <center>
+            <br><br><br><br><br><br><br><br><br><br>
+            <h1 style="color:White;">Welcome to NSM!</h1>
+        </center>
+    </body>
+    </html>
