@@ -1,6 +1,7 @@
 package ucnf
 
 import (
+	"context"
 	"github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/pkg/config"
 	"github.com/networkservicemesh/networkservicemesh/sdk/common"
 	"github.com/sirupsen/logrus"
@@ -33,7 +34,7 @@ func NewUcnfNse(configPath string, verify bool, backend config.UniversalCNFBacke
 	pia := config.NewProcessInitActions(cnfConfig.GetBackend(), cnfConfig.InitActions, configuration)
 	defer pia.Cleanup()
 
-	if err := pia.Process(cnfConfig.GetBackend()); err != nil {
+	if err := pia.Process(context.Background(), cnfConfig.GetBackend()); err != nil {
 		logrus.Fatalf("Error processing the init actions: %v", err)
 	}
 
@@ -43,7 +44,7 @@ func NewUcnfNse(configPath string, verify bool, backend config.UniversalCNFBacke
 	//}
 	//ceAddon := CompositeEndpointPlugin
 
-	pe := config.NewProcessEndpoints(cnfConfig.GetBackend(), cnfConfig.Endpoints, ceAddons)
+	pe := config.NewProcessEndpoints(cnfConfig.GetBackend(), cnfConfig.Endpoints, configuration, ceAddons)
 
 	ucnfnse := &UcnfNse{
 		processEndpoints: pe,

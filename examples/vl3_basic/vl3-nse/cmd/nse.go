@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/pkg/ucnf"
 	"github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/pkg/vppagent"
-	"github.com/networkservicemesh/networkservicemesh/controlplane/pkg/apis/local/networkservice"
+	"github.com/networkservicemesh/networkservicemesh/controlplane/api/networkservice"
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
 	"github.com/networkservicemesh/networkservicemesh/sdk/common"
 	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
