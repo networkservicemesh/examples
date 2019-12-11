@@ -18,13 +18,13 @@ spec:
           image: networkservicemesh/secure-intranet-vppagent-endpoint:latest
           imagePullPolicy: IfNotPresent
           env:
-            - name: ADVERTISE_NSE_NAME
+            - name: ENDPOINT_NETWORK_SERVICE
               value: "secure-intranet"
-            - name: ADVERTISE_NSE_LABELS
+            - name: ENDPOINT_LABELS
               value: "app=acl-filter"
-            - name: OUTGOING_NSC_NAME
+            - name: CLIENT_NETWORK_SERVICE
               value: "secure-intranet"
-            - name: OUTGOING_NSC_LABELS
+            - name: CLIENT_LABELS
               value: "app=acl-filter"
             - name: TRACER_ENABLED
               value: "true"
