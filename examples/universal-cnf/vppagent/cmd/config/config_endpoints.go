@@ -46,16 +46,16 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint,
 
 	for _, e := range endpoints {
 		configuration := &common.NSConfiguration{
-			NsmServerSocket:    nsconfig.NsmServerSocket,
-			NsmClientSocket:    nsconfig.NsmClientSocket,
-			Workspace:          nsconfig.Workspace,
-			AdvertiseNseName:   e.Name,
-			OutgoingNscName:    nsconfig.OutgoingNscName,
-			AdvertiseNseLabels: labelStringFromMap(e.Labels),
-			OutgoingNscLabels:  nsconfig.OutgoingNscLabels,
-			MechanismType:      memif.MECHANISM,
-			IPAddress:          nsconfig.IPAddress,
-			Routes:             nil,
+			NsmServerSocket:        nsconfig.NsmServerSocket,
+			NsmClientSocket:        nsconfig.NsmClientSocket,
+			Workspace:              nsconfig.Workspace,
+			EndpointNetworkService: e.Name,
+			ClientNetworkService:   nsconfig.ClientNetworkService,
+			EndpointLabels:         labelStringFromMap(e.Labels),
+			ClientLabels:           nsconfig.ClientLabels,
+			MechanismType:          memif.MECHANISM,
+			IPAddress:              nsconfig.IPAddress,
+			Routes:                 nil,
 		}
 
 		// Build the list of composites
@@ -66,16 +66,16 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint,
 
 		if e.Ipam != nil {
 			compositeEndpoints = append(compositeEndpoints, endpoint.NewIpamEndpoint((&common.NSConfiguration{
-				NsmServerSocket:    nsconfig.NsmServerSocket,
-				NsmClientSocket:    nsconfig.NsmClientSocket,
-				Workspace:          nsconfig.Workspace,
-				AdvertiseNseName:   nsconfig.AdvertiseNseName,
-				OutgoingNscName:    nsconfig.OutgoingNscName,
-				AdvertiseNseLabels: nsconfig.AdvertiseNseLabels,
-				OutgoingNscLabels:  nsconfig.OutgoingNscLabels,
-				MechanismType:      nsconfig.MechanismType,
-				IPAddress:          e.Ipam.PrefixPool,
-				Routes:             nil,
+				NsmServerSocket:        nsconfig.NsmServerSocket,
+				NsmClientSocket:        nsconfig.NsmClientSocket,
+				Workspace:              nsconfig.Workspace,
+				EndpointNetworkService: nsconfig.EndpointNetworkService,
+				ClientNetworkService:   nsconfig.ClientNetworkService,
+				EndpointLabels:         nsconfig.EndpointLabels,
+				ClientLabels:           nsconfig.ClientLabels,
+				MechanismType:          nsconfig.MechanismType,
+				IPAddress:              e.Ipam.PrefixPool,
+				Routes:                 nil,
 			})))
 
 			if len(e.Ipam.Routes) > 0 {
