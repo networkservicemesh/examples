@@ -97,8 +97,8 @@ func NewUniversalCNFEndpoint(backend UniversalCNFBackend, endpoint *Endpoint,
 		labels := labelStringFromMap(c.Labels)
 
 		// Call the NS Client initiation
-		nsConfig.OutgoingNscName = c.Name
-		nsConfig.OutgoingNscLabels = labels
+		nsConfig.ClientNetworkService = c.Name
+		nsConfig.ClientLabels = labels
 		nsmClient, err = client.NewNSMClient(context.TODO(), nsConfig)
 
 		if err != nil {
