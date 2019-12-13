@@ -13,6 +13,7 @@ spec:
         networkservicemesh.io/app: "bridge-domain-ipv6"
         networkservicemesh.io/impl: "bridge-ipv6"
     spec:
+      serviceAccount: nse-acc
       containers:
         - name: bridge-domain
           image: networkservicemesh/bridge-domain-bridge:latest

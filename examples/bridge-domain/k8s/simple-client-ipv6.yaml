@@ -11,6 +11,7 @@ spec:
       labels:
         networkservicemesh.io/app: "simple-client-ipv6"
     spec:
+      serviceAccount: nsc-acc
       containers:
         - name: alpine-img
           image: alpine:latest
