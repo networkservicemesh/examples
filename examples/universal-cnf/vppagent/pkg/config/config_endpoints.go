@@ -40,7 +40,7 @@ type ProcessEndpoints struct {
 }
 
 type CompositeEndpointAddons interface {
-	AddCompositeEndpoints(*common.NSConfiguration) *[]networkservice.NetworkServiceServer
+	AddCompositeEndpoints(*common.NSConfiguration, *Endpoint) *[]networkservice.NetworkServiceServer
 }
 
 // NewProcessEndpoints returns a new ProcessInitCommands struct
@@ -70,7 +70,7 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint, nsc
 			endpoint.NewConnectionEndpoint(configuration),
 		}
 		// Invoke any additional composite endpoint constructors via the add-on interface
-		addCompositeEndpoints := ceAddons.AddCompositeEndpoints(configuration)
+		addCompositeEndpoints := ceAddons.AddCompositeEndpoints(configuration, e)
 		if addCompositeEndpoints != nil {
 			compositeEndpoints = append(compositeEndpoints, *addCompositeEndpoints...)
 		}
@@ -112,6 +112,7 @@ func (pe *ProcessEndpoints) Process() error {
 		}
 
 		_ = nsEndpoint.Start()
+		e.Endpoint.NseName = nsEndpoint.GetName()
 		logrus.Infof("Started endpoint %s", nsEndpoint.GetName())
 		e.Cleanup = func() { _ = nsEndpoint.Delete() }
 	}

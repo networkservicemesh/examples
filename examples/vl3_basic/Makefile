@@ -3,7 +3,7 @@ CONTAINERS = vl3-nse
 PODS = simple-client vl3-nse
 CHECK = export ITERATIONS=10 && export BATCHES=1 && scripts/check_vl3.sh
 
-export VPP_AGENT=ligato/vpp-agent:v2.1.1
+#export VPP_AGENT=ligato/vpp-agent:v2.1.1
 
 include $(TOP)/mk/targets.mk
 

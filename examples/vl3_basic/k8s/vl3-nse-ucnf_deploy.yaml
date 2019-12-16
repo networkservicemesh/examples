@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: vl3-nse
-          image: tiswanso/vl3_ucnf-vl3-nse:vl3-inter-domain
+          image: tiswanso/vl3_ucnf-vl3-nse:unified_api
           imagePullPolicy: Always
           env:
             - name: ADVERTISE_NSE_NAME

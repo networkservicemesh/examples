@@ -19,6 +19,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/pkg/ucnf"
+	"github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/pkg/config"
 	"github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/pkg/vppagent"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/networkservice"
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
@@ -40,6 +41,8 @@ type Flags struct {
 	Verify     bool
 }
 
+type fnGetNseName func () string
+
 // Process will parse the command line flags and init the structure members
 func (mf *Flags) Process() {
 	flag.StringVar(&mf.ConfigPath, "file", defaultConfigPath, " full path to the configuration file")
@@ -49,7 +52,7 @@ func (mf *Flags) Process() {
 
 type vL3CompositeEndpoint string
 
-func (vL3ce vL3CompositeEndpoint) AddCompositeEndpoints(nsConfig *common.NSConfiguration) *[]networkservice.NetworkServiceServer {
+func (vL3ce vL3CompositeEndpoint) AddCompositeEndpoints(nsConfig *common.NSConfiguration, ucnfEndpoint *config.Endpoint) *[]networkservice.NetworkServiceServer {
 	nsPodIp, ok := os.LookupEnv("NSE_POD_IP")
 	if !ok {
 		nsPodIp = "2.2.20.0" // needs to be set to make sense
@@ -89,7 +92,10 @@ func (vL3ce vL3CompositeEndpoint) AddCompositeEndpoints(nsConfig *common.NSConfi
 	}
 	compositeEndpoints := []networkservice.NetworkServiceServer{
 		ipamEp,
-		newVL3ConnectComposite(nsConfig, prefixPool, &vppagent.UniversalCNFVPPAgentBackend{}, nsRemoteIpList),
+		newVL3ConnectComposite(nsConfig, prefixPool,
+			&vppagent.UniversalCNFVPPAgentBackend{}, nsRemoteIpList, func () string {
+				return ucnfEndpoint.NseName
+			}),
 	}
 
 	return &compositeEndpoints
@@ -110,6 +116,7 @@ func main() {
 
 	//var defCEAddon defaultCompositeEndpointAddon
 	ucnfNse := ucnf.NewUcnfNse(mainFlags.ConfigPath, mainFlags.Verify, &vppagent.UniversalCNFVPPAgentBackend{}, CompositeEndpointPlugin)
+
 	defer ucnfNse.Cleanup()
 	<-c
 }

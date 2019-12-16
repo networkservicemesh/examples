@@ -116,6 +116,7 @@ type Endpoint struct {
 	IfName string
 	Ipam   *IPAM
 	Action *Action
+	NseName string
 }
 
 type UniversalCNFBackend interface {

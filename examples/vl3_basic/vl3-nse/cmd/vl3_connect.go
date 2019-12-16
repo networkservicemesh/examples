@@ -64,6 +64,7 @@ type vL3ConnectComposite struct {
 	nsmClient  *client.NsmClient
 	ipamEndpoint *endpoint.IpamEndpoint
 	backend config.UniversalCNFBackend
+	myNseNameFunc fnGetNseName
 }
 
 func (peer *vL3NsePeer) setPeerState(state vL3PeerState) {
@@ -112,8 +113,13 @@ func (vxc *vL3ConnectComposite) SetMyNseName(request *networkservice.NetworkServ
 	vxc.Lock()
 	defer vxc.Unlock()
 	if vxc.myEndpointName == "" {
-		logrus.Infof("Setting vL3connect composite endpoint name to %s", request.GetConnection().GetNetworkServiceEndpointName())
-		vxc.myEndpointName = request.GetConnection().GetNetworkServiceEndpointName()
+		nseName := vxc.myNseNameFunc()
+		logrus.Infof("Setting vL3connect composite endpoint name to \"%s\"--req contains \"%s\"", nseName, request.GetConnection().GetNetworkServiceEndpointName())
+		if request.GetConnection().GetNetworkServiceEndpointName() != "" {
+			vxc.myEndpointName = request.GetConnection().GetNetworkServiceEndpointName()
+		} else {
+			vxc.myEndpointName = nseName
+		}
 	}
 }
 
@@ -191,6 +197,7 @@ func (vxc *vL3ConnectComposite) Request(ctx context.Context,
 				logger.Infof("vL3ConnectComposite found network service; processing endpoints")
 				go vxc.processNsEndpoints(context.TODO(), response, "")
 			}
+			vxc.nsmClient.Configuration.OutgoingNscName = req.NetworkServiceName
 			logger.Infof("vL3ConnectComposite check remotes for endpoints")
 			for _, remoteIp := range vxc.remoteNsIpList {
 				req.NetworkServiceName = req.NetworkServiceName + "@" + remoteIp
@@ -383,7 +390,7 @@ func removeDuplicates(elements []string) []string {
 }
 
 // NewVppAgentComposite creates a new VPP Agent composite
-func newVL3ConnectComposite(configuration *common.NSConfiguration, ipamCidr string, backend config.UniversalCNFBackend, remoteIpList []string) *vL3ConnectComposite {
+func newVL3ConnectComposite(configuration *common.NSConfiguration, ipamCidr string, backend config.UniversalCNFBackend, remoteIpList []string, getNseName fnGetNseName) *vL3ConnectComposite {
 	nsRegAddr, ok := os.LookupEnv("NSREGISTRY_ADDR")
 	if !ok {
 		nsRegAddr = NSREGISTRY_ADDR
@@ -396,8 +403,8 @@ func newVL3ConnectComposite(configuration *common.NSConfiguration, ipamCidr stri
 	// ensure the env variables are processed
 	if configuration == nil {
 		configuration = &common.NSConfiguration{}
+		configuration.FromEnv()
 	}
-	configuration.FromEnv()
 
 	logrus.Infof("newVL3ConnectComposite")
 
@@ -451,11 +458,13 @@ func newVL3ConnectComposite(configuration *common.NSConfiguration, ipamCidr stri
 	}
 	*/
 	// Call the NS Client initiation
-	nsConfig := &common.NSConfiguration{
+	/* nsConfig := &common.NSConfiguration{
 		OutgoingNscName:   configuration.AdvertiseNseName,
 		OutgoingNscLabels: "",
 		Routes:            configuration.Routes,
-	}
+	} */
+	nsConfig := configuration
+	nsConfig.OutgoingNscLabels = ""
 	var nsmClient *client.NsmClient
 	nsmClient, err = client.NewNSMClient(context.TODO(), nsConfig)
 	if err != nil {
@@ -480,6 +489,7 @@ func newVL3ConnectComposite(configuration *common.NSConfiguration, ipamCidr stri
 		nsDiscoveryClient: nsDiscoveryClient,
 		nsmClient: nsmClient,
 		backend: backend,
+		myNseNameFunc: getNseName,
 	}
 
 	logrus.Infof("newVL3ConnectComposite returning")
