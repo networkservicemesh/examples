@@ -1,3 +1,17 @@
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at:
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package main
 
 import (
@@ -22,12 +36,15 @@ type nsmClientApp struct {
 
 func (c *nsmClientApp) Run() {
 	closer := jaeger.InitJaeger("nsm-init")
+
 	defer func() { _ = closer.Close() }()
 
 	span := spanhelper.FromContext(context.Background(), "RequestNetworkService")
+
 	defer span.Finish()
 
 	c.configuration = c.configuration.FromEnv()
+
 	if c.configuration.PodName == "" {
 		podName, err := tools.GetCurrentPodNameFromHostname()
 		if err != nil {
@@ -36,6 +53,7 @@ func (c *nsmClientApp) Run() {
 			c.configuration.PodName = podName
 		}
 	}
+
 	if c.configuration.Namespace == "" {
 		c.configuration.Namespace = common.GetNamespace()
 	}
@@ -43,27 +61,36 @@ func (c *nsmClientApp) Run() {
 	clientList, err := client.NewNSMClientList(span.Context(), c.configuration)
 	if err != nil {
 		span.Finish()
+
 		_ = closer.Close()
+
 		logrus.Fatalf("nsm client: Unable to create the NSM client %v", err)
+
 		return
 	}
-	err = clientList.ConnectRetry(span.Context(), "nsm", kernel.MECHANISM, "Primary interface", client.ConnectionRetry, client.RequestDelay)
+
+	err = clientList.ConnectRetry(span.Context(), "nsm", kernel.MECHANISM,
+		"Primary interface", client.ConnectionRetry, client.RequestDelay)
 	if err != nil {
 		span.Finish()
+
 		_ = closer.Close()
+
 		logrus.Fatalf("nsm client: Unable to establish connection with network service")
+
 		return
 	}
+
 	logrus.Info("nsm client: initialization is completed successfully")
-	
+
 	// Capture signals to cleanup before exiting
 	ch := tools.NewOSSignalChannel()
+
 	logrus.Info("nsm client: all clients connected. Sleeping...")
 	<-ch
 }
 
-// NewNSMClientApp - creates a client application.
-func NewNSMClientApp(configration *common.NSConfiguration) *nsmClientApp {
+func newNSMClientApp(configration *common.NSConfiguration) *nsmClientApp {
 	return &nsmClientApp{
 		configuration: configration,
 	}

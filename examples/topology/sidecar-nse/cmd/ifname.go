@@ -1,4 +1,3 @@
-// Copyright 2019 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,7 +28,7 @@ import (
 )
 
 const (
-	IfNameKey = "peerif"
+	ifNameKey = "peerif"
 )
 
 // IfnameEndpoint is a composite to change interface's name upon request
@@ -55,7 +54,7 @@ func (mce *IfnameEndpoint) Request(ctx context.Context,
 
 		endpoint.Log(ctx).Infof("Ifname UpdateConnection: %v", incomingConnection)
 
-		ifname, ok := request.GetRequestConnection().GetLabels()[IfNameKey]
+		ifname, ok := request.GetRequestConnection().GetLabels()[ifNameKey]
 		if ok {
 			incomingConnection.GetMechanism().GetParameters()[local.InterfaceNameKey] = ifname
 		}

@@ -49,7 +49,7 @@ spec:
               subPath: zebra.conf
       volumes:
         - name: startup-config
-          configMap: 
+          configMap:
             name: qrtr-5
 metadata:
   name: router5
@@ -57,7 +57,7 @@ metadata:
 ---
 apiVersion: v1
 metadata:
-    name: qrtr-5
+  name: qrtr-5
 data:
   zebra.conf: |
     !
