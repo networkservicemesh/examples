@@ -1,0 +1,51 @@
+---
+apiVersion: networkservicemesh.io/v1alpha1
+kind: NetworkService
+metadata:
+  name: topo
+  namespace: default
+spec:
+  payload: IP
+  matches:
+    - match:
+      sourceSelector:
+        link: r1-r2
+      route:
+        - destination:
+          destinationSelector:
+            device: router2
+    - match:
+      sourceSelector:
+        link: r2-r3
+      route:
+        - destination:
+          destinationSelector:
+            device: router3
+    - match:
+      sourceSelector:
+        link: r3-r4
+      route:
+        - destination:
+          destinationSelector:
+            device: router4
+    - match:
+      sourceSelector:
+        link: r4-r1
+      route:
+        - destination:
+          destinationSelector:
+            device: router1
+    - match:
+      sourceSelector:
+        link: r5-r1
+      route:
+        - destination:
+          destinationSelector:
+            device: router1
+    - match:
+      sourceSelector:
+        link: r4-r5
+      route:
+        - destination:
+          destinationSelector:
+            device: router5

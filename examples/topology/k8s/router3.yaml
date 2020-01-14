@@ -1,0 +1,70 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  selector:
+    matchLabels:
+      device: "router3"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: "topo"
+        device: "router3"
+    spec:
+      containers:
+        - name: sidecar-nsc
+          image: networkservicemesh/topology-sidecar-nsc:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              networkservicemesh.io/socket: "1"
+          env:
+            - name: NS_NETWORKSERVICEMESH_IO
+              value: "topo/eth34?link=r3-r4&peerif=eth43"
+        - name: sidecar-nse
+          image: networkservicemesh/topology-sidecar-nse:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ADVERTISE_NSE_NAME
+              value: "topo"
+            - name: ADVERTISE_NSE_LABELS
+              value: "device=router3"
+            - name: TRACER_ENABLED
+              value: "true"
+            - name: IP_ADDRESS
+              value: "10.60.3.0/24"
+          resources:
+            limits:
+              networkservicemesh.io/socket: 1
+        - name: router
+          image: networkservicemesh/topology-qrtr:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            capabilities:
+              add: ["NET_ADMIN"]
+          volumeMounts:
+            - name: startup-config
+              mountPath: /etc/quagga/zebra.conf
+              subPath: zebra.conf
+      volumes:
+        - name: startup-config
+          configMap:
+            name: qrtr-3
+metadata:
+  name: "router3"
+  namespace: default
+---
+apiVersion: v1
+metadata:
+  name: qrtr-3
+data:
+  zebra.conf: |
+    !
+    hostname qrtr-3
+    !
+    interface lo
+      ip address 192.0.2.3/32
+      exit
+    !
+kind: ConfigMap
