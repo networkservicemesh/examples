@@ -71,10 +71,10 @@ fi
 clus1_IP=$(kubectl get node --kubeconfig ${KCONF_CLUS1} -o jsonpath='{.items[0].status.addresses[?(@.type=="ExternalIP")].address}')
 clus2_IP=$(kubectl get node --kubeconfig ${KCONF_CLUS2} -o jsonpath='{.items[0].status.addresses[?(@.type=="ExternalIP")].address}')
 if [[ "${clus1_IP}" == "" ]]; then
-    clus1_IP=$(kubectl get node --kubeconfig ${KCONF_CLUS1} --selector='!node-role.kubernetes.io/master' -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+    clus1_IP=$(kubectl get node --kubeconfig ${KCONF_CLUS1} --selector='node-role.kubernetes.io/master' -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
 fi
 if [[ "${clus2_IP}" == "" ]]; then
-    clus2_IP=$(kubectl get node --kubeconfig ${KCONF_CLUS2} --selector='!node-role.kubernetes.io/master' -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+    clus2_IP=$(kubectl get node --kubeconfig ${KCONF_CLUS2} --selector='node-role.kubernetes.io/master' -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
 fi
 
 ########################
