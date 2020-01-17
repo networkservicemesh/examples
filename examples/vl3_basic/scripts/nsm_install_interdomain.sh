@@ -1,7 +1,7 @@
 #!/bin/bash
 
 HUB=${HUB:-tiswanso}
-TAG=${TAG:-master}
+TAG=${TAG:-vl3_api_rebase}
 
 INSTALL_OP=${INSTALL_OP:-apply}
 

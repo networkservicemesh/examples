@@ -21,6 +21,7 @@ usage() {
 NSMISTIODIR=${GOPATH}/src/github.com/nsm-istio
 sdir=$(dirname ${0})
 HELMDIR=${sdir}/../helm
+MFSTDIR=${MFSTDIR:-${sdir}/../k8s}
 
 for i in "$@"; do
     case $i in
@@ -70,10 +71,10 @@ fi
 clus1_IP=$(kubectl get node --kubeconfig ${KCONF_CLUS1} -o jsonpath='{.items[0].status.addresses[?(@.type=="ExternalIP")].address}')
 clus2_IP=$(kubectl get node --kubeconfig ${KCONF_CLUS2} -o jsonpath='{.items[0].status.addresses[?(@.type=="ExternalIP")].address}')
 if [[ "${clus1_IP}" == "" ]]; then
-    clus1_IP=$(kubectl get node --kubeconfig ${KCONF_CLUS1} --selector='node-role.kubernetes.io/master' -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+    clus1_IP=$(kubectl get node --kubeconfig ${KCONF_CLUS1} --selector='!node-role.kubernetes.io/master' -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
 fi
 if [[ "${clus2_IP}" == "" ]]; then
-    clus2_IP=$(kubectl get node --kubeconfig ${KCONF_CLUS2} --selector='node-role.kubernetes.io/master' -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+    clus2_IP=$(kubectl get node --kubeconfig ${KCONF_CLUS2} --selector='!node-role.kubernetes.io/master' -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
 fi
 
 ########################
@@ -129,12 +130,12 @@ fi
 
 p "# --------------------- Virtual L3 Setup ------------------------"
 
-pe "# **** Install vL3 ${HELLO:+ + helloworld clients} in cluster 1"
-pc "${DELETE:+INSTALL_OP=delete} REMOTE_IP=${clus2_IP} KCONF=${KCONF_CLUS1} examples/vl3_basic/scripts/vl3_interdomain.sh ${HELLO:+--hello}"
+pe "# **** Install vL3 in cluster 1"
+pc "${DELETE:+INSTALL_OP=delete} REMOTE_IP=${clus2_IP} KCONF=${KCONF_CLUS1} examples/vl3_basic/scripts/vl3_interdomain.sh --ipamOctet=22"
 pc "kubectl get pods --kubeconfig ${KCONF_CLUS1} -o wide"
 echo
-pe "# **** Install vL3 ${HELLO:+ + helloworld clients} in cluster 2"
-pc "${DELETE:+INSTALL_OP=delete} REMOTE_IP=${clus1_IP} KCONF=${KCONF_CLUS2} examples/vl3_basic/scripts/vl3_interdomain.sh ${HELLO:+--hello}"
+pe "# **** Install vL3  in cluster 2"
+pc "${DELETE:+INSTALL_OP=delete} REMOTE_IP=${clus1_IP} KCONF=${KCONF_CLUS2} examples/vl3_basic/scripts/vl3_interdomain.sh --ipamOctet=33"
 #pc "kubectl get pods --kubeconfig ${KCONF_CLUS2} -o wide"
 echo
 p "# **** Virtual L3 service definition (CRD) ***"
@@ -146,6 +147,29 @@ echo
 p "# **** Cluster 2 vL3 NSEs"
 pc "kubectl get pods --kubeconfig ${KCONF_CLUS2} -l networkservicemesh.io/app=vl3-nse-ucnf -o wide"
 echo
+
+if [[ -n ${HELLO} ]]; then
+    INSTALL_OP=apply
+    if [ "${DELETE}" == "true" ]; then
+        INSTALL_OP=delete
+    fi
+
+    p "# **** Install helloworld in cluster 1 ****"
+    pe "kubectl ${INSTALL_OP} --kubeconfig ${KCONF_CLUS1} -f ${MFSTDIR}/vl3-hello-kali.yaml"
+
+    if [[ "$INSTALL_OP" != "delete" ]]; then
+        sleep 10    p "# **** Install helloworld in cluster 1 ****"
+        kubectl wait --kubeconfig ${KCONF_CLUS1} --timeout=150s --for condition=Ready -l app=helloworld pod
+    fi
+
+    p "# **** Install helloworld in cluster 2 ****"
+    pe "kubectl ${INSTALL_OP} --kubeconfig ${KCONF_CLUS2} -f ${MFSTDIR}/vl3-hello-kali.yaml"
+
+    if [[ "$INSTALL_OP" != "delete" ]]; then
+        sleep 10
+        kubectl wait --kubeconfig ${KCONF_CLUS2} --timeout=150s --for condition=Ready -l app=helloworld pod
+    fi
+fi
 
 if [[ -n ${MYSQL} ]]; then
     INSTALL_OP=apply

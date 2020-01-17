@@ -7,8 +7,6 @@ spec:
   payload: IP
   matches:
     - match:
-      sourceSelector:
-        app: ucnf-client
       route:
         - destination:
           destinationSelector:

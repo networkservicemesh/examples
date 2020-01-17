@@ -13,6 +13,12 @@ for i in "$@"; do
         --namespace=?*)
             NAMESPACE=${i#*=}
             ;;
+        --ipamPool=?*)
+            IPAMPOOL=${i#*=}
+            ;;
+        --ipamOctet=?*)
+            IPAMOCTET=${i#*=}
+            ;;
         --delete)
             INSTALL_OP=delete
             ;;
@@ -36,11 +42,13 @@ sdir=$(dirname ${0})
 NSMDIR=${NSMDIR:-${sdir}/../../../../networkservicemesh}
 #echo "$NSMDIR"
 
+VL3HELMDIR=${VL3HELMDIR:-${sdir}/../helm}
+
 MFSTDIR=${MFSTDIR:-${sdir}/../k8s}
-VL3_NSEMFST=${MFSTDIR}/vl3-nse-ucnf-single.yaml
-if [[ -n ${REMOTE_IP} ]]; then
-    VL3_NSEMFST=${MFSTDIR}/vl3-nse-ucnf_deploy.yaml
-fi
+# VL3_NSEMFST=${MFSTDIR}/vl3-nse-ucnf-single.yaml
+# if [[ -n ${REMOTE_IP} ]]; then
+#    VL3_NSEMFST=${MFSTDIR}/vl3-nse-ucnf_deploy.yaml
+# fi
 
 KUBEINSTALL="kubectl $INSTALL_OP ${KCONF:+--kubeconfig $KCONF}"
 
@@ -55,7 +63,8 @@ else
 fi
 
 echo "---------------Install NSE-------------"
-${KUBEINSTALL} -f ${VL3_NSEMFST}
+# ${KUBEINSTALL} -f ${VL3_NSEMFST}
+helm template ${VL3HELMDIR}/vl3 ${IPAMPOOL:+ --set ipam.prefixPool=${IPAMPOOL}} ${IPAMOCTET:+ --set ipam.uniqueOctet=${IPAMOCTET}} | kubectl ${INSTALL_OP} ${KCONF:+--kubeconfig $KCONF} -f -
 
 if [[ "$INSTALL_OP" != "delete" ]]; then
   sleep 20

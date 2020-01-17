@@ -28,6 +28,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 )
 const (
@@ -57,6 +58,11 @@ func (vL3ce vL3CompositeEndpoint) AddCompositeEndpoints(nsConfig *common.NSConfi
 	if !ok {
 		nsPodIp = "2.2.20.0" // needs to be set to make sense
 	}
+	ipamUseNsPodOctet := false
+	nseUniqueOctet, ok := os.LookupEnv("NSE_IPAM_UNIQUE_OCTET")
+	if !ok {
+		ipamUseNsPodOctet = true
+	}
 	prefixPool := ""
 	// Find the 3rd octet of the pod IP
 	if nsConfig.IPAddress != "" {
@@ -65,15 +71,22 @@ func (vL3ce vL3CompositeEndpoint) AddCompositeEndpoints(nsConfig *common.NSConfi
 			logrus.Errorf("Failed to parse configured prefix pool IP")
 			prefixPoolIP = net.ParseIP("1.1.0.0")
 		}
-		podIP := net.ParseIP(nsPodIp)
-		if podIP == nil {
-			logrus.Errorf("Failed to parse configured pod IP")
-			podIP = net.ParseIP("2.2.0.0")
+		var ipamUniqueOctet int
+		if ipamUseNsPodOctet {
+			podIP := net.ParseIP(nsPodIp)
+			if podIP == nil {
+				logrus.Errorf("Failed to parse configured pod IP")
+				ipamUniqueOctet = 0
+			} else {
+				ipamUniqueOctet = int(podIP.To4()[2])
+			}
+		} else {
+			ipamUniqueOctet, _ = strconv.Atoi(nseUniqueOctet)
 		}
 		prefixPool = fmt.Sprintf("%d.%d.%d.%d/24",
 			prefixPoolIP.To4()[0],
 			prefixPoolIP.To4()[1],
-			podIP.To4()[2],
+			ipamUniqueOctet,
 			0)
 	}
 	logrus.WithFields(logrus.Fields{
