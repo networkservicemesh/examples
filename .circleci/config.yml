@@ -163,6 +163,76 @@ jobs:
             kubectl get pods -o wide --all-namespaces
             kubectl describe pods --all-namespaces
 
+  test-all:
+    parameters:
+      nsmbranch:
+        type: string
+        default: "master"
+      nightly:
+        type: string
+        default: "false"
+    machine:
+      enabled: true
+      docker_layer_caching: true
+    working_directory: ~/project/examples
+    steps:
+      - run:
+          name: Update go to 1.13
+          working_directory: /tmp
+          command: |
+            wget https://dl.google.com/go/go1.13.linux-amd64.tar.gz
+            sudo rm -rf /usr/local/go
+            sudo tar -C /usr/local -xzf go1.13.linux-amd64.tar.gz
+      - run:
+          name: Install kubectl
+          command: |
+            curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+            chmod +x kubectl
+            sudo mv kubectl /usr/local/bin/
+      - run:
+          name: Install kind
+          command: |
+            GO111MODULE="on" go get sigs.k8s.io/kind@master
+            kind version
+      - checkout
+      - run:
+          name: Patch go.mod
+          command: |
+            if [ "<< parameters.nightly >>" == "true" ]; then
+               ./scripts/update_networkservicemesh.sh master # Update to the master branch
+            fi
+      - run:
+          name: Clone NSM
+          command: |
+            git clone --single-branch --branch << parameters.nsmbranch >> https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
+      - run:
+          name: Start kind
+          command: |
+            make kind-start
+            kubectl config use-context kind-nsm
+      - run:
+          name: Wait for kind to settle
+          command: |
+            kubectl wait -n kube-system --timeout=150s --for condition=Ready --all pods
+      - helm/install-helm-client
+      - helm/install-helm-on-cluster:
+          enable-cluster-wide-admin-access: true
+      - helm/install-helm-chart:
+          chart: "../networkservicemesh/deployments/helm/nsm"
+          values-to-override: |
+            "org=networkservicemesh,tag=<< parameters.nsmbranch >>,admission-webhook.org=networkservicemesh,admission-webhook.tag=<< parameters.nsmbranch >>,spire.enabled=false,insecure=true"
+      - run:
+          name: Test all
+          command: |
+            make test-all
+      - run:
+          name: Dump cluster state
+          when: always
+          command: |
+            kubectl get nodes --all-namespaces
+            kubectl get pods -o wide --all-namespaces
+            kubectl describe pods --all-namespaces
+
 orbs:
   helm: circleci/helm@0.2.1
 workflows:
@@ -170,64 +240,8 @@ workflows:
   test-and-push:
     jobs:
       - sanity-check
-      - test:
-          name: "Test 4G Network Topology"
-          example: "4g-network"
-          description: "4G Network Topology example"
-          requires:
-            - sanity-check
-      # - test:
-      #     name: "Test Bridge domain"
-      #     example: "bridge-domain"
-      #     description: "A simple VPP bridge domain example"
-      #     requires:
-      #       - sanity-check
-      - test:
-          name: "Test Envoy"
-          example: "envoy_interceptor"
-          description: "Envoy interceptor"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test GW Routers"
-          example: "gw-routers"
-          description: "GW Routers"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test ICMP"
-          example: "icmp"
-          description: "Simple ICMP"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test Packet Filtering"
-          example: "packet-filtering"
-          description: "Packet filtering"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test Proxy"
-          example: "proxy"
-          description: "Proxy"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test Secure Intranet"
-          example: "secure-intranet"
-          description: "Secure Intranet"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test UCNF ICMP"
-          example: "ucnf-icmp"
-          description: "UCNF ICMP"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test VPP ICMP"
-          example: "vpp-icmp"
-          description: "VPP ICMP"
+      - test-all:
+          name: "Test all"
           requires:
             - sanity-check
       - push-all:
@@ -238,16 +252,7 @@ workflows:
             branches:
               only: master
           requires:
-            - "Test 4G Network Topology"
-            # - "Test Bridge domain"
-            - "Test Envoy"
-            - "Test GW Routers"
-            - "Test ICMP"
-            - "Test Packet Filtering"
-            - "Test Proxy"
-            - "Test Secure Intranet"
-            - "Test UCNF ICMP"
-            - "Test VPP ICMP"
+            - "Test all"
   nightly-test:
     triggers:
       - schedule:

@@ -51,9 +51,21 @@ $(eval $(DELETE))
 define RUN_CHECK
 .PHONY: $(PREFIX)-$(NAME)-check
 $(PREFIX)-$(NAME)-check:
+	@kubectl wait -n default --timeout=150s --for condition=Ready --all pods
 	@cd examples/$(NAME) && $(CHECK)
 endef
 $(eval $(RUN_CHECK))
+
+define TEST
+.PHONY: $(PREFIX)-$(NAME)-test
+$(PREFIX)-$(NAME)-test:
+	@make $(PREFIX)-$(NAME)-save
+	@make $(PREFIX)-$(NAME)-load-images
+	@make $(PREFIX)-$(NAME)-deploy
+	@make $(PREFIX)-$(NAME)-check
+	@make $(PREFIX)-$(NAME)-delete
+endef
+$(eval $(TEST))
 
 define LINT
 .PHONY: $(NAME)-lint

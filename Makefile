@@ -48,6 +48,10 @@ lint-all: $(addsuffix -lint,$(EXAMPLE_NAMES))
 list: $(addsuffix -list,$(EXAMPLE_NAMES))
 	@printf "\n Get the full description of the example by calling:\n\n \t make <example-name>-describe \n\n"
 
+.PHONY: test-all
+test-all: $(addsuffix -test,$(addprefix ${PREFIX}-,$(EXAMPLE_NAMES)))
+	@echo "Tested examples: ${EXAMPLE_NAMES}"
+
 # NSM fallthrough target
 %:
 	@cd ${NSM_PATH} && make $*
