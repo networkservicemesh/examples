@@ -44,7 +44,9 @@ define DELETE
 .PHONY: $(PREFIX)-$(NAME)-delete
 $(PREFIX)-$(NAME)-delete:
 	@echo "Deleting examples/$(NAME)/$(PREFIX)/"
-	@kubectl delete -R -f examples/$(NAME)/$(PREFIX)/ > /dev/null 2>&1 || echo "$* does not exist and thus cannot be deleted"
+	@kubectl delete -R -f examples/$(NAME)/$(PREFIX)/ > /dev/null 2>&1 || true
+	@kubectl wait -n default --timeout=150s --for=delete --all pods \
+		|| echo "$(NAME) does not exist and thus cannot be deleted"
 endef
 $(eval $(DELETE))
 
