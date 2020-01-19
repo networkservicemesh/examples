@@ -49,7 +49,11 @@ list: $(addsuffix -list,$(EXAMPLE_NAMES))
 	@printf "\n Get the full description of the example by calling:\n\n \t make <example-name>-describe \n\n"
 
 .PHONY: test-all
-test-all: $(addsuffix -test,$(addprefix ${PREFIX}-,$(EXAMPLE_NAMES)))
+test-all:
+	for example in ${EXAMPLE_NAMES} ; do \
+		echo Test $${example}; \
+		make ${PREFIX}-$${example}-test; \
+	done
 	@echo "Tested examples: ${EXAMPLE_NAMES}"
 
 # NSM fallthrough target
