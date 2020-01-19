@@ -164,6 +164,7 @@ jobs:
             kubectl describe pods --all-namespaces
 
   test-all:
+    resource_class: large
     parameters:
       nsmbranch:
         type: string
