@@ -36,25 +36,31 @@ $(PREFIX)-$(NAME)-deploy: $(PREFIX)-$(NAME)-delete $(addsuffix -deploy,$(addpref
 
 .PHONY: $(PREFIX)-$(NAME)-%-deploy
 $(PREFIX)-$(NAME)-%-deploy:
-	@kubectl apply -f examples/$(NAME)/$(PREFIX)/\$$*.yaml
+	@if [ -d "examples/$(NAME)/$(PREFIX)" ]; then \
+		kubectl apply -f examples/$(NAME)/$(PREFIX)/\$$*.yaml; \
+	fi
 endef
 $(eval $(DEPLOY))
 
 define DELETE
 .PHONY: $(PREFIX)-$(NAME)-delete
 $(PREFIX)-$(NAME)-delete:
-	@echo "Deleting examples/$(NAME)/$(PREFIX)/"
-	@kubectl delete -R -f examples/$(NAME)/$(PREFIX)/ > /dev/null 2>&1 || true
-	@kubectl wait -n default --timeout=150s --for=delete --all pods \
-		|| echo "$(NAME) does not exist and thus cannot be deleted"
+	@if [ -d "examples/$(NAME)/$(PREFIX)" ]; then \
+		echo "Deleting examples/$(NAME)/$(PREFIX)"; \
+		kubectl delete -R -f examples/$(NAME)/$(PREFIX)/ > /dev/null 2>&1 || true; \
+		kubectl wait -n default --timeout=150s --for=delete --all pods \
+			|| echo "$(NAME) does not exist and thus cannot be deleted"; \
+	fi
 endef
 $(eval $(DELETE))
 
 define RUN_CHECK
 .PHONY: $(PREFIX)-$(NAME)-check
 $(PREFIX)-$(NAME)-check:
-	@kubectl wait -n default --timeout=150s --for condition=Ready --all pods
-	@cd examples/$(NAME) && $(CHECK)
+	@if [ -d "examples/$(NAME)/$(PREFIX)" ]; then \
+		kubectl wait -n default --timeout=150s --for condition=Ready --all pods; \
+		cd examples/$(NAME) && $(CHECK); \
+	fi
 endef
 $(eval $(RUN_CHECK))
 
