@@ -136,6 +136,7 @@ jobs:
           enable-cluster-wide-admin-access: true
       - helm/install-helm-chart:
           chart: "../networkservicemesh/deployments/helm/nsm"
+          namespace: "nsm-system"
           values-to-override: |
             "org=networkservicemesh,tag=<< parameters.nsmbranch >>,admission-webhook.org=networkservicemesh,admission-webhook.tag=<< parameters.nsmbranch >>,spire.enabled=false,insecure=true"
       - run:
@@ -220,6 +221,7 @@ jobs:
           enable-cluster-wide-admin-access: true
       - helm/install-helm-chart:
           chart: "../networkservicemesh/deployments/helm/nsm"
+          namespace: "nsm-system"
           values-to-override: |
             "org=networkservicemesh,tag=<< parameters.nsmbranch >>,admission-webhook.org=networkservicemesh,admission-webhook.tag=<< parameters.nsmbranch >>,spire.enabled=false,insecure=true"
       - run:
