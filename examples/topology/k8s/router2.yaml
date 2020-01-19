@@ -26,9 +26,9 @@ spec:
           image: networkservicemesh/topology-sidecar-nse:latest
           imagePullPolicy: IfNotPresent
           env:
-            - name: ADVERTISE_NSE_NAME
+            - name: ENDPOINT_NETWORK_SERVICE
               value: "topo"
-            - name: ADVERTISE_NSE_LABELS
+            - name: ENDPOINT_LABELS
               value: "device=router2"
             - name: TRACER_ENABLED
               value: "true"
