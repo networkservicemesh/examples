@@ -237,7 +237,7 @@ jobs:
             kubectl describe pods --all-namespaces
 
 orbs:
-  helm: circleci/helm@0.2.1
+  helm: circleci/helm@0.2.3
 workflows:
   version: 2
   test-and-push:
