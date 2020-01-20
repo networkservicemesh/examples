@@ -9,6 +9,7 @@ EXIT_VAL=0
 for nsc in $(kubectl get pods -n default -o=name | grep simple-client | sed 's@.*/@@'); do
     echo "===== >>>>> PROCESSING ${nsc}  <<<<< ==========="
     for i in {1..10}; do
+        EXIT_VAL=0
         echo Try ${i}
 
         if kubectl exec -n default -it "${nsc}" -- ping -c 1 "${targetIp}" ; then
