@@ -4,6 +4,6 @@ CONTAINERS = vppagent
 AUX_CONTAINERS =
 PODS =
 NETWORK_SERVICES =
-CHECK =
+CHECK = true
 
 include $(TOP)/mk/targets.mk

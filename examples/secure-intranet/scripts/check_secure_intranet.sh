@@ -7,6 +7,7 @@ EXIT_VAL=0
 for nsc in $(kubectl get pods -o=name | grep simple-client | sed 's@.*/@@'); do
     echo "===== >>>>> PROCESSING ${nsc}  <<<<< ==========="
     for i in {1..10}; do
+        EXIT_VAL=0
         echo Try ${i}
         for ip in $(kubectl exec -it "${nsc}" -- ip addr| grep inet | awk '{print $2}'); do
             if [[ "${ip}" == 10.60.1.* ]];then
@@ -39,7 +40,7 @@ for nsc in $(kubectl get pods -o=name | grep simple-client | sed 's@.*/@@'); do
                     EXIT_VAL=1
                 else
                     echo "NSC ${nsc} with IP ${ip} blocked ${endpointName} TargetIP: ${targetIp} TargetPort:8080"
-                    Wget8080Blocked="true"                
+                    Wget8080Blocked="true"
                 fi
 
                 unset targetIp
@@ -59,6 +60,7 @@ for nsc in $(kubectl get pods -o=name | grep simple-client | sed 's@.*/@@'); do
         echo "POD ${nsc} Network dump -------------------------------"
         kubectl exec -ti "${nsc}" -- ip addr
         echo "+++++++==ERROR==ERROR=============================================================================+++++"
+        exit $EXIT_VAL
     fi
     if [ -z ${Wget80Success} ]; then
         EXIT_VAL=1
@@ -66,6 +68,7 @@ for nsc in $(kubectl get pods -o=name | grep simple-client | sed 's@.*/@@'); do
         echo "NSC ${nsc} failed to wget on port 80 to a vpn-gateway NetworkService"
         kubectl get pod "${nsc}" -o wide
         echo "+++++++==ERROR==ERROR=============================================================================+++++"
+        exit $EXIT_VAL
     fi
     if [ -z ${Wget8080Blocked} ]; then
         EXIT_VAL=1
@@ -73,6 +76,7 @@ for nsc in $(kubectl get pods -o=name | grep simple-client | sed 's@.*/@@'); do
         echo "NSC ${nsc} wget on port 8080 to a vpn-gateway NetworkService successful but it should have been blocked"
         kubectl get pod "${nsc}" -o wide
         echo "+++++++==ERROR==ERROR=============================================================================+++++"
+        exit $EXIT_VAL
     fi
     
     echo "All check OK. NSC ${nsc} behaving as expected."

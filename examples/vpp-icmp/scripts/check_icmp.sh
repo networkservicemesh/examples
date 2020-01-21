@@ -7,6 +7,7 @@ EXIT_VAL=0
 for nsc in $(kubectl get pods -o=name | grep -E "vppagent-client" | sed 's@.*/@@'); do
     echo "===== >>>>> PROCESSING ${nsc}  <<<<< ==========="
     for i in {1..10}; do
+        EXIT_VAL=0
         echo Try ${i}
         for ip in $(kubectl exec -it "${nsc}" -- vppctl show int addr | grep L3 | awk '{print $2}'); do
             if [[ "${ip}" == 10.60.1.* ]];then
@@ -25,7 +26,6 @@ for nsc in $(kubectl get pods -o=name | grep -E "vppagent-client" | sed 's@.*/@@
                 if [ "${RESULT}" = "0%" ]; then
                     echo "NSC ${nsc} with IP ${ip} pinging ${endpointName} TargetIP: ${targetIp} successful"
                     PingSuccess="true"
-                    EXIT_VAL=0
                 else
                     echo "NSC ${nsc} with IP ${ip} pinging ${endpointName} TargetIP: ${targetIp} unsuccessful"
                     EXIT_VAL=1

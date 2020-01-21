@@ -8,6 +8,7 @@ EXIT_VAL=0
 for gw in $(kubectl get pods -o=name | grep -E "gateway-left" | sed 's@.*/@@'); do
     echo "===== >>>>> PROCESSING ${gw}  <<<<< ==========="
     for i in {1..10}; do
+        EXIT_VAL=0
         echo Try ${i}
         for ip in $(kubectl exec -n default -it "${gw}" -- vppctl show int addr | grep L3 | awk '{print $2}'); do
             if [[ "${ip}" == 10.60.1.* ]];then
@@ -26,7 +27,6 @@ for gw in $(kubectl get pods -o=name | grep -E "gateway-left" | sed 's@.*/@@'); 
                 if [ "${RESULT}" = "0%" ]; then
                     echo "Left Gateway ${gw} with IP ${ip} pinging ${endpointName} TargetIP: ${targetIp} successful"
                     PingSuccess="true"
-                    EXIT_VAL=0
                 else
                     echo "Left Gateway ${gw} with IP ${ip} pinging ${endpointName} TargetIP: ${targetIp} unsuccessful"
                     EXIT_VAL=1
@@ -58,6 +58,7 @@ done
 for gw in $(kubectl get pods -o=name | grep -E "gateway-right" | sed 's@.*/@@'); do
     echo "===== >>>>> PROCESSING ${gw}  <<<<< ==========="
     for i in {1..10}; do
+        EXIT_VAL=0
         echo Try ${i}
         for ip in $(kubectl exec -n default -it "${gw}" -- vppctl show int addr | grep L3 | awk '{print $2}'); do
             if [[ "${ip}" == 10.60.3.* ]];then
@@ -74,7 +75,6 @@ for gw in $(kubectl get pods -o=name | grep -E "gateway-right" | sed 's@.*/@@');
                 if [ "${RESULT}" = "0%" ]; then
                     echo "Right Gateway ${gw} with IP ${ip} pinging ${endpointName} TargetIP: ${targetIp} successful"
                     PingSuccess="true"
-                    EXIT_VAL=0
                 else
                     echo "Right Gateway ${gw} with IP ${ip} pinging ${endpointName} TargetIP: ${targetIp} unsuccessful"
                     EXIT_VAL=1

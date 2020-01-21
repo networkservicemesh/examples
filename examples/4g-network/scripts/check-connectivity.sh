@@ -33,6 +33,7 @@ for client in ${CLIENTS}; do
                 if kubectl exec -n default -it -c "${client}" "${nsc}" -- ping -c 1 "${targetIp}" ; then
                     echo "NSC ${nsc} with IP ${ip} pinging ${endpointName} TargetIP: ${targetIp} successful"
                     PingSuccess="true"
+                    EXIT_VAL=0
                 else
                     echo "NSC ${nsc} with IP ${ip} pinging ${endpointName} TargetIP: ${targetIp} unsuccessful"
                     EXIT_VAL=1
