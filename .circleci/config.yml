@@ -2,11 +2,13 @@ version: 2.1
 
 # Docker environment.
 defaults: &defaults
+  shell: /bin/sh -leo pipefail
   working_directory: /go/src/github.com/networkservicemesh/examples
   docker:
     - image: tiswanso/kubectl_kind:latest
   environment:
     GOPATH: /go
+    BASH_ENV: /etc/profile
 
 #kind-setup: &kind-setup
 #  name: Set up the environment
@@ -23,10 +25,15 @@ e2e-kind-test: &e2e-kind-test
         command: |
           kind create cluster --name kind1
     - run:
+        name: Get KinD cluster info
         command: |
-          export KUBE1="$(kind get kubeconfig-path --name="kind1")"
+          echo "export KUBE1=$(kind get kubeconfig-path --name=kind1)" >> $BASH_ENV
+          source $BASH_ENV
           kubectl get nodes --kubeconfig ${KUBE1}
-    
+    - run:
+        name: Install NSM in cluster 1
+        command: |
+          KCONF=${KUBE1} examples/vl3_basic/scripts/nsm_install_interdomain.sh
 
 jobs:
   sanity-check:

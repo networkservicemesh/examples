@@ -15,6 +15,8 @@ RUN apk add --no-cache ca-certificates bash git openssh curl \
     && wget -q https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm \
     && chmod +x /usr/local/bin/helm
 
+RUN apk add --no-cache docker
+
 # install kind
 RUN curl -Lo ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-linux-amd64 && \
     chmod +x ./kind && \
