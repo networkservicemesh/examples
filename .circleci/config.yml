@@ -243,8 +243,70 @@ workflows:
   test-and-push:
     jobs:
       - sanity-check
-      - test-all:
-          name: "Test all"
+      - test:
+          name: "Test 4G Network Topology"
+          example: "4g-network"
+          description: "4G Network Topology example"
+          requires:
+            - sanity-check
+      - test:
+          name: "Test Bridge domain"
+          example: "bridge-domain"
+          description: "A simple VPP bridge domain example"
+          requires:
+            - sanity-check
+      - test:
+          name: "Test Envoy"
+          example: "envoy_interceptor"
+          description: "Envoy interceptor"
+          requires:
+            - sanity-check
+      - test:
+          name: "Test GW Routers"
+          example: "gw-routers"
+          description: "GW Routers"
+          requires:
+            - sanity-check
+      - test:
+          name: "Test ICMP"
+          example: "icmp"
+          description: "Simple ICMP"
+          requires:
+            - sanity-check
+      - test:
+          name: "Test Packet Filtering"
+          example: "packet-filtering"
+          description: "Packet filtering"
+          requires:
+            - sanity-check
+      - test:
+          name: "Test Proxy"
+          example: "proxy"
+          description: "Proxy"
+          requires:
+            - sanity-check
+      - test:
+          name: "Test Secure Intranet"
+          example: "secure-intranet"
+          description: "Secure Intranet"
+          requires:
+            - sanity-check
+      - test:
+          name: "Test Router Topology"
+          example: "topology"
+          description: "Router Topology"
+          requires:
+            - sanity-check
+      - test:
+          name: "Test UCNF ICMP"
+          example: "ucnf-icmp"
+          description: "UCNF ICMP"
+          requires:
+            - sanity-check
+      - test:
+          name: "Test VPP ICMP"
+          example: "vpp-icmp"
+          description: "VPP ICMP"
           requires:
             - sanity-check
       - push-all:
@@ -255,7 +317,17 @@ workflows:
             branches:
               only: master
           requires:
-            - "Test all"
+            - "Test 4G Network Topology"
+            - "Test Bridge domain"
+            - "Test Envoy"
+            - "Test GW Routers"
+            - "Test ICMP"
+            - "Test Packet Filtering"
+            - "Test Proxy"
+            - "Test Secure Intranet"
+            - "Test Router Topology"
+            - "Test UCNF ICMP"
+            - "Test VPP ICMP"
   nightly-test:
     triggers:
       - schedule:
@@ -265,53 +337,6 @@ workflows:
               only:
                 - master
     jobs:
-      - test:
-          name: "[N] Test 4G Network Topology"
-          example: "4g-network"
-          description: "4G Network Topology example"
-          nightly: "true"
-      - test:
-          name: "[N] Test Bridge domain"
-          example: "bridge-domain"
-          description: "A simple VPP bridge domain example"
-          nightly: "true"
-      - test:
-          name: "[N] Test Envoy"
-          example: "envoy_interceptor"
-          description: "Envoy interceptor"
-          nightly: "true"
-      - test:
-          name: "[N] Test GW Routers"
-          example: "gw-routers"
-          description: "GW Routers"
-          nightly: "true"
-      - test:
-          name: "[N] Test ICMP"
-          example: "icmp"
-          description: "Simple ICMP"
-          nightly: "true"
-      - test:
-          name: "[N] Test Packet Filtering"
-          example: "packet-filtering"
-          description: "Packet Filtering"
-          nightly: "true"
-      - test:
-          name: "[N] Test Proxy"
-          example: "proxy"
-          description: "Proxy"
-          nightly: "true"
-      - test:
-          name: "[N] Test Secure Intranet"
-          example: "secure-intranet"
-          description: "Secure Intranet"
-          nightly: "true"
-      - test:
-          name: "[N] Test UCNF ICMP"
-          example: "ucnf-icmp"
-          description: "UCNF ICMP"
-          nightly: "true"
-      - test:
-          name: "[N] Test VPP ICMP"
-          example: "vpp-icmp"
-          description: "VPP ICMP"
-          nightly: "true"
+      - sanity-check
+      - test-all:
+          name: "Test all"
