@@ -35,6 +35,10 @@ type vppAgentBridgeComposite struct {
 	bridgeDomain *l2.BridgeDomain
 }
 
+const (
+	defaultMacAge = 120
+)
+
 func (vbc *vppAgentBridgeComposite) Request(ctx context.Context,
 	request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
 	err := vbc.insertVPPAgentInterface(request.GetConnection(), true, vbc.workspace)
@@ -90,7 +94,7 @@ func newVppAgentBridgeComposite(configuration *common.NSConfiguration) *vppAgent
 		UnknownUnicastFlood: true,
 		Forward:             true,
 		Learn:               true,
-		MacAge:              120,
+		MacAge:              defaultMacAge,
 		Interfaces:          make([]*l2.BridgeDomain_Interface, 0),
 	}
 

@@ -30,13 +30,15 @@ import (
 
 const (
 	defaultVPPAgentEndpoint = "localhost:9113"
+	contextTimeOut          = 120 * time.Second
+	portAvailableTimeOut    = 100 * time.Millisecond
 )
 
 func resetVppAgent() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), contextTimeOut)
 	defer cancel()
 
-	if err := tools.WaitForPortAvailable(ctx, "tcp", defaultVPPAgentEndpoint, 100*time.Millisecond); err != nil {
+	if err := tools.WaitForPortAvailable(ctx, "tcp", defaultVPPAgentEndpoint, portAvailableTimeOut); err != nil {
 		return err
 	}
 
@@ -68,10 +70,10 @@ func resetVppAgent() error {
 
 // SendDataChangeToVppAgent send the udpate to the VPP-Agent
 func sendDataChangeToVppAgent(dataChange *configurator.Config) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), contextTimeOut)
 	defer cancel()
 
-	if err := tools.WaitForPortAvailable(ctx, "tcp", defaultVPPAgentEndpoint, 100*time.Millisecond); err != nil {
+	if err := tools.WaitForPortAvailable(ctx, "tcp", defaultVPPAgentEndpoint, portAvailableTimeOut); err != nil {
 		logrus.Error(err)
 		return err
 	}

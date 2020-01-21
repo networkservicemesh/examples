@@ -122,6 +122,7 @@ func makeRouteMutator(routes []string) endpoint.ConnectionMutator {
 				Prefix: r,
 			})
 		}
+
 		return nil
 	}
 }
