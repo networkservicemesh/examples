@@ -17,7 +17,6 @@ package main
 import (
 	"context"
 	"os"
-	"sync"
 
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection/mechanisms/memif"
@@ -108,10 +107,6 @@ func main() {
 	}
 
 	logrus.Info("nsm client: initialization is completed successfully, wait for Ctrl+C...")
-
-	var wg sync.WaitGroup
-
-	wg.Add(1)
 
 	<-c
 }

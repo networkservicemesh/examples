@@ -30,14 +30,16 @@ import (
 
 const (
 	defaultVPPAgentEndpoint = "localhost:9113"
+	contextTimeOut          = 120 * time.Second
+	portAvailableTimeOut    = 100 * time.Millisecond
 )
 
 // ResetVppAgent resets the VPP instance settings to nil
 func ResetVppAgent() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), contextTimeOut)
 	defer cancel()
 
-	if err := tools.WaitForPortAvailable(ctx, "tcp", defaultVPPAgentEndpoint, 100*time.Millisecond); err != nil {
+	if err := tools.WaitForPortAvailable(ctx, "tcp", defaultVPPAgentEndpoint, portAvailableTimeOut); err != nil {
 		return err
 	}
 
@@ -71,11 +73,11 @@ func SendVppConfigToVppAgent(vppconfig *vpp.ConfigData, update bool) error {
 	dataChange := &configurator.Config{
 		VppConfig: vppconfig,
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), contextTimeOut)
 
 	defer cancel()
 
-	if err := tools.WaitForPortAvailable(ctx, "tcp", defaultVPPAgentEndpoint, 100*time.Millisecond); err != nil {
+	if err := tools.WaitForPortAvailable(ctx, "tcp", defaultVPPAgentEndpoint, portAvailableTimeOut); err != nil {
 		return err
 	}
 

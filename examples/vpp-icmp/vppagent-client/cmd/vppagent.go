@@ -18,6 +18,11 @@ import (
 	"google.golang.org/grpc"
 )
 
+const (
+	contextTimeOut       = 120 * time.Second
+	portAvailableTimeOut = 100 * time.Millisecond
+)
+
 // CreateVppInterface creates a VPP memif interface
 func CreateVppInterface(nscConnection *connection.Connection, baseDir, vppAgentEndpoint string) error {
 	tracer := opentracing.GlobalTracer()
@@ -71,11 +76,11 @@ func CreateVppInterface(nscConnection *connection.Connection, baseDir, vppAgentE
 
 // Reset resets the vpp configuration through the vpp-agent
 func Reset(vppAgentEndpoint string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), contextTimeOut)
 
 	defer cancel()
 
-	if err := tools.WaitForPortAvailable(ctx, "tcp", vppAgentEndpoint, 100*time.Millisecond); err != nil {
+	if err := tools.WaitForPortAvailable(ctx, "tcp", vppAgentEndpoint, portAvailableTimeOut); err != nil {
 		logrus.Errorf("reset: Timed out waiting for vpp-agent port")
 		return err
 	}

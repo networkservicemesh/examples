@@ -64,7 +64,7 @@ func (b *UniversalCNFVPPAgentBackend) ProcessClient(
 	socketFilename := path.Join(getBaseDir(), memif.ToMechanism(conn.GetMechanism()).GetSocketFilename())
 
 	ipAddresses := []string{}
-	if len(srcIP) > 4 {
+	if len(srcIP) > net.IPv4len {
 		ipAddresses = append(ipAddresses, srcIP)
 	}
 
@@ -108,7 +108,7 @@ func (b *UniversalCNFVPPAgentBackend) ProcessEndpoint(
 	socketFilename := path.Join(getBaseDir(), memif.ToMechanism(conn.GetMechanism()).GetSocketFilename())
 
 	ipAddresses := []string{}
-	if len(dstIP) > 4 {
+	if len(dstIP) > net.IPv4len {
 		ipAddresses = append(ipAddresses, dstIP)
 	}
 
