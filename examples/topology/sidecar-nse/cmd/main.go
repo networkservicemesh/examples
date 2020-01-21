@@ -28,11 +28,13 @@ func main() {
 	c := tools.NewOSSignalChannel()
 
 	configuration := common.FromEnv()
+	podName := endpoint.CreatePodNameMutator()
 	composite := endpoint.NewCompositeEndpoint(
 		endpoint.NewMonitorEndpoint(configuration),
 		endpoint.NewConnectionEndpoint(configuration),
 		NewIfnameEndpoint(configuration),
 		endpoint.NewIpamEndpoint(configuration),
+		endpoint.NewCustomFuncEndpoint("podName", podName),
 	)
 
 	nsmEndpoint, err := endpoint.NewNSMEndpoint(context.Background(), configuration, composite)

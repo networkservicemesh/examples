@@ -28,11 +28,13 @@ func main() {
 	// Capture signals to cleanup before exiting
 	c := tools.NewOSSignalChannel()
 	configuration := common.FromEnv()
+	podName := endpoint.CreatePodNameMutator()
 	composite := endpoint.NewCompositeEndpoint(
 		NewIptablesEndpoint(),
 		endpoint.NewMonitorEndpoint(configuration),
 		endpoint.NewConnectionEndpoint(configuration),
 		endpoint.NewIpamEndpoint(configuration),
+		endpoint.NewCustomFuncEndpoint("podName", podName),
 	)
 
 	nsmEndpoint, err := endpoint.NewNSMEndpoint(context.TODO(), configuration, composite)

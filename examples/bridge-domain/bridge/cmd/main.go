@@ -33,9 +33,11 @@ func main() {
 		MechanismType: memif.MECHANISM,
 	}).FromEnv()
 
+	podName := endpoint.CreatePodNameMutator()
 	composite := endpoint.NewCompositeEndpoint(
 		endpoint.NewMonitorEndpoint(configuration),
 		endpoint.NewConnectionEndpoint(configuration),
+		endpoint.NewCustomFuncEndpoint("podName", podName),
 		NewIpamEndpoint(configuration),
 		newVppAgentBridgeComposite(configuration),
 	)
