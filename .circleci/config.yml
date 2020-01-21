@@ -1,4 +1,33 @@
 version: 2.1
+
+# Docker environment.
+defaults: &defaults
+  working_directory: /go/src/github.com/networkservicemesh/examples
+  docker:
+    - image: tiswanso/kubectl_kind:latest
+  environment:
+    GOPATH: /go
+
+#kind-setup: &kind-setup
+#  name: Set up the environment
+#  command: |
+    
+
+e2e-kind-test: &e2e-kind-test
+  steps:
+    - setup_remote_docker
+    - checkout:
+        path: /go/src/github.com/networkservicemesh/examples
+    - run:
+        name: Start KinD Cluster 1
+        command: |
+          kind create cluster --name kind1
+    - run:
+        command: |
+          export KUBE1="$(kind get kubeconfig-path --name="kind1")"
+          kubectl get nodes --kubeconfig ${KUBE1}
+    
+
 jobs:
   sanity-check:
     resource_class: large
@@ -163,73 +192,27 @@ jobs:
             kubectl get pods -o wide --all-namespaces
             kubectl describe pods --all-namespaces
 
+  e2e-kind-integration:
+    <<: *defaults
+    <<: *e2e-kind-test
+
 orbs:
   helm: circleci/helm@0.2.1
 workflows:
   version: 2
   test-and-push:
     jobs:
+      - e2e-kind-integration
       - sanity-check
-      - test:
-          name: "Test 4G Network Topology"
-          example: "4g-network"
-          description: "4G Network Topology example"
-          requires:
-            - sanity-check
+          filters:
+            branches:
+              only: master
       # - test:
       #     name: "Test Bridge domain"
       #     example: "bridge-domain"
       #     description: "A simple VPP bridge domain example"
       #     requires:
       #       - sanity-check
-      - test:
-          name: "Test Envoy"
-          example: "envoy_interceptor"
-          description: "Envoy interceptor"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test GW Routers"
-          example: "gw-routers"
-          description: "GW Routers"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test ICMP"
-          example: "icmp"
-          description: "Simple ICMP"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test Packet Filtering"
-          example: "packet-filtering"
-          description: "Packet filtering"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test Proxy"
-          example: "proxy"
-          description: "Proxy"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test Secure Intranet"
-          example: "secure-intranet"
-          description: "Secure Intranet"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test UCNF ICMP"
-          example: "ucnf-icmp"
-          description: "UCNF ICMP"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test VPP ICMP"
-          example: "vpp-icmp"
-          description: "VPP ICMP"
-          requires:
-            - sanity-check
       - push-all:
           name: "Push all"
           org: "networkservicemesh"
@@ -248,62 +231,3 @@ workflows:
             - "Test Secure Intranet"
             - "Test UCNF ICMP"
             - "Test VPP ICMP"
-  nightly-test:
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-      - test:
-          name: "[N] Test 4G Network Topology"
-          example: "4g-network"
-          description: "4G Network Topology example"
-          nightly: "true"
-      - test:
-          name: "[N] Test Bridge domain"
-          example: "bridge-domain"
-          description: "A simple VPP bridge domain example"
-          nightly: "true"
-      - test:
-          name: "[N] Test Envoy"
-          example: "envoy_interceptor"
-          description: "Envoy interceptor"
-          nightly: "true"
-      - test:
-          name: "[N] Test GW Routers"
-          example: "gw-routers"
-          description: "GW Routers"
-          nightly: "true"
-      - test:
-          name: "[N] Test ICMP"
-          example: "icmp"
-          description: "Simple ICMP"
-          nightly: "true"
-      - test:
-          name: "[N] Test Packet Filtering"
-          example: "packet-filtering"
-          description: "Packet Filtering"
-          nightly: "true"
-      - test:
-          name: "[N] Test Proxy"
-          example: "proxy"
-          description: "Proxy"
-          nightly: "true"
-      - test:
-          name: "[N] Test Secure Intranet"
-          example: "secure-intranet"
-          description: "Secure Intranet"
-          nightly: "true"
-      - test:
-          name: "[N] Test UCNF ICMP"
-          example: "ucnf-icmp"
-          description: "UCNF ICMP"
-          nightly: "true"
-      - test:
-          name: "[N] Test VPP ICMP"
-          example: "vpp-icmp"
-          description: "VPP ICMP"
-          nightly: "true"
