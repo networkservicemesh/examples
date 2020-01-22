@@ -16,7 +16,8 @@ export VL3_OUT_LINUX:=$(OUT_DIR)/linux_amd64/$(BUILDTYPE_DIR)
 # scratch dir for building isolated images
 DOCKER_BUILD_TOP:=${VL3_OUT_LINUX}/docker_build
 
-build-vl3: ${GOPATH}/bin/linux_amd64/vl3_nse
+.PHONY: build-vl3
+build-vl3:
 	GO111MODULE=on CGO_ENABLED=0 GOOS=linux go build -ldflags '-extldflags "-static"' -o ${GOPATH}/bin/linux_amd64/vl3_nse ./examples/vl3_basic/vl3-nse/cmd/...
 
 .PHONY: docker-vl3

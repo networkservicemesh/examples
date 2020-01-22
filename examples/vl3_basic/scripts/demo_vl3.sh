@@ -131,11 +131,11 @@ fi
 p "# --------------------- Virtual L3 Setup ------------------------"
 
 pe "# **** Install vL3 in cluster 1"
-pc "${DELETE:+INSTALL_OP=delete} REMOTE_IP=${clus2_IP} KCONF=${KCONF_CLUS1} examples/vl3_basic/scripts/vl3_interdomain.sh --ipamOctet=22"
+pc "${DELETE:+INSTALL_OP=delete} REMOTE_IP=${clus2_IP} KCONF=${KCONF_CLUS1} PULLPOLICY=Always examples/vl3_basic/scripts/vl3_interdomain.sh --ipamOctet=22"
 pc "kubectl get pods --kubeconfig ${KCONF_CLUS1} -o wide"
 echo
 pe "# **** Install vL3  in cluster 2"
-pc "${DELETE:+INSTALL_OP=delete} REMOTE_IP=${clus1_IP} KCONF=${KCONF_CLUS2} examples/vl3_basic/scripts/vl3_interdomain.sh --ipamOctet=33"
+pc "${DELETE:+INSTALL_OP=delete} REMOTE_IP=${clus1_IP} KCONF=${KCONF_CLUS2} PULLPOLICY=Always examples/vl3_basic/scripts/vl3_interdomain.sh --ipamOctet=33"
 #pc "kubectl get pods --kubeconfig ${KCONF_CLUS2} -o wide"
 echo
 p "# **** Virtual L3 service definition (CRD) ***"

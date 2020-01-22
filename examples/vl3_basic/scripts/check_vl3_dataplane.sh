@@ -65,10 +65,10 @@ function gatherdata_kali {
     local pod=$2
     echo "------pod data for ${pod} in ${kconf} (gathered using kali container)---------"
     echo "**** nsm0 interface info:"
-    kubectl exec -t ${pod} -c kali --kubeconfig ${kconf} -- ip a show dev nsm0
+    kubectl exec -t ${pod} -c helloworld --kubeconfig ${kconf} -- ip a show dev nsm0
     echo 
     echo "**** Route info:"
-    kubectl exec -t ${pod} -c kali --kubeconfig ${kconf} -- ip route
+    kubectl exec -t ${pod} -c helloworld --kubeconfig ${kconf} -- ip route
     echo
 }
 

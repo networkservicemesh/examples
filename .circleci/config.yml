@@ -10,16 +10,13 @@ defaults: &defaults
     GOPATH: /go
     BASH_ENV: /etc/profile
 
-#kind-setup: &kind-setup
-#  name: Set up the environment
-#  command: |
-    
-
 e2e-kind-test: &e2e-kind-test
   steps:
     - setup_remote_docker
     - checkout:
         path: /go/src/github.com/networkservicemesh/examples
+    - attach_workspace:
+        at: /go/src/_save
     - run:
         name: Start KinD Clusters
         command: |
@@ -32,6 +29,16 @@ e2e-kind-test: &e2e-kind-test
           mkdir kubeconfigs
           kind get kubeconfig --name=kind1 > kubeconfigs/kind1.kubeconfig
           kind get kubeconfig --name=kind2 > kubeconfigs/kind2.kubeconfig
+
+    - run:
+        name: Restore built images
+        command: |
+          for node in kind1-control-plane kind2-control-plane; do
+            docker cp /go/src/_save/images.tar $node:/images.tar
+            docker exec -t $node sh -c "docker load -i /images.tar"
+            docker exec -t $node sh -c "docker images"
+          done
+
     - run:
         name: Build vl3 runner container
         working_directory: /go/src/github.com/networkservicemesh/examples/examples/vl3_basic/ci/runner
@@ -43,7 +50,43 @@ e2e-kind-test: &e2e-kind-test
         command: |
           docker run --name=vl3-run --network=host -t vl3-runner:latest /go/run_vl3.sh
 
+    - run:
+        name: Dump cluster state
+        when: always
+        command: |
+          docker run --name=vl3-dump --network=host -t vl3-runner:latest bash -c "/go/src/github.com/networkservicemesh/examples/examples/vl3_basic/scripts/check_vl3_dataplane.sh --kconf_clus1=/etc/kubeconfigs/kind1.kubeconfig --kconf_clus1=/etc/kubeconfigs/kind2.kubeconfig"
+          mkdir -p /tmp/cluster_state
+          docker logs vl3-dump > /tmp/cluster_state/cluster_dump.txt
+
+    - store_artifacts:
+        path: /tmp/cluster_state
+
 jobs:
+  build-vl3:
+    <<: *defaults
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Clone networkservicemesh
+          working_directory: /go/src/github.com/networkservicemesh
+          command: |
+            git clone https://github.com/tiswanso/networkservicemesh.git
+            cd networkservicemesh
+            git checkout vl3_api_rebase
+      - run:
+          name: Build docker images
+          working_directory: /go/src/github.com/networkservicemesh/examples
+          command: |
+            ORG=tiswanso TAG=${CIRCLE_SHA1} make docker-vl3
+            images_to_save+=("tiswanso/vl3_ucnf-vl3-nse:${CIRCLE_SHA1}")
+            mkdir -p _save
+            docker save "${images_to_save[@]}" >_save/images.tar
+      - persist_to_workspace:
+          root: _save
+          paths:
+          - images.tar
+
   sanity-check:
     resource_class: large
     working_directory: ~/project/examples
@@ -217,4 +260,7 @@ workflows:
   version: 2
   test-and-push:
     jobs:
-      - e2e-kind-integration
+      - build-vl3
+      - e2e-kind-integration:
+          requires:
+            - build-vl3

@@ -1,5 +1,5 @@
 FROM golang:alpine as build
-RUN apk --no-cache add git
+RUN apk --no-cache add git make
 
 
 # Note: Latest version of kubectl may be found at:
