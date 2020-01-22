@@ -26,14 +26,20 @@ e2e-kind-test: &e2e-kind-test
           kind create cluster --name kind1
     - run:
         name: Get KinD cluster info
+        working_directory: /go/src/github.com/networkservicemesh/examples/examples/vl3_basic/ci/runner
         command: |
-          echo "export KUBE1=$(kind get kubeconfig-path --name=kind1)" >> $BASH_ENV
-          source $BASH_ENV
-          kubectl get nodes --kubeconfig ${KUBE1}
+          mkdir kubeconfigs
+          kind get kubeconfig --name=kind1 > kubeconfigs/kind1.kubeconfig
     - run:
-        name: Install NSM in cluster 1
+        name: Build vl3 runner container
+        working_directory: /go/src/github.com/networkservicemesh/examples/examples/vl3_basic/ci/runner
         command: |
-          KCONF=${KUBE1} examples/vl3_basic/scripts/nsm_install_interdomain.sh
+          docker build --build-arg vl3_branch=${CIRCLE_SHA1:-master} -t vl3-runner:latest -f Dockerfile.runner .
+
+    - run:
+        name: Run vl3 test
+        command: |
+          docker run --name=vl3-run --network=container:kind1-control-plane -t vl3-runner:latest /go/run_vl3.sh
 
 jobs:
   sanity-check:
