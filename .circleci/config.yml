@@ -21,15 +21,17 @@ e2e-kind-test: &e2e-kind-test
     - checkout:
         path: /go/src/github.com/networkservicemesh/examples
     - run:
-        name: Start KinD Cluster 1
+        name: Start KinD Clusters
         command: |
           kind create cluster --name kind1
+          kind create cluster --name kind2
     - run:
         name: Get KinD cluster info
         working_directory: /go/src/github.com/networkservicemesh/examples/examples/vl3_basic/ci/runner
         command: |
           mkdir kubeconfigs
           kind get kubeconfig --name=kind1 > kubeconfigs/kind1.kubeconfig
+          kind get kubeconfig --name=kind2 > kubeconfigs/kind2.kubeconfig
     - run:
         name: Build vl3 runner container
         working_directory: /go/src/github.com/networkservicemesh/examples/examples/vl3_basic/ci/runner
@@ -39,7 +41,7 @@ e2e-kind-test: &e2e-kind-test
     - run:
         name: Run vl3 test
         command: |
-          docker run --name=vl3-run --network=container:kind1-control-plane -t vl3-runner:latest /go/run_vl3.sh
+          docker run --name=vl3-run --network=host -t vl3-runner:latest /go/run_vl3.sh
 
 jobs:
   sanity-check:
