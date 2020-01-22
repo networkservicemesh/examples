@@ -2,13 +2,11 @@ version: 2.1
 
 # Docker environment.
 defaults: &defaults
-  shell: /bin/sh -leo pipefail
   working_directory: /go/src/github.com/networkservicemesh/examples
   docker:
     - image: tiswanso/kubectl_kind:latest
   environment:
     GOPATH: /go
-    BASH_ENV: /etc/profile
 
 e2e-kind-test: &e2e-kind-test
   steps:
@@ -33,10 +31,8 @@ e2e-kind-test: &e2e-kind-test
     - run:
         name: Restore built images
         command: |
-          for node in kind1-control-plane kind2-control-plane; do
-            docker cp /go/src/_save/images.tar $node:/images.tar
-            docker exec -t $node sh -c "docker load -i /images.tar"
-            docker exec -t $node sh -c "docker images"
+          for cluster in kind1 kind2; do
+            kind load image-archive --name $cluster /go/src/_save/images.tar
           done
 
     - run:
@@ -48,13 +44,13 @@ e2e-kind-test: &e2e-kind-test
     - run:
         name: Run vl3 test
         command: |
-          docker run --name=vl3-run --network=host -t vl3-runner:latest /go/run_vl3.sh
+          docker run --name=vl3-run --network=host -t -e VL3_IMGTAG=${CIRCLE_SHA1} vl3-runner:latest /go/run_vl3.sh
 
     - run:
         name: Dump cluster state
         when: always
         command: |
-          docker run --name=vl3-dump --network=host -t vl3-runner:latest bash -c "/go/src/github.com/networkservicemesh/examples/examples/vl3_basic/scripts/check_vl3_dataplane.sh --kconf_clus1=/etc/kubeconfigs/kind1.kubeconfig --kconf_clus1=/etc/kubeconfigs/kind2.kubeconfig"
+          docker run --name=vl3-dump --network=host -t vl3-runner:latest bash -c "/go/src/github.com/networkservicemesh/examples/examples/vl3_basic/scripts/check_vl3_dataplane.sh --kconf_clus1=/etc/kubeconfigs/kind1.kubeconfig --kconf_clus2=/etc/kubeconfigs/kind2.kubeconfig"
           mkdir -p /tmp/cluster_state
           docker logs vl3-dump > /tmp/cluster_state/cluster_dump.txt
 

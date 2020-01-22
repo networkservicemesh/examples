@@ -158,7 +158,7 @@ if [[ -n ${HELLO} ]]; then
     pe "kubectl ${INSTALL_OP} --kubeconfig ${KCONF_CLUS1} -f ${MFSTDIR}/vl3-hello-kali.yaml"
 
     if [[ "$INSTALL_OP" != "delete" ]]; then
-        sleep 10    p "# **** Install helloworld in cluster 1 ****"
+        sleep 10
         kubectl wait --kubeconfig ${KCONF_CLUS1} --timeout=150s --for condition=Ready -l app=helloworld pod
     fi
 

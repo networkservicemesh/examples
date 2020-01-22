@@ -4,4 +4,4 @@ FROM ${VPP_AGENT} as runtime
 COPY vl3_nse /bin/cnf-vppagent
 RUN rm /opt/vpp-agent/dev/etcd.conf; echo 'Endpoint: "0.0.0.0:9113"' > /opt/vpp-agent/dev/grpc.conf; echo "disabled: true" > /opt/vpp-agent/dev/linux-plugin.conf; echo "disabled: true" > /opt/vpp-agent/dev/telemetry.conf
 COPY ./etc/ /etc/
-COPY ./etc/supervisord/supervisord.conf /opt/vpp-agent/dev/supervisor.conf
+COPY etc/supervisord/supervisord.conf /opt/vpp-agent/dev/supervisor.conf
