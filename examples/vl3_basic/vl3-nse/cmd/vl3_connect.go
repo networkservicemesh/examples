@@ -174,17 +174,17 @@ func (vxc *vL3ConnectComposite) Request(ctx context.Context,
 		_ = vxc.processPeerRequest(vl3SrcEndpointName, request, request.Connection)
 
 	} else {
+		/* set NSC route to this NSE for full vL3 CIDR */
+		nscVL3Route := connectioncontext.Route{
+			Prefix:               vxc.nsConfig.IPAddress,
+		}
+		request.Connection.Context.IpContext.DstRoutes = append(request.Connection.Context.IpContext.DstRoutes, &nscVL3Route)
+
 		vxc.SetMyNseName(request)
 		logger.Infof("vL3ConnectComposite serviceRegistry.DiscoveryClient")
 		if vxc.nsDiscoveryClient == nil {
 			logger.Error("nsDiscoveryClient is nil")
 		} else {
-			/* set NSC route to this NSE for full vL3 CIDR */
-			nscVL3Route := connectioncontext.Route{
-				Prefix:               vxc.nsConfig.IPAddress,
-			}
-			request.Connection.Context.IpContext.DstRoutes = append(request.Connection.Context.IpContext.DstRoutes, &nscVL3Route)
-
 			/* Find all NSEs registered as the same type as this one */
 			req := &registry.FindNetworkServiceRequest{
 				NetworkServiceName: request.GetConnection().GetNetworkService(),
