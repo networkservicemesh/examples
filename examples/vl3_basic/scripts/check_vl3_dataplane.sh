@@ -39,7 +39,7 @@ function gatherdata_vpp_forwarder {
         echo "**** Gathering data for NSM forwarder ${dp}"
         echo "****"
         gatherdata_vppctl_pod ${kconf} ${dp} ${NSMNAMESPACE} "sh int"
-        
+        gatherdata_vppctl_pod ${kconf} ${dp} ${NSMNAMESPACE} "sh int addr"
         gatherdata_vppctl_pod ${kconf} ${dp} ${NSMNAMESPACE} "sh mode"
         gatherdata_vppctl_pod ${kconf} ${dp} ${NSMNAMESPACE} "sh vxlan tunnel"
         gatherdata_vppctl_pod ${kconf} ${dp} ${NSMNAMESPACE} "sh ip fib"
@@ -63,12 +63,16 @@ function gatherdata_vl3_nse {
 function gatherdata_kali {
     local kconf=$1
     local pod=$2
-    echo "------pod data for ${pod} in ${kconf} (gathered using kali container)---------"
+    local cont=kali
+    if [[ $# > 2 ]]; then
+        cont=$3
+    fi
+    echo "------pod data for ${pod} in ${kconf} (gathered using ${cont} container)---------"
     echo "**** nsm0 interface info:"
-    kubectl exec -t ${pod} -c helloworld --kubeconfig ${kconf} -- ip a show dev nsm0
+    kubectl exec -t ${pod} -c ${cont} --kubeconfig ${kconf} -- ip a show dev nsm0
     echo 
     echo "**** Route info:"
-    kubectl exec -t ${pod} -c helloworld --kubeconfig ${kconf} -- ip route
+    kubectl exec -t ${pod} -c ${cont} --kubeconfig ${kconf} -- ip route
     echo
 }
 
@@ -79,7 +83,7 @@ function gatherdata_hello {
     for hellopod in $hellopods; do
         echo "---------------------------------------------------------------------"
         echo "------Helloworld pod data for ${hellopod} in ${kconf}---------"
-        gatherdata_kali ${kconf} ${hellopod}
+        gatherdata_kali ${kconf} ${hellopod} helloworld
     done
 }
 
