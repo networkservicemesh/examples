@@ -376,72 +376,41 @@ to have IP communication across the cluster boundary (due to the common docker b
 Therefore, it's possible to replicate the NSM interdomain setup and vL3 examples on KinD.
 
 The following are instructions for starting 2 KinD clusters with port mappings to allow
-for remote access of the k8s API and the NSM jaeger service.  In the example, the IP
-address of the KinD (docker) host is `10.1.1.1`.
+for access to each cluster's NSM Jaeger UI (NodePort service).
 
 1. Cluster 1 bringup
 
    ```
+   $ JAEGER_HOSTPORT=38901
    $ cat <<EOF > kind1.yaml
    kind: Cluster
    apiVersion: kind.sigs.k8s.io/v1alpha3
-   kubeadmConfigPatchesJson6902:
-   - group: kubeadm.k8s.io
-     version: v1beta2
-     kind: ClusterConfiguration
-     patch: |
-       - op: add
-         path: /apiServer/certSANs/-
-         value: 10.1.1.1
-   # 1 control plane node and 1 worker
    nodes:
    - role: control-plane
      extraPortMappings:
-     - containerPort: 6443
-       hostPort: 38791
-       listenAddress: "10.1.1.1"  
      - containerPort:  31922
-       hostPort: 38901
-       listenAddress: "10.1.1.1"
+       hostPort: ${JAEGER_HOSTPORT}
    EOF
 
    $ kind create cluster --config kind1.yaml --name kind1 
    ```
 
-   The `certSANs` setting and `containerPort` 6443 are used to setup the cluster for
-   `kubectl` access from a different host that can reach the `10.1.1.1` docker host.
-
 1. Cluster 2 bringup
 
    ```
+   $ JAEGER_HOSTPORT=38902
    $ cat <<EOF > kind2.yaml
    kind: Cluster
    apiVersion: kind.sigs.k8s.io/v1alpha3
-   kubeadmConfigPatchesJson6902:
-   - group: kubeadm.k8s.io
-     version: v1beta2
-     kind: ClusterConfiguration
-     patch: |
-       - op: add
-         path: /apiServer/certSANs/-
-         value: 10.1.1.1
-   # 1 control plane node and 1 worker
    nodes:
    - role: control-plane
      extraPortMappings:
-     - containerPort: 6443
-       hostPort: 38792
-       listenAddress: "10.1.1.1"  
      - containerPort:  31922
-       hostPort: 38902
-       listenAddress: "10.1.1.1"
+       hostPort: ${JAEGER_HOSTPORT}
    EOF
 
    $ kind create cluster --config kind2.yaml --name kind2 
    ```
-
-   The `certSANs` setting and `containerPort` 6443 are used to setup the cluster for
-   `kubectl` access from a different host that can reach the `10.1.1.1` docker host.
 
 1. Run the demo script against the 2 clusters.  The following example runs vL3 with the
    `helloworld` example.
@@ -452,8 +421,16 @@ address of the KinD (docker) host is `10.1.1.1`.
    $ examples/vl3_basic/scripts/demo_vl3.sh --kconf_clus1=${KIND1} --kconf_clus2=${KIND2} --hello
    ```
 
+   __NOTE:__  The latest versions of `kind` no longer support the `kubeconfig-path` option.
+   Instead, use `kind get kubeconfig --name kind1` to the kubeconfig file contents
+   and save it to a file.
+
 1. NSM gets installed into the namespace `nsm-system` and the `jaeger` UI is reachable
-   via browser at `http://10.1.1.1:38902`
+   via browser on the localhost at:
+
+   1. `http://127.0.0.1:38901` -- Jaeger KinD cluster 1
+   1. `http://127.0.0.1:38902` -- Jaeger KinD cluster 2
+   
 
 ## References
 
