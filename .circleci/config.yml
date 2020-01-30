@@ -145,8 +145,7 @@ jobs:
       - helm/install-helm-chart:
           chart: "../networkservicemesh/deployments/helm/nsm"
           namespace: "nsm-system"
-          values-to-override: |
-            "org=networkservicemesh,tag=<< parameters.nsmbranch >>,admission-webhook.org=networkservicemesh,admission-webhook.tag=<< parameters.nsmbranch >>,spire.enabled=false,insecure=true"
+          values-to-override: "org=networkservicemesh,tag=<< parameters.nsmbranch >>,global.JaegerTracing=false,forwardingPlane=vpp,admission-webhook.org=networkservicemesh,admission-webhook.tag=<< parameters.nsmbranch >>,prefix-service.org=networkservicemesh,prefix-service.tag=<< parameters.nsmbranch >>,prometheus=false,metricsCollectorEnabled=false,spire.enabled=false,insecure=true"
       - run:
           name: Build << parameters.example >> images
           command: |
@@ -234,8 +233,7 @@ jobs:
       - helm/install-helm-chart:
           chart: "../networkservicemesh/deployments/helm/nsm"
           namespace: "nsm-system"
-          values-to-override: |
-            "org=networkservicemesh,tag=<< parameters.nsmbranch >>,admission-webhook.org=networkservicemesh,admission-webhook.tag=<< parameters.nsmbranch >>,spire.enabled=false,insecure=true"
+          values-to-override: "org=networkservicemesh,tag=<< parameters.nsmbranch >>,global.JaegerTracing=true,forwardingPlane=vpp,admission-webhook.org=networkservicemesh,admission-webhook.tag=<< parameters.nsmbranch >>,prefix-service.org=networkservicemesh,prefix-service.tag=<< parameters.nsmbranch >>,prometheus=false,metricsCollectorEnabled=false,spire.enabled=false,insecure=true"
       - run:
           name: Test all
           command: |
