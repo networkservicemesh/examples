@@ -109,7 +109,7 @@ jobs:
       - run:
           name: Install kind
           command: |
-            GO111MODULE="on" go get sigs.k8s.io/kind@v0.7.0
+            GO111MODULE="on" go get -u sigs.k8s.io/kind@master
             kind version
       - checkout
       - run:
@@ -125,6 +125,14 @@ jobs:
       - run:
           name: Start kind
           command: |
+            echo "
+            ---
+            kind: Cluster
+            apiVersion: kind.sigs.k8s.io/v1alpha3
+            nodes:
+              - role: control-plane
+              - role: worker
+            " > ../networkservicemesh/scripts/kind.yaml
             make kind-start
             kubectl config use-context kind-nsm
       - run:
