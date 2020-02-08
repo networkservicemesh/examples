@@ -48,9 +48,16 @@ lint-all: $(addsuffix -lint,$(EXAMPLE_NAMES))
 list: $(addsuffix -list,$(EXAMPLE_NAMES))
 	@printf "\n Get the full description of the example by calling:\n\n \t make <example-name>-describe \n\n"
 
+.PHONY: list-tests
+list-tests:
+	@for example in ${EXAMPLE_NAMES} ; do \
+		echo ${PREFIX}-$${example}-test; \
+	done
+
 .PHONY: test-all
 test-all:
-	for example in ${EXAMPLE_NAMES} ; do \
+	@echo "Testing: ${EXAMPLE_NAMES}"
+	@for example in ${EXAMPLE_NAMES} ; do \
 		echo Test $${example}; \
 		make ${PREFIX}-$${example}-test; \
 	done
