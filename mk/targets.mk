@@ -37,7 +37,7 @@ $(PREFIX)-$(NAME)-deploy: $(PREFIX)-$(NAME)-delete $(addsuffix -deploy,$(addpref
 .PHONY: $(PREFIX)-$(NAME)-%-deploy
 $(PREFIX)-$(NAME)-%-deploy:
 	@if [ -d "examples/$(NAME)/$(PREFIX)" ]; then \
-		kubectl apply -f examples/$(NAME)/$(PREFIX)/\$$*.yaml; \
+		kubectl apply --wait -f examples/$(NAME)/$(PREFIX)/\$$*.yaml; \
 	fi
 endef
 $(eval $(DEPLOY))
@@ -47,7 +47,7 @@ define DELETE
 $(PREFIX)-$(NAME)-delete:
 	@if [ -d "examples/$(NAME)/$(PREFIX)" ]; then \
 		echo "Deleting examples/$(NAME)/$(PREFIX)"; \
-		kubectl delete -R -f examples/$(NAME)/$(PREFIX)/ > /dev/null 2>&1 || true; \
+		kubectl delete --wait --grace-period=5 -R -f examples/$(NAME)/$(PREFIX)/ > /dev/null 2>&1 || true; \
 		kubectl wait -n default --timeout=150s --for=delete --all pods \
 			|| echo "$(NAME) does not exist and thus cannot be deleted"; \
 	fi
@@ -67,11 +67,13 @@ $(eval $(RUN_CHECK))
 define TEST
 .PHONY: $(PREFIX)-$(NAME)-test
 $(PREFIX)-$(NAME)-test:
+	@echo "==================== START $(NAME) ===================="
 	@make $(PREFIX)-$(NAME)-save
 	@make $(PREFIX)-$(NAME)-load-images
 	@make $(PREFIX)-$(NAME)-deploy
 	@make $(PREFIX)-$(NAME)-check
 	@make $(PREFIX)-$(NAME)-delete
+	@echo "====================  END $(NAME)  ===================="
 endef
 $(eval $(TEST))
 
