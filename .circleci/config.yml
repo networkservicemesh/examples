@@ -168,9 +168,13 @@ jobs:
           name: Dump cluster state
           when: always
           command: |
-            kubectl get nodes --all-namespaces
-            kubectl get pods -o wide --all-namespaces
-            kubectl describe pods --all-namespaces
+            kubectl get nodes
+            kubectl get pods -o wide --namespace=nsm-system
+            kubectl get pods -o wide
+            kubectl describe pods --namespace=nsm-system
+            kubectl describe pods
+            make k8s-nsmgr-logs
+            make k8s-nsm-vpp-forwarder-logs
 
   test-all:
     resource_class: large
@@ -240,9 +244,13 @@ jobs:
           name: Dump cluster state
           when: always
           command: |
-            kubectl get nodes --all-namespaces
-            kubectl get pods -o wide --all-namespaces
-            kubectl describe pods --all-namespaces
+            kubectl get nodes
+            kubectl get pods -o wide --namespace=nsm-system
+            kubectl get pods -o wide
+            kubectl describe pods --namespace=nsm-system
+            kubectl describe pods
+            make k8s-nsmgr-logs
+            make k8s-nsm-vpp-forwarder-logs
 
 orbs:
   helm: circleci/helm@0.2.3
