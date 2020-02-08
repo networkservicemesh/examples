@@ -77,11 +77,8 @@ jobs:
             ORG=<< parameters.org >> TAG=<< parameters.tag >> make push-all
 
   test:
+    resource_class: large
     parameters:
-      example:
-        type: string
-      description:
-        type: string
       nsmbranch:
         type: string
         default: "master"
@@ -92,6 +89,7 @@ jobs:
       enabled: true
       docker_layer_caching: true
     working_directory: ~/project/examples
+    parallelism: 2
     steps:
       - run:
           name: Update go to 1.13
@@ -147,97 +145,9 @@ jobs:
           namespace: "nsm-system"
           values-to-override: "org=networkservicemesh,tag=<< parameters.nsmbranch >>,global.JaegerTracing=false,forwardingPlane=vpp,admission-webhook.org=networkservicemesh,admission-webhook.tag=<< parameters.nsmbranch >>,prefix-service.org=networkservicemesh,prefix-service.tag=<< parameters.nsmbranch >>,prometheus=false,metricsCollectorEnabled=false,spire.enabled=false,insecure=true"
       - run:
-          name: Build << parameters.example >> images
+          name: Test
           command: |
-            make k8s-<< parameters.example >>-save
-      - run:
-          name: << parameters.description >> deploy
-          command: |
-            make k8s-<< parameters.example >>-load-images k8s-<< parameters.example >>-deploy
-            kubectl wait -n default --timeout=150s --for condition=Ready --all pods
-      - run:
-          name: << parameters.description >> check
-          command: |
-            make k8s-<< parameters.example >>-check
-      - run:
-          name: << parameters.description >> delete
-          command: |
-            make k8s-<< parameters.example >>-delete
-      - run:
-          name: Dump cluster state
-          when: always
-          command: |
-            kubectl get nodes
-            kubectl get pods -o wide --namespace=nsm-system
-            kubectl get pods -o wide
-            kubectl describe pods --namespace=nsm-system
-            kubectl describe pods
-            make k8s-nsmgr-logs
-            make k8s-nsm-vpp-forwarder-logs
-
-  test-all:
-    resource_class: large
-    parameters:
-      nsmbranch:
-        type: string
-        default: "master"
-      nightly:
-        type: string
-        default: "false"
-    machine:
-      enabled: true
-      docker_layer_caching: true
-    working_directory: ~/project/examples
-    steps:
-      - run:
-          name: Update go to 1.13
-          working_directory: /tmp
-          command: |
-            wget https://dl.google.com/go/go1.13.linux-amd64.tar.gz
-            sudo rm -rf /usr/local/go
-            sudo tar -C /usr/local -xzf go1.13.linux-amd64.tar.gz
-      - run:
-          name: Install kubectl
-          command: |
-            curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
-            chmod +x kubectl
-            sudo mv kubectl /usr/local/bin/
-      - run:
-          name: Install kind
-          command: |
-            GO111MODULE="on" go get sigs.k8s.io/kind@v0.7.0
-            kind version
-      - checkout
-      - run:
-          name: Patch go.mod
-          command: |
-            if [ "<< parameters.nightly >>" == "true" ]; then
-               ./scripts/update_networkservicemesh.sh master # Update to the master branch
-            fi
-      - run:
-          name: Clone NSM
-          command: |
-            git clone --single-branch --branch << parameters.nsmbranch >> https://github.com/networkservicemesh/networkservicemesh.git ../networkservicemesh
-      - run:
-          name: Start kind
-          command: |
-            make kind-start
-            kubectl config use-context kind-nsm
-      - run:
-          name: Wait for kind to settle
-          command: |
-            kubectl wait -n kube-system --timeout=150s --for condition=Ready --all pods
-      - helm/install-helm-client
-      - helm/install-helm-on-cluster:
-          enable-cluster-wide-admin-access: true
-      - helm/install-helm-chart:
-          chart: "../networkservicemesh/deployments/helm/nsm"
-          namespace: "nsm-system"
-          values-to-override: "org=networkservicemesh,tag=<< parameters.nsmbranch >>,global.JaegerTracing=true,forwardingPlane=vpp,admission-webhook.org=networkservicemesh,admission-webhook.tag=<< parameters.nsmbranch >>,prefix-service.org=networkservicemesh,prefix-service.tag=<< parameters.nsmbranch >>,prometheus=false,metricsCollectorEnabled=false,spire.enabled=false,insecure=true"
-      - run:
-          name: Test all
-          command: |
-            make test-all
+            make $(make list-tests | circleci tests split --split-by=timings)
       - run:
           name: Dump cluster state
           when: always
@@ -258,69 +168,7 @@ workflows:
     jobs:
       - sanity-check
       - test:
-          name: "Test 4G Network Topology"
-          example: "4g-network"
-          description: "4G Network Topology example"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test Bridge domain"
-          example: "bridge-domain"
-          description: "A simple VPP bridge domain example"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test Envoy"
-          example: "envoy_interceptor"
-          description: "Envoy interceptor"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test GW Routers"
-          example: "gw-routers"
-          description: "GW Routers"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test ICMP"
-          example: "icmp"
-          description: "Simple ICMP"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test Packet Filtering"
-          example: "packet-filtering"
-          description: "Packet filtering"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test Proxy"
-          example: "proxy"
-          description: "Proxy"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test Secure Intranet"
-          example: "secure-intranet"
-          description: "Secure Intranet"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test Router Topology"
-          example: "topology"
-          description: "Router Topology"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test UCNF ICMP"
-          example: "ucnf-icmp"
-          description: "UCNF ICMP"
-          requires:
-            - sanity-check
-      - test:
-          name: "Test VPP ICMP"
-          example: "vpp-icmp"
-          description: "VPP ICMP"
+          name: "Test Parallel"
           requires:
             - sanity-check
       - push-all:
@@ -331,17 +179,7 @@ workflows:
             branches:
               only: master
           requires:
-            - "Test 4G Network Topology"
-            - "Test Bridge domain"
-            - "Test Envoy"
-            - "Test GW Routers"
-            - "Test ICMP"
-            - "Test Packet Filtering"
-            - "Test Proxy"
-            - "Test Secure Intranet"
-            - "Test Router Topology"
-            - "Test UCNF ICMP"
-            - "Test VPP ICMP"
+            - "Test Parallel"
   nightly-test:
     triggers:
       - schedule:
@@ -352,5 +190,8 @@ workflows:
                 - master
     jobs:
       - sanity-check
-      - test-all:
-          name: "Test all"
+      - test:
+          name: "Test Parallel"
+          nightly: "true"
+          requires:
+            - sanity-check
