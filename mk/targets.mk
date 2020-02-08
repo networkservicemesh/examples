@@ -1,6 +1,8 @@
 
 include $(TOP)/mk/docker-targets.mk
 
+run-with-cleanup = $(1) && $(2) || (ret=$$?; $(2) && exit $$ret)
+
 define GATHER_EXAMPLES
 EXAMPLE_NAMES+=${NAME}
 endef
@@ -68,11 +70,10 @@ define TEST
 .PHONY: $(PREFIX)-$(NAME)-test
 $(PREFIX)-$(NAME)-test:
 	@echo "==================== START $(NAME) ===================="
-	@make $(PREFIX)-$(NAME)-save
-	@make $(PREFIX)-$(NAME)-load-images
-	@make $(PREFIX)-$(NAME)-deploy
-	@make $(PREFIX)-$(NAME)-check
-	@make $(PREFIX)-$(NAME)-delete
+	@$(MAKE) $(PREFIX)-$(NAME)-save
+	@$(MAKE) $(PREFIX)-$(NAME)-load-images
+	@$(MAKE) $(PREFIX)-$(NAME)-deploy
+	@$(call run-with-cleanup, $(MAKE) $(PREFIX)-$(NAME)-check, $(MAKE) $(PREFIX)-$(NAME)-delete)
 	@echo "====================  END $(NAME)  ===================="
 endef
 $(eval $(TEST))

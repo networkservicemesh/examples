@@ -59,10 +59,10 @@ test-all:
 	@echo "Testing: ${EXAMPLE_NAMES}"
 	@for example in ${EXAMPLE_NAMES} ; do \
 		echo Test $${example}; \
-		make ${PREFIX}-$${example}-test; \
+		$(MAKE) ${PREFIX}-$${example}-test; \
 	done
 	@echo "Tested examples: ${EXAMPLE_NAMES}"
 
 # NSM fallthrough target
 %:
-	@cd ${NSM_PATH} && make $*
+	@cd ${NSM_PATH} && $(MAKE) $*
