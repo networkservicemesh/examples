@@ -64,5 +64,6 @@ test-all:
 	@echo "Tested examples: ${EXAMPLE_NAMES}"
 
 # NSM fallthrough target
-%:
-	@cd ${NSM_PATH} && $(MAKE) $*
+# do not use $(MAKE) here, as this make autocompletion import NSM targets
+.DEFAULT:
+	@pushd ${NSM_PATH} && make $@
