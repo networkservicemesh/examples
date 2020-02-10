@@ -1,0 +1,13 @@
+---
+apiVersion: networkservicemesh.io/v1alpha1
+kind: NetworkService
+metadata:
+  name: load-balancer
+spec:
+  payload: IP
+  matches:
+    - match:
+      route:
+        - destination:
+          destinationSelector:
+            app: lb
