@@ -13,7 +13,8 @@ spec:
         networkservicemesh.io/app: "load-balancer"
         networkservicemesh.io/impl: "lb"
     spec:
-      serviceAccount: nse-acc
+      # Enable this with INSECURE=false
+      # serviceAccount: nse-acc
       containers:
         - name: load-balancer
           image: networkservicemesh/load-balancer-image:latest
