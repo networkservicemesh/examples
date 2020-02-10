@@ -1,0 +1,48 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  selector:
+    matchLabels:
+      networkservicemesh.io/app: "application-server"
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        networkservicemesh.io/app: "application-server"
+    spec:
+      serviceAccount: nsc-acc
+      containers:
+        - name: alpine-img
+          image: alpine:latest
+          imagePullPolicy: IfNotPresent
+          command: ["sh", "-f", "/container-init/container-init"]
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /container-init
+              name: container-init
+      volumes:
+        - name: container-init
+          configMap:
+            name: application-server-init
+
+metadata:
+  name: application-server
+  namespace: default
+  annotations:
+    ns.networkservicemesh.io: load-balancer?app=lb
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: application-server-init
+data:
+  container-init: |
+    ip addr add 10.2.2.0/24 dev lo
+    ip link add gre0 type gre || true
+    ip link set up dev gre0
+    ip ro add 10.70.0.0/31 via 10.60.1.1
+    ip rule add from 10.2.2.0/24 table 222
+    ip ro add default via 10.60.1.1 dev nsm0 table 222
+    nc -lk -p 5001 -e hostname

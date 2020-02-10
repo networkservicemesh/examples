@@ -1,0 +1,41 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  selector:
+    matchLabels:
+      networkservicemesh.io/app: "load-balancer"
+      networkservicemesh.io/impl: "lb"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        networkservicemesh.io/app: "load-balancer"
+        networkservicemesh.io/impl: "lb"
+    spec:
+      serviceAccount: nse-acc
+      containers:
+        - name: load-balancer
+          image: networkservicemesh/load-balancer-image:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ENDPOINT_NETWORK_SERVICE
+              value: "load-balancer"
+            - name: ENDPOINT_LABELS
+              value: "app=lb"
+            - name: TRACER_ENABLED
+              value: "true"
+            - name: IP_ADDRESS
+              value: "10.60.1.0/24"
+            - name: VIP_ADDRESS
+              value: "10.2.2.0/24"
+            - name: NSE_HOOK
+              value: "/bin/nsehook.sh"
+          resources:
+            limits:
+              networkservicemesh.io/socket: 1
+          securityContext:
+            privileged: true
+metadata:
+  name: load-balancer
+  namespace: default
