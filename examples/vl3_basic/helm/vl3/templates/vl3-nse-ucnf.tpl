@@ -26,7 +26,7 @@ spec:
             - name: ADVERTISE_NSE_NAME
               value: {{ .Values.nsm.serviceName | quote }}
             - name: ADVERTISE_NSE_LABELS
-              value: "app=vl3-nse-ucnf"
+              value: "app=vl3-nse-ucnf,cnns/domain=foo.com"
             - name: TRACER_ENABLED
               value: "true"
             - name: JAEGER_SERVICE_HOST
@@ -81,6 +81,10 @@ data:
     - name: {{ .Values.nsm.serviceName | quote }}
       labels:
         app: "vl3-nse-ucnf"
+{{- if .Values.cnns.nsr.addr }}
+        cnns/nsr.addr: {{ .Values.cnns.nsr.addr | quote }}
+        cnns/nsr.port: {{ .Values.cnns.nsr.port | quote }}
+{{- end }}
       ipam:
         prefixpool: {{ .Values.ipam.prefixPool | quote }}
         routes: []

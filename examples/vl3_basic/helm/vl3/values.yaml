@@ -7,6 +7,12 @@ org: tiswanso
 tag: unified_api_ipam
 pullPolicy: Always
 
+cnns:
+  nsr:
+    port: 5005
+    # addr: 
+#  domain: nsr.foo.com
+
 nsm:
   serviceName: vl3-service
 

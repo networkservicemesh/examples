@@ -20,6 +20,12 @@ for i in "$@"; do
         --ipamOctet=?*)
             IPAMOCTET=${i#*=}
             ;;
+        --cnnsNsrAddr=?*)
+            CNNS_NSRADDR=${i#*=}
+            ;;
+        --cnnsNsrPort=?*)
+            CNNS_NSRPORT=${i#*=}
+            ;;
         --delete)
             INSTALL_OP=delete
             ;;
@@ -58,6 +64,7 @@ if [[ "${INSTALL_OP}" == "delete" ]]; then
     echo "delete configmap"
     kubectl delete ${KCONF:+--kubeconfig $KCONF} ${CFGMAP}
 else
+    REMOTE_IP=${CNNS_NSRADDR}:${CNNS_NSRPORT}
     if [[ -n ${REMOTE_IP} ]]; then
         kubectl create ${KCONF:+--kubeconfig $KCONF} ${CFGMAP} --from-literal=remote.ip_list=${REMOTE_IP}
     fi
@@ -65,7 +72,7 @@ fi
 
 echo "---------------Install NSE-------------"
 # ${KUBEINSTALL} -f ${VL3_NSEMFST}
-helm template ${VL3HELMDIR}/vl3 --set org=${HUB} --set tag=${TAG} --set pullPolicy=${PULLPOLICY} ${IPAMPOOL:+ --set ipam.prefixPool=${IPAMPOOL}} ${IPAMOCTET:+ --set ipam.uniqueOctet=${IPAMOCTET}} | kubectl ${INSTALL_OP} ${KCONF:+--kubeconfig $KCONF} -f -
+helm template ${VL3HELMDIR}/vl3 --set org=${HUB} --set tag=${TAG} --set pullPolicy=${PULLPOLICY} ${IPAMPOOL:+ --set ipam.prefixPool=${IPAMPOOL}} ${IPAMOCTET:+ --set ipam.uniqueOctet=${IPAMOCTET}} ${CNNS_NSRADDR:+ --set cnns.nsr.addr=${CNNS_NSRADDR}} ${CNNS_NSRPORT:+ --set cnns.nsr.port=${CNNS_NSRPORT}} | kubectl ${INSTALL_OP} ${KCONF:+--kubeconfig $KCONF} -f -
 
 if [[ "$INSTALL_OP" != "delete" ]]; then
   sleep 20
