@@ -1,7 +1,7 @@
 #!/bin/bash
 
 HUB=${HUB:-tiswanso}
-TAG=${TAG:-unified_api_ipam}
+TAG=${TAG:-kind_ci}
 PULLPOLICY=${PULLPOLICY:-IfNotPresent}
 INSTALL_OP=${INSTALL_OP:-apply}
 
@@ -46,16 +46,23 @@ done
 sdir=$(dirname ${0})
 #echo "$sdir"
 
+if [[ -n ${CNNS_NSRADDR} ]]; then
+    REMOTE_IP=${CNNS_NSRADDR}
+fi
+if [[ -n ${CNNS_NSRPORT} ]]; then
+    REMOTE_IP=${REMOTE_IP}:${CNNS_NSRPORT}
+fi
+
 NSMDIR=${NSMDIR:-${sdir}/../../../../networkservicemesh}
 #echo "$NSMDIR"
 
 VL3HELMDIR=${VL3HELMDIR:-${sdir}/../helm}
 
 MFSTDIR=${MFSTDIR:-${sdir}/../k8s}
-# VL3_NSEMFST=${MFSTDIR}/vl3-nse-ucnf-single.yaml
-# if [[ -n ${REMOTE_IP} ]]; then
-#    VL3_NSEMFST=${MFSTDIR}/vl3-nse-ucnf_deploy.yaml
-# fi
+VL3_NSEMFST=${MFSTDIR}/vl3-nse-ucnf-single.yaml
+if [[ -n ${REMOTE_IP} ]]; then
+   VL3_NSEMFST=${MFSTDIR}/vl3-nse-ucnf_deploy.yaml
+fi
 
 KUBEINSTALL="kubectl $INSTALL_OP ${KCONF:+--kubeconfig $KCONF}"
 
@@ -64,7 +71,6 @@ if [[ "${INSTALL_OP}" == "delete" ]]; then
     echo "delete configmap"
     kubectl delete ${KCONF:+--kubeconfig $KCONF} ${CFGMAP}
 else
-    REMOTE_IP=${CNNS_NSRADDR}:${CNNS_NSRPORT}
     if [[ -n ${REMOTE_IP} ]]; then
         kubectl create ${KCONF:+--kubeconfig $KCONF} ${CFGMAP} --from-literal=remote.ip_list=${REMOTE_IP}
     fi
