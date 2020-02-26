@@ -1,12 +1,29 @@
 #!/bin/bash
+COMMAND_ROOT=$(dirname "${BASH_SOURCE}")
+print_usage() {
+  echo "$(basename "$0")
+Usage: $(basename "$0") [options...]
+Options:
+  --nse-hub=STRING          Hub for vL3 NSE images
+                            (default=\"tiswanso\", environment variable: NSE_HUB)
+  --nse-tag=STRING          Tag for vL3 NSE images
+                            (default=\"kind_ci\", environment variable: NSE_TAG)
+" >&2
+}
 
-HUB=${HUB:-tiswanso}
-TAG=${TAG:-kind_ci}
+NSE_HUB=${NSE_HUB:-"tiswanso"}
+NSE_TAG=${NSE_TAG:-"kind_ci"}
 PULLPOLICY=${PULLPOLICY:-IfNotPresent}
 INSTALL_OP=${INSTALL_OP:-apply}
 
 for i in "$@"; do
     case $i in
+        --nse-hub=*)
+	    NSE_HUB=${i#*=}
+	    ;;
+        --nse-tag=*)
+            NSE_TAG=${i#*=}
+	    ;;
         -h|--help)
             usage
             exit
@@ -78,7 +95,7 @@ fi
 
 echo "---------------Install NSE-------------"
 # ${KUBEINSTALL} -f ${VL3_NSEMFST}
-helm template ${VL3HELMDIR}/vl3 --set org=${HUB} --set tag=${TAG} --set pullPolicy=${PULLPOLICY} ${IPAMPOOL:+ --set ipam.prefixPool=${IPAMPOOL}} ${IPAMOCTET:+ --set ipam.uniqueOctet=${IPAMOCTET}} ${CNNS_NSRADDR:+ --set cnns.nsr.addr=${CNNS_NSRADDR}} ${CNNS_NSRPORT:+ --set cnns.nsr.port=${CNNS_NSRPORT}} | kubectl ${INSTALL_OP} ${KCONF:+--kubeconfig $KCONF} -f -
+helm template ${VL3HELMDIR}/vl3 --set org=${NSE_HUB} --set tag=${NSE_TAG} --set pullPolicy=${PULLPOLICY} ${IPAMPOOL:+ --set ipam.prefixPool=${IPAMPOOL}} ${IPAMOCTET:+ --set ipam.uniqueOctet=${IPAMOCTET}} ${CNNS_NSRADDR:+ --set cnns.nsr.addr=${CNNS_NSRADDR}} ${CNNS_NSRPORT:+ --set cnns.nsr.port=${CNNS_NSRPORT}} | kubectl ${INSTALL_OP} ${KCONF:+--kubeconfig $KCONF} -f -
 
 if [[ "$INSTALL_OP" != "delete" ]]; then
   sleep 20
