@@ -8,7 +8,6 @@ require (
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/golang/protobuf v1.3.3
 	github.com/grpc-ecosystem/grpc-opentracing v0.0.0-20180507213350-8e809c8a8645
-	github.com/ligato/vpp-agent v2.5.1+incompatible
 	github.com/networkservicemesh/networkservicemesh/controlplane/api v0.3.0
 	github.com/networkservicemesh/networkservicemesh/pkg v0.3.0
 	github.com/networkservicemesh/networkservicemesh/sdk v0.3.0
@@ -17,6 +16,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/viper v1.5.0
+	go.ligato.io/vpp-agent/v3 v3.0.1
 	google.golang.org/grpc v1.27.0
 	gopkg.in/yaml.v2 v2.2.4
 )
