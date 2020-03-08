@@ -22,12 +22,12 @@ import (
 	"path"
 	"strconv"
 
-	vpp "github.com/ligato/vpp-agent/api/models/vpp"
-	interfaces "github.com/ligato/vpp-agent/api/models/vpp/interfaces"
-	vpp_l3 "github.com/ligato/vpp-agent/api/models/vpp/l3"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection/mechanisms/memif"
 	"github.com/sirupsen/logrus"
+	vpp "go.ligato.io/vpp-agent/v3/proto/ligato/vpp"
+	interfaces "go.ligato.io/vpp-agent/v3/proto/ligato/vpp/interfaces"
+	vpp_l3 "go.ligato.io/vpp-agent/v3/proto/ligato/vpp/l3"
 )
 
 // UniversalCNFVPPAgentBackend is the VPP CNF backend struct
