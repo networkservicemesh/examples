@@ -1,6 +1,6 @@
 module github.com/networkservicemesh/examples
 
-go 1.12
+go 1.14
 
 require (
 	github.com/Nordix/simple-ipam v1.0.0
