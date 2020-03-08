@@ -20,11 +20,11 @@ import (
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
-	"github.com/ligato/vpp-agent/api/configurator"
-	vpp "github.com/ligato/vpp-agent/api/models/vpp"
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
+	"go.ligato.io/vpp-agent/v3/proto/ligato/configurator"
+	vpp "go.ligato.io/vpp-agent/v3/proto/ligato/vpp"
 	"google.golang.org/grpc"
 )
 
@@ -51,7 +51,7 @@ func ResetVppAgent() error {
 
 	defer func() { _ = conn.Close() }()
 
-	client := configurator.NewConfiguratorClient(conn)
+	client := configurator.NewConfiguratorServiceClient(conn)
 
 	logrus.Infof("Resetting vppagent...")
 
@@ -95,7 +95,7 @@ func SendVppConfigToVppAgent(vppconfig *vpp.ConfigData, update bool) error {
 
 	defer func() { _ = conn.Close() }()
 
-	client := configurator.NewConfiguratorClient(conn)
+	client := configurator.NewConfiguratorServiceClient(conn)
 
 	logrus.Infof("Sending DataChange to vppagent: %v", dataChange)
 
