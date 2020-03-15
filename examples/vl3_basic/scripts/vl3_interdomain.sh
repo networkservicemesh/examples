@@ -66,9 +66,9 @@ sdir=$(dirname ${0})
 if [[ -n ${CNNS_NSRADDR} ]]; then
     REMOTE_IP=${CNNS_NSRADDR}
 fi
-if [[ -n ${CNNS_NSRPORT} ]]; then
-    REMOTE_IP=${REMOTE_IP}:${CNNS_NSRPORT}
-fi
+#if [[ -n ${CNNS_NSRPORT} ]]; then
+#    REMOTE_IP=${REMOTE_IP}:${CNNS_NSRPORT}
+#fi
 
 NSMDIR=${NSMDIR:-${sdir}/../../../../networkservicemesh}
 #echo "$NSMDIR"

@@ -18,7 +18,10 @@ spec:
         cnns/nse.servicename: {{ .Values.nsm.serviceName | quote }}
       annotations:
         sidecar.istio.io/inject: "false"
-        cnns/nsr.address: "{{ .Values.cnns.nsr.addr }}:{{ .Values.cnns.nsr.port }}"
+{{- if .Values.cnns.nsr.addr }}
+        cnns/nsr.address: {{ .Values.cnns.nsr.addr | quote }}
+        cnns/nsr.port: {{ .Values.cnns.nsr.port | quote }}
+{{- end }}
     spec:
       containers:
         - name: vl3-nse

@@ -68,7 +68,7 @@ helm template ${VL3DIR}/helm/nsm-addons --namespace nsm-system --set global.NSRe
 #helm template ${NSMDIR}/deployments/helm/nsm --namespace nsm-system --set global.JaegerTracing=true --set org=${NSM_HUB},tag=${NSM_TAG} --set pullPolicy=Always --set admission-webhook.org=tiswanso --set admission-webhook.tag=vl3-inter-domain2 --set admission-webhook.pullPolicy=Always --set global.NSRegistrySvc=true --set global.NSMApiSvc=true --set global.NSMApiSvcPort=30501 --set global.NSMApiSvcAddr="0.0.0.0:30501" --set global.NSMApiSvcType=NodePort --set global.ExtraDnsServers="${kubednsip} ${kinddnsip}" --set global.OverrideDnsServers="${kubednsip} ${kinddnsip}" | kubectl ${INSTALL_OP} ${KCONF:+--kubeconfig $KCONF} -f -
 
 echo "------------Installing proxy NSM-----------"
-helm template ${NSMDIR}/deployments/helm/proxy-nsmgr --namespace nsm-system --set org=${NSM_HUB},tag=${NSM_TAG} --set pullPolicy=Always --set insecure="true" --set global.JaegerTracing="true" | kubectl ${INSTALL_OP} ${KCONF:+--kubeconfig $KCONF} -f -
+helm template ${NSMDIR}/deployments/helm/proxy-nsmgr --namespace nsm-system --set org=${NSM_HUB},tag=${NSM_TAG} --set pullPolicy=Always --set insecure="true" --set global.JaegerTracing="true" ${REMOTE_NSR_PORT:+ --set remoteNsrPort=${REMOTE_NSR_PORT}} | kubectl ${INSTALL_OP} ${KCONF:+--kubeconfig $KCONF} -f -
 
 #helm template ${NSMDIR}/deployments/helm/proxy-nsmgr --namespace nsm-system --set global.JaegerTracing=true --set org=${NSM_HUB},tag=${NSM_TAG} --set pullPolicy=Always --set global.NSMApiSvc=true --set global.NSMApiSvcPort=30501 --set global.NSMApiSvcAddr="0.0.0.0:30501" | kubectl ${INSTALL_OP} ${KCONF:+--kubeconfig $KCONF} -f -
 
