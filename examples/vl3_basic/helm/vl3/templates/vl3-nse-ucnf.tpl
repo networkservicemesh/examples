@@ -2,18 +2,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: vl3-nse-ucnf
+  name: vl3-nse-{{ .Values.nsm.serviceName }}
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      networkservicemesh.io/app: "vl3-nse-ucnf"
+      networkservicemesh.io/app: "vl3-nse-{{ .Values.nsm.serviceName }}"
       networkservicemesh.io/impl: {{ .Values.nsm.serviceName | quote }}
   template:
     metadata:
       labels:
-        networkservicemesh.io/app: "vl3-nse-ucnf"
+        networkservicemesh.io/app: "vl3-nse-{{ .Values.nsm.serviceName }}"
         networkservicemesh.io/impl: {{ .Values.nsm.serviceName | quote }}
         cnns/nse.servicename: {{ .Values.nsm.serviceName | quote }}
       annotations:
@@ -31,7 +31,7 @@ spec:
             - name: ADVERTISE_NSE_NAME
               value: {{ .Values.nsm.serviceName | quote }}
             - name: ADVERTISE_NSE_LABELS
-              value: "app=vl3-nse-ucnf,cnns/domain=foo.com"
+              value: "app=vl3-nse-{{ .Values.nsm.serviceName }}"
             - name: TRACER_ENABLED
               value: "true"
             - name: JAEGER_SERVICE_HOST
@@ -57,7 +57,7 @@ spec:
             - name: NSM_REMOTE_NS_IP_LIST
               valueFrom:
                 configMapKeyRef:
-                  name: nsm-vl3
+                  name: nsm-vl3-{{ .Values.nsm.serviceName }}
                   key: remote.ip_list
           securityContext:
             capabilities:
@@ -74,18 +74,18 @@ spec:
       volumes:
         - name: universal-cnf-config-volume
           configMap:
-            name: universal-cnf-vl3
+            name: ucnf-vl3-{{ .Values.nsm.serviceName }}
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: universal-cnf-vl3
+  name: ucnf-vl3-{{ .Values.nsm.serviceName }}
 data:
   config.yaml: |
     endpoints:
     - name: {{ .Values.nsm.serviceName | quote }}
       labels:
-        app: "vl3-nse-ucnf"
+        app: "vl3-nse-{{ .Values.nsm.serviceName }}"
 {{- if .Values.cnns.nsr.addr }}
         cnns/nsr.addr: {{ .Values.cnns.nsr.addr | quote }}
         cnns/nsr.port: {{ .Values.cnns.nsr.port | quote }}

@@ -15,13 +15,14 @@ NSE_HUB=${NSE_HUB:-"tiswanso"}
 NSE_TAG=${NSE_TAG:-"kind_ci"}
 PULLPOLICY=${PULLPOLICY:-IfNotPresent}
 INSTALL_OP=${INSTALL_OP:-apply}
+SERVICENAME=${SERVICENAME:-vl3-service}
 
 for i in "$@"; do
     case $i in
-        --nse-hub=*)
+        --nse-hub=?*)
 	    NSE_HUB=${i#*=}
 	    ;;
-        --nse-tag=*)
+        --nse-tag=?*)
             NSE_TAG=${i#*=}
 	    ;;
         -h|--help)
@@ -30,6 +31,9 @@ for i in "$@"; do
             ;;
         --namespace=?*)
             NAMESPACE=${i#*=}
+            ;;
+        --serviceName=?*)
+            SERVICENAME=${i#*=}
             ;;
         --ipamPool=?*)
             IPAMPOOL=${i#*=}
@@ -83,7 +87,7 @@ fi
 
 KUBEINSTALL="kubectl $INSTALL_OP ${KCONF:+--kubeconfig $KCONF}"
 
-CFGMAP="configmap nsm-vl3"
+CFGMAP="configmap nsm-vl3-${SERVICENAME}"
 if [[ "${INSTALL_OP}" == "delete" ]]; then
     echo "delete configmap"
     kubectl delete ${KCONF:+--kubeconfig $KCONF} ${CFGMAP}
@@ -95,11 +99,11 @@ fi
 
 echo "---------------Install NSE-------------"
 # ${KUBEINSTALL} -f ${VL3_NSEMFST}
-helm template ${VL3HELMDIR}/vl3 --set org=${NSE_HUB} --set tag=${NSE_TAG} --set pullPolicy=${PULLPOLICY} ${IPAMPOOL:+ --set ipam.prefixPool=${IPAMPOOL}} ${IPAMOCTET:+ --set ipam.uniqueOctet=${IPAMOCTET}} ${CNNS_NSRADDR:+ --set cnns.nsr.addr=${CNNS_NSRADDR}} ${CNNS_NSRPORT:+ --set cnns.nsr.port=${CNNS_NSRPORT}} | kubectl ${INSTALL_OP} ${KCONF:+--kubeconfig $KCONF} -f -
+helm template ${VL3HELMDIR}/vl3 --set org=${NSE_HUB} --set tag=${NSE_TAG} --set pullPolicy=${PULLPOLICY} ${IPAMPOOL:+ --set ipam.prefixPool=${IPAMPOOL}} ${IPAMOCTET:+ --set ipam.uniqueOctet=${IPAMOCTET}} ${CNNS_NSRADDR:+ --set cnns.nsr.addr=${CNNS_NSRADDR}} ${CNNS_NSRPORT:+ --set cnns.nsr.port=${CNNS_NSRPORT}} --set nsm.serviceName=${SERVICENAME} | kubectl ${INSTALL_OP} ${KCONF:+--kubeconfig $KCONF} -f -
 
 if [[ "$INSTALL_OP" != "delete" ]]; then
   sleep 20
-  kubectl wait ${KCONF:+--kubeconfig $KCONF} --timeout=150s --for condition=Ready -l networkservicemesh.io/app=vl3-nse-ucnf pod
+  kubectl wait ${KCONF:+--kubeconfig $KCONF} --timeout=150s --for condition=Ready -l networkservicemesh.io/app=vl3-nse-${SERVICENAME} pod
 fi
 
 if [[ "${HELLO}" == "true" ]]; then
