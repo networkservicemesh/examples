@@ -49,7 +49,7 @@ function gatherdata_vpp_forwarder {
 function gatherdata_vl3_nse {
     local kconf=$1
 
-    local nse_pods=$(kubectl get pods --kubeconfig ${kconf} -n ${VL3NAMESPACE} -o=name | grep vl3-nse-ucnf | sed 's@.*/@@')
+    local nse_pods=$(kubectl get pods --kubeconfig ${kconf} -n ${VL3NAMESPACE} -o=name | grep vl3-nse | sed 's@.*/@@')
 
     for nse in $nse_pods; do
         echo "****"
