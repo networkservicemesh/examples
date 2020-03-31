@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/Nordix/simple-ipam v1.0.0
+	github.com/danielvladco/k8s-vnet v0.0.0-20200326075255-ab8adf273c88
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/golang/protobuf v1.3.2

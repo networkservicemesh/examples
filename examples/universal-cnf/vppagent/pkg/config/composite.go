@@ -18,12 +18,12 @@ package config
 import (
 	"context"
 
+	"github.com/danielvladco/k8s-vnet/pkg/nseconfig"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/ligato/vpp-agent/api/models/vpp"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connectioncontext"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/networkservice"
-	"github.com/networkservicemesh/networkservicemesh/sdk/client"
-	"github.com/networkservicemesh/networkservicemesh/sdk/common"
 	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
 	"github.com/sirupsen/logrus"
 )
@@ -31,9 +31,9 @@ import (
 // UniversalCNFEndpoint is a Universal CNF Endpoint composite implementation
 type UniversalCNFEndpoint struct {
 	//endpoint.BaseCompositeEndpoint
-	endpoint  *Endpoint
-	backend   UniversalCNFBackend
-	nsmClient *client.NsmClient
+	endpoint *nseconfig.Endpoint
+	backend  UniversalCNFBackend
+	dpConfig *vpp.ConfigData
 }
 
 // Request implements the request handler
@@ -41,23 +41,17 @@ func (uce *UniversalCNFEndpoint) Request(ctx context.Context,
 	request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
 	conn := request.GetConnection()
 
-	if uce.endpoint.Action == nil {
-		uce.endpoint.Action = &Action{}
+	if uce.dpConfig == nil {
+		uce.dpConfig = uce.backend.NewDPConfig()
 	}
 
-	action := uce.endpoint.Action
-
-	if action.DPConfig == nil {
-		action.DPConfig = uce.backend.NewDPConfig()
-	}
-
-	if err := uce.backend.ProcessEndpoint(action.DPConfig, uce.endpoint.Name, uce.endpoint.IfName, conn); err != nil {
-		logrus.Errorf("Failed to process: %+v", uce.endpoint.Action)
+	if err := uce.backend.ProcessEndpoint(uce.dpConfig, uce.endpoint.Name, uce.endpoint.VL3.Ifname, conn); err != nil {
+		logrus.Errorf("Failed to process: %+v", uce.endpoint)
 		return nil, err
 	}
 
-	if err := action.Process(ctx, uce.backend, uce.nsmClient); err != nil {
-		logrus.Errorf("Failed to process: %+v", uce.endpoint.Action)
+	if err := uce.backend.ProcessDPConfig(uce.dpConfig); err != nil {
+		logrus.Errorf("Error processing dpconfig: %+v", uce.dpConfig)
 		return nil, err
 	}
 
@@ -85,32 +79,10 @@ func (uce *UniversalCNFEndpoint) Name() string {
 }
 
 // NewUniversalCNFEndpoint creates a MonitorEndpoint
-func NewUniversalCNFEndpoint(backend UniversalCNFBackend, endpoint *Endpoint,
-	nsConfig *common.NSConfiguration) *UniversalCNFEndpoint {
-	var nsmClient *client.NsmClient
-
-	var err error
-
-	if endpoint.Action != nil && endpoint.Action.Client != nil {
-		c := endpoint.Action.Client
-
-		// Map the labels to a single comma separated string
-		labels := labelStringFromMap(c.Labels)
-
-		// Call the NS Client initiation
-		nsConfig.OutgoingNscName = c.Name
-		nsConfig.OutgoingNscLabels = labels
-		nsmClient, err = client.NewNSMClient(context.TODO(), nsConfig)
-
-		if err != nil {
-			logrus.Errorf("Unable to create the NSM client %v", err)
-		}
-	}
-
+func NewUniversalCNFEndpoint(backend UniversalCNFBackend, e *nseconfig.Endpoint) *UniversalCNFEndpoint {
 	self := &UniversalCNFEndpoint{
-		endpoint:  endpoint,
-		backend:   backend,
-		nsmClient: nsmClient,
+		backend:  backend,
+		endpoint: e,
 	}
 
 	return self

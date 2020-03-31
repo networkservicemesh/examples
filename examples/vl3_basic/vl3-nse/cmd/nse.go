@@ -19,7 +19,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/pkg/ucnf"
-	"github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/pkg/config"
+	"github.com/danielvladco/k8s-vnet/pkg/nseconfig"
 	"github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/pkg/vppagent"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/networkservice"
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
@@ -53,7 +53,7 @@ func (mf *Flags) Process() {
 
 type vL3CompositeEndpoint string
 
-func (vL3ce vL3CompositeEndpoint) AddCompositeEndpoints(nsConfig *common.NSConfiguration, ucnfEndpoint *config.Endpoint) *[]networkservice.NetworkServiceServer {
+func (vL3ce vL3CompositeEndpoint) AddCompositeEndpoints(nsConfig *common.NSConfiguration, ucnfEndpoint *nseconfig.Endpoint) *[]networkservice.NetworkServiceServer {
 	nsPodIp, ok := os.LookupEnv("NSE_POD_IP")
 	if !ok {
 		nsPodIp = "2.2.20.0" // needs to be set to make sense

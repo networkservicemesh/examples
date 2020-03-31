@@ -18,6 +18,7 @@ package config
 import (
 	"context"
 
+	"github.com/danielvladco/k8s-vnet/pkg/nseconfig"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection/mechanisms/memif"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/networkservice"
 
@@ -30,7 +31,7 @@ import (
 type SingleEndpoint struct {
 	NSConfiguration *common.NSConfiguration
 	NSComposite     *networkservice.NetworkServiceServer
-	Endpoint        *Endpoint
+	Endpoint        *nseconfig.Endpoint
 	Cleanup         func()
 }
 
@@ -40,19 +41,15 @@ type ProcessEndpoints struct {
 }
 
 type CompositeEndpointAddons interface {
-	AddCompositeEndpoints(*common.NSConfiguration, *Endpoint) *[]networkservice.NetworkServiceServer
+	AddCompositeEndpoints(*common.NSConfiguration, *nseconfig.Endpoint) *[]networkservice.NetworkServiceServer
 }
 
 // NewProcessEndpoints returns a new ProcessInitCommands struct
-func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint, nsconfig *common.NSConfiguration, ceAddons CompositeEndpointAddons) *ProcessEndpoints {
+func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*nseconfig.Endpoint, nsconfig *common.NSConfiguration, ceAddons CompositeEndpointAddons) *ProcessEndpoints {
 	result := &ProcessEndpoints{}
 
 	for _, e := range endpoints {
 
-		var ipPrefix string
-		if e.Ipam != nil {
-			ipPrefix = e.Ipam.PrefixPool
-		}
 		configuration := &common.NSConfiguration{
 			NsmServerSocket:    nsconfig.NsmServerSocket,
 			NsmClientSocket:    nsconfig.NsmClientSocket,
@@ -61,7 +58,7 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint, nsc
 			OutgoingNscName:    nsconfig.OutgoingNscName,
 			AdvertiseNseLabels: labelStringFromMap(e.Labels),
 			MechanismType:      memif.MECHANISM,
-			IPAddress:          ipPrefix,
+			IPAddress:          e.VL3.IPAM.PrefixPool,
 		}
 
 		// Build the list of composites
@@ -75,20 +72,12 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint, nsc
 			compositeEndpoints = append(compositeEndpoints, *addCompositeEndpoints...)
 		}
 
-		if e.Ipam != nil {
-			/*
-				compositeEndpoints = append(compositeEndpoints, endpoint.NewIpamEndpoint(&common.NSConfiguration{
-					IPAddress: e.Ipam.PrefixPool,
-				}))
-			*/
-
-			if len(e.Ipam.Routes) > 0 {
-				routeAddr := makeRouteMutator(e.Ipam.Routes)
-				compositeEndpoints = append(compositeEndpoints, endpoint.NewCustomFuncEndpoint("route", routeAddr))
-			}
+		if len(e.VL3.IPAM.Routes) > 0 {
+			routeAddr := makeRouteMutator(e.VL3.IPAM.Routes)
+			compositeEndpoints = append(compositeEndpoints, endpoint.NewCustomFuncEndpoint("route", routeAddr))
 		}
 
-		compositeEndpoints = append(compositeEndpoints, NewUniversalCNFEndpoint(backend, e, nsconfig))
+		compositeEndpoints = append(compositeEndpoints, NewUniversalCNFEndpoint(backend, e))
 		// Compose the Endpoint
 		composite := endpoint.NewCompositeEndpoint(compositeEndpoints...)
 
