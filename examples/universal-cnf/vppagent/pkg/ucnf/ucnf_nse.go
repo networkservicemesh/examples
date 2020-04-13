@@ -1,10 +1,13 @@
 package ucnf
 
 import (
-	"context"
+	"github.com/danielvladco/k8s-vnet/pkg/nseconfig"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/pkg/config"
 	"github.com/networkservicemesh/networkservicemesh/sdk/common"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
+	"os"
 )
 
 type UcnfNse struct {
@@ -16,35 +19,28 @@ func (ucnf *UcnfNse) Cleanup() {
 }
 
 func NewUcnfNse(configPath string, verify bool, backend config.UniversalCNFBackend, ceAddons config.CompositeEndpointAddons) *UcnfNse {
-	cnfConfig, err := config.NewUniversalCNFConfig(backend)
+	cnfConfig := &nseconfig.Config{}
+	f, err := os.Open(configPath)
 	if err != nil {
-		logrus.Fatalf("Error creating the Universal CNF Config")
+		logrus.Fatal(err)
+	}
+	err = nseconfig.NewConfig(yaml.NewDecoder(f), cnfConfig)
+	if err != nil {
+		logrus.Fatal(err)
 	}
 
-	if err := cnfConfig.InitConfig(configPath); err != nil {
-		logrus.Fatalf("Error processing [%s]: %v", configPath, err)
+	if err := backend.NewUniversalCNFBackend(); err != nil {
+		logrus.Fatal(err)
 	}
 
 	if verify {
-		cnfConfig.Dump()
+		spew.Dump(cnfConfig)
 		return nil
 	}
 
 	configuration := common.FromEnv()
-	pia := config.NewProcessInitActions(cnfConfig.GetBackend(), cnfConfig.InitActions, configuration)
-	defer pia.Cleanup()
 
-	if err := pia.Process(context.Background(), cnfConfig.GetBackend()); err != nil {
-		logrus.Fatalf("Error processing the init actions: %v", err)
-	}
-
-	//ceAddon, err := GetPluginCompositeEndpoints(mainFlags.CompositeEndpointPluginModule)
-	//if err != nil {
-	//	logrus.Errorf("Failed to get composite endpoints addon method from plugin")
-	//}
-	//ceAddon := CompositeEndpointPlugin
-
-	pe := config.NewProcessEndpoints(cnfConfig.GetBackend(), cnfConfig.Endpoints, configuration, ceAddons)
+	pe := config.NewProcessEndpoints(backend, cnfConfig.Endpoints, configuration, ceAddons)
 
 	ucnfnse := &UcnfNse{
 		processEndpoints: pe,
