@@ -7,7 +7,7 @@ Please follow the instructions on where the NSM project should be in the [Exampl
 
 # Testing 
 
-Follow the following sequence to verify that the NSE works as expected
+Follow the following sequence to verify that the NSE works as expected. All `make` commands should be given from the project root.
 
 ```bash
 # Deploy the NSM
