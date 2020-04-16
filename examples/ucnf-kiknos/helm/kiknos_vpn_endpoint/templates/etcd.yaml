@@ -1,0 +1,111 @@
+{{- define "utils.commaseparated" -}}
+{{- $local := dict "first" true -}}
+{{- range $k, $v := . -}}{{- if not $local.first -}},{{- end -}}{{- $v -}}{{- $_ := set $local "first" false -}}{{- end -}}
+{{- end }}
+
+{{- if not .Values.etcd.useExternalEtcd }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kiknos-etcd
+  labels:
+    k8s-app: kiknos-etcd
+spec:
+  serviceName: kiknos-etcd
+  selector:
+    matchLabels:
+      k8s-app: kiknos-etcd
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        k8s-app: kiknos-etcd
+    spec:
+      containers:
+        - name: kiknos-etcd
+          image: {{ .Values.etcd.image.repository }}:{{ .Values.etcd.image.tag }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ETCDCTL_API
+              value: "3"
+            {{- if .Values.etcd.secureTransport }}
+            - name: ETCDCTL_CACERT
+              value: /var/etcd/secrets/{{ .Values.etcd.secrets.caCertFile }}
+            - name: ETCDCTL_CERT
+              value: /var/etcd/secrets/{{ .Values.etcd.secrets.clientCertFile }}
+            - name: ETCDCTL_KEY
+              value: /var/etcd/secrets/{{ .Values.etcd.secrets.clientKeyFile }}
+            {{- end }}
+          command:
+            - /bin/sh
+          args:
+            - -c
+            - /usr/local/bin/etcd --name=kiknos-etcd --data-dir=/var/etcd/data
+              {{- if .Values.etcd.secureTransport }}
+              --client-cert-auth --trusted-ca-file=/var/etcd/secrets/{{ .Values.etcd.secrets.caCertFile }}
+              --cert-file=/var/etcd/secrets/{{ .Values.etcd.secrets.serverCertFile }} --key-file=/var/etcd/secrets/{{ .Values.etcd.secrets.serverKeyFile }}
+              --peer-client-cert-auth --peer-trusted-ca-file=/var/etcd/secrets/{{ .Values.etcd.secrets.caCertFile }}
+              --peer-cert-file=/var/etcd/secrets/{{ .Values.etcd.secrets.serverCertFile }} --peer-key-file=/var/etcd/secrets/{{ .Values.etcd.secrets.serverKeyFile }}
+              --advertise-client-urls=https://0.0.0.0:2379 --listen-client-urls=https://0.0.0.0:2379 --listen-peer-urls=https://0.0.0.0:2380
+              {{- if .Values.etcd.cipherSuites }}
+              --cipher-suites={{ include "utils.commaseparated" .Values.etcd.cipherSuites }}
+              {{- end }}
+              {{- else }}
+              --advertise-client-urls=http://0.0.0.0:2379 --listen-client-urls=http://0.0.0.0:2379 --listen-peer-urls=http://0.0.0.0:2380
+              {{- end }}
+          volumeMounts:
+            - name: etcd-data-dir
+              mountPath: /var/etcd/
+            {{- if .Values.etcd.secureTransport }}
+            - name: etcd-secrets
+              mountPath: /var/etcd/secrets
+            {{- end }}
+      volumes:
+        - name: etcd-data-dir
+          {{- if .Values.etcd.dataDir }}
+          hostPath:
+            path: {{ .Values.etcd.dataDir }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- if .Values.etcd.secureTransport }}
+        - name: etcd-secrets
+          secret:
+            secretName: {{ .Values.etcd.secrets.secretName }}
+        {{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.etcd.serviceName }}
+spec:
+  type: NodePort
+  selector:
+    k8s-app: kiknos-etcd
+  ports:
+    - port: 2379
+      nodePort: 32379
+{{- end }}
+
+{{- if and .Values.etcd.secureTransport .Values.etcd.secrets.loadFromFiles }}
+---
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: {{ .Values.etcd.secrets.secretName }}
+data:
+  {{ .Values.etcd.secrets.caCertFile }}: |-
+    {{ .Files.Get (printf "secrets/%s" .Values.etcd.secrets.caCertFile) | b64enc }}
+  {{ .Values.etcd.secrets.serverCertFile }}: |-
+    {{ .Files.Get (printf "secrets/%s" .Values.etcd.secrets.serverCertFile) | b64enc }}
+  {{ .Values.etcd.secrets.serverKeyFile }}: |-
+    {{ .Files.Get (printf "secrets/%s" .Values.etcd.secrets.serverKeyFile) | b64enc }}
+  {{ .Values.etcd.secrets.clientCertFile }}: |-
+    {{ .Files.Get (printf "secrets/%s" .Values.etcd.secrets.clientCertFile) | b64enc }}
+  {{ .Values.etcd.secrets.clientKeyFile }}: |-
+    {{ .Files.Get (printf "secrets/%s" .Values.etcd.secrets.clientKeyFile) | b64enc }}
+{{- end }}

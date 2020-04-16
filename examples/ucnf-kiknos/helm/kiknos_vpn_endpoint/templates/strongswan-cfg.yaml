@@ -1,0 +1,61 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: strongswan-cfg
+data:
+  strongswan.conf: |
+    charon {
+        threads = 32
+        replay_window = 32
+        dos_protection = yes
+        block_threshold=35000
+        cookie_threshold=35000
+        init_limit_half_open=35000
+        retransmit_timeout=300
+        retransmit_tries=300
+        #install_virtual_ip=no
+        #install_routes=no
+        close_ike_on_child_failure=no
+        ikesa_table_size = 8192
+        ikesa_table_segments = 32
+        reuse_ikesa = no
+        load_modular = yes
+        plugins {
+            include strongswan.d/charon/*.conf
+        }
+        filelog {
+            charon {
+                # path to the log file, specify this as section name in versions prior to 5.7.0
+                path = /var/log/charon.log
+                # add a timestamp prefix
+                time_format = %b %e %T
+                # prepend connection name, simplifies grepping
+                ike_name = yes
+                # overwrite existing files
+                append = no
+                # increase default loglevel for all daemon subsystems
+                default = 0
+                # flush each line to disk
+                flush_line = yes
+            }
+            stderr {
+                # more detailed loglevel for a specific subsystem, overriding the
+                # default loglevel.
+                ike = 0
+                knl = 0
+            }
+        }
+    }
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: strongswan-vpp-cfg
+data:
+  kernel-vpp.conf: |
+    kernel-vpp {
+        load = yes
+        grpc = unix:///run/vpp-agent.sock
+    }
