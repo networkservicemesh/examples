@@ -1,0 +1,95 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: network-cfg
+data:
+{{- if eq .Values.scenario "aio" }}
+  aio-vswitch.json: |
+{{ include "network-cfg.aio-vswitch" . | indent 4 }}
+
+  aio-kiknos.json: |
+{{ include "network-cfg.aio-kiknos" . | indent 4 }}
+
+{{- else }}
+  dcups-vswitch.json: |
+{{ include "network-cfg.dcups-vswitch" . | indent 4 }}
+
+  dcups-esp.json: |
+{{ include "network-cfg.dcups-esp" . | indent 4 }}
+
+  dcups-ike.json: |
+{{ include "network-cfg.dcups-ike" . | indent 4 }}
+
+{{- end }}
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: network-cfg-job
+spec:
+  template:
+    spec:
+      containers:
+        - name: network-config
+        {{- if eq .Values.scenario "aio" }}
+          {{- if .Values.development.useDevImages }}
+          image: {{ .Values.aio.image.devRepository }}:{{ .Values.aio.image.tag }}
+          {{- else }}
+          image: {{ .Values.aio.image.repository }}:{{ .Values.aio.image.tag }}
+          {{- end }}
+        {{- else }}
+          {{- if .Values.development.useDevImages }}
+          image: {{ .Values.ike.image.devRepository }}:{{ .Values.ike.image.tag }}
+          {{- else }}
+          image: {{ .Values.ike.image.repository }}:{{ .Values.ike.image.tag }}
+          {{- end }}
+        {{- end }}
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+            {{- if eq .Values.scenario "aio" }}
+              {{if.Values.development.useDevImages}}/go/bin/{{else}}/usr/bin/{{end}}kiknosctl --config-dir=/var/kiknosctl --service-label=$NODE_NAME import /var/cfg/aio-vswitch.json && \
+              {{if.Values.development.useDevImages}}/go/bin/{{else}}/usr/bin/{{end}}kiknosctl --config-dir=/var/kiknosctl --service-label={{ .Values.aio.serviceLabel }} import /var/cfg/aio-kiknos.json
+            {{- else }}
+              {{if.Values.development.useDevImages}}/go/bin/{{else}}/usr/bin/{{end}}kiknosctl --config-dir=/var/kiknosctl --service-label=$NODE_NAME import /var/cfg/dcups-vswitch.json && \
+              {{if.Values.development.useDevImages}}/go/bin/{{else}}/usr/bin/{{end}}kiknosctl --config-dir=/var/kiknosctl --service-label={{ .Values.esp.serviceLabel }} import /var/cfg/dcups-esp.json && \
+              {{- if eq ($.Values.ike.replicas|int) 1}}
+              {{if.Values.development.useDevImages}}/go/bin/{{else}}/usr/bin/{{end}}kiknosctl --config-dir=/var/kiknosctl --service-label={{ .Values.ike.serviceLabel }} import /var/cfg/dcups-ike.json
+              {{- else}}
+              {{- range $i, $e := untilStep 1 ($.Values.ike.replicas|add 1|int) 1 }}
+              {{if $.Values.development.useDevImages}}/go/bin/{{else}}/usr/bin/{{end}}kiknosctl --config-dir=/var/kiknosctl --service-label={{ $.Values.ike.serviceLabel }}-{{ $e }} import /var/cfg/dcups-ike.json {{ if lt $e $.Values.ike.replicas }}&& \{{ end }}
+              {{- end}}
+              {{- end}}
+            {{- end }}
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: kiknosctl-config
+              mountPath: /var/kiknosctl
+            - name: network-config
+              mountPath: /var/cfg
+            {{- if .Values.etcd.secureTransport }}
+            - name: etcd-secrets
+              mountPath: /var/etcd/secrets
+            {{- end }}
+      volumes:
+        - name: kiknosctl-config
+          configMap:
+            name: kiknosctl-job-cfg
+        - name: network-config
+          configMap:
+            name: network-cfg
+        {{- if .Values.etcd.secureTransport }}
+        - name: etcd-secrets
+          secret:
+            secretName: {{ .Values.etcd.secrets.secretName }}
+        {{- end }}
+      restartPolicy: OnFailure
+  backoffLimit: 10

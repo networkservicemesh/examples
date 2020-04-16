@@ -1,0 +1,98 @@
+{{- if .Values.ikester.enabled }}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ikester
+spec:
+  containers:
+    - name: ikester
+      image: {{ .Values.ikester.image.repository }}:{{ .Values.ikester.image.tag }}
+      imagePullPolicy: {{ .Values.ikester.image.pullPolicy }}
+      ports:
+        - containerPort: 9191
+      env:
+        - name: MICROSERVICE_LABEL
+          value: ikester
+        - name: HTTP_CLIENT_CONFIG
+          value: /opt/ike-tester/http.client.conf
+      {{- if .Values.probes.enabled }}
+      readinessProbe:
+        httpGet:
+          path: /ike-tester/summary
+          port: 9191
+        periodSeconds: {{ .Values.probes.periodSeconds }}
+        timeoutSeconds: {{ .Values.probes.timeoutSeconds }}
+        failureThreshold: {{ .Values.probes.failureThreshold }}
+        initialDelaySeconds: {{ .Values.probes.readinessInitialDelaySeconds }}
+      livenessProbe:
+        httpGet:
+          path: /ike-tester/summary
+          port: 9191
+        periodSeconds: {{ .Values.probes.periodSeconds }}
+        timeoutSeconds: {{ .Values.probes.timeoutSeconds }}
+        failureThreshold: {{ .Values.probes.failureThreshold }}
+        initialDelaySeconds: {{ .Values.probes.livenessInitialDelaySeconds }}
+      {{- end }}
+      volumeMounts:
+        - name: ike-tester-config
+          mountPath: /opt/ike-tester
+  volumes:
+    - name: ike-tester-config
+      configMap:
+        name: ike-tester-cfg
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ike-tester-cfg
+data:
+  supervisor.conf: |
+    programs:
+      - name: "ike-tester"
+        executable-path: "/go/bin/ike-tester"
+        executable-args: ["--ike-config=/opt/ike-tester/ike.conf"]
+        logfile-path: "/var/log/ike-tester.log"
+    hooks:
+      #- cmd: "/usr/bin/init_hook.sh"
+
+  ike.conf: |
+    ike_tester_config_version: 1
+    ike_test_desc:
+      {{- if not .Values.ikester.useRawSocket }}
+      use_raw_packet: false
+      udp_socket_info:
+         local_ip_address: "{{ .Values.ikester.network.redInterfaceIP }}"
+         remote_ip_address: "{{ if eq .Values.scenario "aio" }}{{ .Values.aio.network.redInterfaceIP }}{{ else }}{{ .Values.esp.network.redInterfaceIP }}{{ end }}"
+      {{- else }}
+      use_raw_packet: true
+      raw_packet_capture_info:
+        local_mac_addr: "02:00:00:00:00:04"
+        remote_mac_addr: "02:00:00:00:00:05"
+        local_ip_address_base: "{{ .Values.ikester.network.ikeSourceIPBase }}"
+        remote_ip_address: "{{ if eq .Values.scenario "aio" }}{{ .Values.aio.network.redInterfaceIP }}{{ else }}{{ .Values.esp.network.redInterfaceIP }}{{ end }}"
+        local_ike_esp_port_name: "red"
+        local_arp_enabled: true
+        num_arp_threads: 4
+      {{- end }}
+      child_sa_local_ip_address_mask: "10.0.0.0"
+      child_sa_remote_ip_address_mask: "40.0.0.0"
+      udp_encap_enabled: true
+      num_threads: 1
+      thread_sleep_micro_secs: 10000
+      num_tunnels: 0
+      send_shaper_msgs_per_second: 50
+      #retry_interval_in_seconds: 5
+      num_retries_per_tunnel: 0
+      pre_shared_key: {{ .Values.ikester.preSharedKey }}
+      log_socket_level: 0
+      log_decode_level: 0
+      log_encode_level: 0
+      log_ike_level: 0
+
+  http.client.conf: |
+    port: 9191
+    use-https: false
+
+{{- end }}

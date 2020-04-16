@@ -1,0 +1,232 @@
+---
+
+registry: docker.io
+org: networkservicemesh
+tag: latest
+pullPolicy: IfNotPresent
+
+nsm:
+  serviceName: icmp-responder
+  sourceApp: ucnf-client
+  destinationApp: vpn-endpoint
+
+ipam:
+  prefixPool: "172.31.0.0/16"
+
+global:
+
+replicaCount: 1
+
+image:
+  repository: networkservicemesh
+  tag: latest
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+#  memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# scenario can be either "aio" (All-in-One) or "dcups" (Distributed Control and User Plane)
+scenario: aio
+
+# Kiknos All-in-One deployment
+aio:
+  image:
+    repository: ciscolabs/kiknos
+    devRepository: ciscolabs/dev-kiknos
+    tag: latest
+  serviceLabel: kiknos
+  privileged: true
+  hugePages:
+    enabled: false
+    size: 512Mi
+  logs:
+    txnSummary: true
+  http:
+    secureTransport: false
+    secrets:
+      loadFromFiles: true
+      secretName: kiknos-http-secrets
+      caCertFile: ca.crt
+      serverCertFile: kiknos-server.crt
+      serverKeyFile: kiknos-server.key
+      clientCertFile: kiknos-client.crt
+      clientKeyFile: kiknos-client.key
+      basicAuth: user:pass
+  network:
+    redInterfaceIP: 100.100.100.102
+    blackInterfaceIP: 10.10.20.100
+
+# Kiknos ESP (DCUPS component) deployment
+esp:
+  image:
+    repository: ciscolabs/esp
+    devRepository: ciscolabs/dev-esp
+    tag: latest
+  serviceLabel: esp
+  privileged: true
+  hugePages:
+    enabled: false
+    size: 512Mi
+  logs:
+    txnSummary: true
+  http:
+    secureTransport: false
+    secrets:
+      loadFromFiles: true
+      secretName: esp-http-secrets
+      caCertFile: ca.crt
+      serverCertFile: esp-server.crt
+      serverKeyFile: esp-server.key
+      clientCertFile: esp-client.crt
+      clientKeyFile: esp-client.key
+      basicAuth: user:pass
+  network:
+    redInterfaceIP: 100.100.100.102
+    blackInterfaceIP: 10.10.20.100
+
+# Kiknos IKE (DCUPS component) deployment
+ike:
+  image:
+    repository: ciscolabs/ike
+    devRepository: ciscolabs/dev-ike
+    tag: latest
+  serviceLabel: ike
+  replicas: 1
+  logs:
+    txnSummary: true
+  http:
+    secureTransport: false
+    secrets:
+      loadFromFiles: true
+      secretName: ike-http-secrets
+      caCertFile: ca.crt
+      serverCertFile: ike-server.crt
+      serverKeyFile: ike-server.key
+      clientCertFile: ike-client.crt
+      clientKeyFile: ike-client.key
+      basicAuth: user:pass
+  network:
+    redInterfaceIP: 100.100.100.200
+    redInterfaceIPBase: 100.100.100.20
+
+# StrongSwan configuration
+strongswan:
+  secrets:
+    ikePreSharedKey: Vpp123
+    encryption:
+      enabled: false
+      loadKeysFromFiles: true
+      keysSecretName: strongswan-secrets-keys
+      privateKeyFile: secrets-key.pem
+      publicKeyFile: secrets-pub.pem
+
+# IKE tester pod settings (used for testing)
+ikester:
+  enabled: true
+  image:
+    repository: ciscolabs/ikester
+    tag: latest
+    pullPolicy: IfNotPresent
+  preSharedKey: Vpp123
+  useRawSocket: true
+  network:
+    redInterfaceIP: 100.100.100.101
+    blackInterfaceIP: 10.10.10.100
+    ikeSourceIPBase: 200.0.0.0
+
+# ETCD settings
+etcd:
+  # useExternalEtcd controls whether Kiknos-private ETCD instance should be deployed, or external ETCD (e.g. Contiv ETCD) will be used
+  useExternalEtcd: false
+  externalEtcdEndpoint: contiv-etcd.kube-system.svc.cluster.local:12379
+  # the options below are only applicable if useExternalEtcd is false
+  serviceName: kiknos-etcd
+  secureTransport: false
+  secrets:
+    loadFromFiles: true
+    secretName: kiknos-etcd-secrets
+    caCertFile: ca.crt
+    serverCertFile: etcd-server.crt
+    serverKeyFile: etcd-server.key
+    clientCertFile: etcd-client.crt
+    clientKeyFile: etcd-client.key
+  # related to Kiknos-private ETCD
+  image:
+    repository: quay.io/coreos/etcd
+    tag: v3.3.15
+  # dataDir can be e.g. /var/etcd/kiknos for host-mounted directory. EmptyDir if not specified
+  dataDir:
+  cipherSuites:
+    - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+    - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+    - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+
+# vSwitch settings
+vswitch:
+  # controls whether Kiknos VPP vSwitch should be deployed, or external vSwitch (e.g. Contiv) will be used
+  useExternalVswitch: false
+  memifSocketDir: /var/run/contiv
+  # the options below are only applicable if useExternalVswitch is false
+  image:
+    repository: ligato/vpp-agent
+    tag: v3.0.1
+  dpdk:
+    enabled: false
+    pciDevices:
+      #- 0000:00:08.0
+  http:
+    secureTransport: false
+    secrets:
+      loadFromFiles: true
+      secretName: vswitch-http-secrets
+      caCertFile: ca.crt
+      serverCertFile: vswitch-server.crt
+      serverKeyFile: vswitch-server.key
+      basicAuth: user:pass
+
+# controls k8s liveness & readiness probes for Kiknos deployment
+probes:
+  enabled: true
+  readinessInitialDelaySeconds: 15
+  livenessInitialDelaySeconds: 60
+  periodSeconds: 3
+  timeoutSeconds: 2
+  failureThreshold: 3
+
+# addons to be deployed alongside with Kiknos
+addons:
+  prometheus:
+    enabled: false
+  iperfPods:
+    # names of the iperf pods to be deployed, e.g.:
+    #- client
+    #- server
+
+# settings used for development
+development:
+  useDevImages: false
+  debugEndpointsEnabled: true
+  # sourceDirMount is used to mount sources into the Kiknos containers
+  sourceDirMount:
+    enabled: true
+    hostPath: /home/vagrant/projects/src/github.com/ccnf
+    containerPath: /go/src/github.com/ccnf

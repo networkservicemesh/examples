@@ -1,0 +1,10 @@
+{{- define "network-cfg.aio-kiknos" -}}
+# Kiknos memifs
+config/vpp/v2/interfaces/black {"name":"black","type":"MEMIF","enabled":true,"phys_address":"02:00:00:00:00:07","ip_addresses":["{{ .Values.aio.network.blackInterfaceIP }}/24"],"mtu":1500,"rx_modes":[{"mode":"ADAPTIVE"}],"memif":{"id":1,"socket_filename":"/var/run/contiv/memif_ts1-host4.sock"}}
+config/vpp/v2/interfaces/red {"name":"red","type":"MEMIF","enabled":true,"phys_address":"02:00:00:00:00:05","ip_addresses":["{{ .Values.aio.network.redInterfaceIP }}/24"],"mtu":1500,"rx_modes":[{"mode":"ADAPTIVE"}],"memif":{"id":2,"socket_filename":"/var/run/contiv/memif_ts1-host4.sock"}}
+#
+{{- if .Values.ikester.useRawSocket }}
+# Route towards ikester source IP subnet
+config/vpp/v2/route/if/red/vrf/0/dst/{{ .Values.ikester.network.ikeSourceIPBase }}/8/gw/{{ .Values.ikester.network.redInterfaceIP }} {"type":"INTRA_VRF","dst_network":"{{ .Values.ikester.network.ikeSourceIPBase }}/8","next_hop_addr":"{{ .Values.ikester.network.redInterfaceIP }}","outgoing_interface":"red"}
+{{- end -}}
+{{- end -}}

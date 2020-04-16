@@ -1,0 +1,289 @@
+{{- if eq .Values.scenario "dcups" }}
+{{- range $i, $e :=  untilStep 1 (.Values.ike.replicas|add 1|int) 1 }}
+{{- $id := $.Values.ike.serviceLabel -}}
+{{- if gt ($.Values.ike.replicas|int) 1 }}
+  {{- $id = printf "%s-%d" $.Values.ike.serviceLabel $e -}}
+{{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $id }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ $id }}
+  template:
+    metadata:
+      labels:
+        app: {{ $id }}
+    spec:
+      containers:
+        - name: ike
+          {{- if $.Values.development.useDevImages }}
+          image: {{ $.Values.ike.image.devRepository }}:{{ $.Values.ike.image.tag }}
+          {{- else }}
+          image: {{ $.Values.ike.image.repository }}:{{ $.Values.ike.image.tag }}
+          {{- end }}
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            capabilities:
+              add: ["NET_ADMIN"]
+          ports:
+            - containerPort: 9111
+            - containerPort: 9191
+            {{- if $.Values.development.debugEndpointsEnabled }}
+            - containerPort: 32500
+            {{- end }}
+          env:
+            - name: MICROSERVICE_LABEL
+              value: {{ $id }}
+          {{- if $.Values.probes.enabled }}
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: 9191
+              {{- if $.Values.ike.http.secureTransport }}
+              scheme: HTTPS
+              httpHeaders:
+                - name: Authorization
+                  value: "Basic {{ $.Values.ike.http.secrets.basicAuth | b64enc }}"
+              {{- end }}
+            periodSeconds: {{ $.Values.probes.periodSeconds }}
+            timeoutSeconds: {{ $.Values.probes.timeoutSeconds }}
+            failureThreshold: {{ $.Values.probes.failureThreshold }}
+            initialDelaySeconds: {{ $.Values.probes.readinessInitialDelaySeconds }}
+          livenessProbe:
+            httpGet:
+              path: /liveness
+              port: 9191
+              {{- if $.Values.ike.http.secureTransport }}
+              scheme: HTTPS
+              httpHeaders:
+                - name: Authorization
+                  value: "Basic {{ $.Values.ike.http.secrets.basicAuth | b64enc }}"
+              {{- end }}
+            periodSeconds: {{ $.Values.probes.periodSeconds }}
+            timeoutSeconds: {{ $.Values.probes.timeoutSeconds }}
+            failureThreshold: {{ $.Values.probes.failureThreshold }}
+            initialDelaySeconds: {{ $.Values.probes.livenessInitialDelaySeconds }}
+          {{- end }}
+          volumeMounts:
+            - name: agent-config
+              mountPath: /opt/ike-agent/dev
+            - name: kiknosctl-config
+              mountPath: /root/.agentctl/
+            - name: vpp-config
+              mountPath: /etc/vpp/vpp.conf
+              subPath: vpp.conf
+            - name: strongswan-config
+              mountPath: /etc/strongswan.conf
+              subPath: strongswan.conf
+            - name: strongswan-vpp-config
+              mountPath: /etc/strongswan.d/charon/kernel-vpp.conf
+              subPath: kernel-vpp.conf
+            {{- if $.Values.etcd.secureTransport }}
+            - name: etcd-secrets
+              mountPath: /var/etcd/secrets
+            {{- end }}
+            {{- if $.Values.ike.http.secureTransport }}
+            - name: http-secrets
+              mountPath: /var/http/secrets
+            {{- end }}
+            {{- if $.Values.strongswan.secrets.encryption.enabled }}
+            - name: strongswan-secrets
+              mountPath: /var/strongswan/secrets
+            {{- end }}
+            {{- if $.Values.development.sourceDirMount.enabled }}
+            - name: source-dir
+              mountPath: {{ $.Values.development.sourceDirMount.containerPath }}
+            {{- end }}
+      volumes:
+        - name: agent-config
+          configMap:
+            name: ike-agent-cfg
+        - name: kiknosctl-config
+          configMap:
+            name: ike-kiknosctl-cfg
+        - name: vpp-config
+          configMap:
+            name: kiknos-vpp-cfg
+        - name: strongswan-config
+          configMap:
+            name: strongswan-cfg
+        - name: strongswan-vpp-config
+          configMap:
+            name: strongswan-vpp-cfg
+        {{- if $.Values.etcd.secureTransport }}
+        - name: etcd-secrets
+          secret:
+            secretName: {{ $.Values.etcd.secrets.secretName }}
+        {{- end }}
+        {{- if $.Values.ike.http.secureTransport }}
+        - name: http-secrets
+          secret:
+            secretName: {{ $.Values.ike.http.secrets.secretName }}
+        {{- end }}
+        {{- if $.Values.strongswan.secrets.encryption.enabled }}
+        - name: strongswan-secrets
+          secret:
+            secretName: {{ $.Values.strongswan.secrets.encryption.keysSecretName }}
+        {{- end }}
+        {{- if $.Values.development.sourceDirMount.enabled }}
+        - name: source-dir
+          hostPath:
+            path: {{ $.Values.development.sourceDirMount.hostPath }}
+        {{- end }}
+{{- end }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ike-agent-cfg
+data:
+  {{- if not .Values.ike.logs.txnSummary }}
+  kvscheduler.conf: |
+    print-txn-summary: false
+  {{- end }}
+  etcd.conf: |
+    endpoints:
+      {{- if .Values.etcd.useExternalEtcd }}
+      - "{{ .Values.etcd.externalEtcdEndpoint }}"
+      {{- else }}
+      - {{ .Values.etcd.serviceName }}:2379
+      {{- end }}
+    {{- if .Values.etcd.secureTransport }}
+    insecure-transport: false
+    cert-file: /var/etcd/secrets/{{ .Values.etcd.secrets.clientCertFile }}
+    key-file: /var/etcd/secrets/{{ .Values.etcd.secrets.clientKeyFile }}
+    ca-file: /var/etcd/secrets/{{ .Values.etcd.secrets.caCertFile }}
+    {{- else }}
+    insecure-transport: true
+    {{- end }}
+    dial-timeout: 10000000000
+    allow-delayed-start: true
+  grpc-sswan.conf: |
+    endpoint: /run/vpp-agent.sock
+    network: unix
+    permission: 700
+    max-msg-size: 4096
+  grpc.conf: |
+    endpoint: 0.0.0.0:9111
+    {{- if .Values.ike.http.secureTransport }}
+    insecure-transport: false
+    cert-file: /var/http/secrets/{{ .Values.ike.http.secrets.serverCertFile }}
+    key-file: /var/http/secrets/{{ .Values.ike.http.secrets.serverKeyFile }}
+    ca-files:
+      - /var/http/secrets/{{ .Values.ike.http.secrets.caCertFile }}
+    {{- else }}
+    insecure-transport: true
+    {{- end }}
+    network: tcp
+    max-msg-size: 4096
+  http.conf: |
+    endpoint: 0.0.0.0:9191
+    {{- if .Values.ike.http.secureTransport }}
+    server-cert-file: /var/http/secrets/{{ .Values.ike.http.secrets.serverCertFile }}
+    server-key-file: /var/http/secrets/{{ .Values.ike.http.secrets.serverKeyFile }}
+    client-basic-auth:
+      - {{ .Values.ike.http.secrets.basicAuth | quote }}
+    {{- end }}
+  {{- if .Values.strongswan.secrets.encryption.enabled }}
+  kiknos.conf: |
+    KiknosConfig:
+      secretsKeyFile: /var/strongswan/secrets/{{ .Values.strongswan.secrets.encryption.privateKeyFile }}
+  {{- end }}
+  supervisor.conf: |
+    programs:
+      - name: "ike-agent"
+        executable-path: "{{if.Values.development.useDevImages}}/go/bin/{{else}}/usr/bin/{{end}}ike-agent"
+        executable-args: ["--config-dir=/opt/ike-agent/dev"]
+      - name: "strongswan"
+        executable-path: "/usr/local/libexec/ipsec/charon"
+        executable-args: ["--use-syslog"]
+    hooks:
+      - cmd: "/usr/bin/init_hook.sh"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ike-kiknosctl-cfg
+data:
+  config.yml: |
+    etcd-endpoints:
+    {{- if .Values.etcd.useExternalEtcd }}
+      - "{{ .Values.etcd.externalEtcdEndpoint }}"
+    {{- else }}
+      - {{ .Values.etcd.serviceName }}:2379
+    {{- end }}
+    etcd-dial-timeout: 20000000000
+    {{- if .Values.etcd.secureTransport }}
+    kvdb-tls:
+      cert-file: /var/etcd/secrets/{{ .Values.etcd.secrets.clientCertFile }}
+      key-file: /var/etcd/secrets/{{ .Values.etcd.secrets.clientKeyFile }}
+      ca-file: /var/etcd/secrets/{{ .Values.etcd.secrets.caCertFile }}
+    {{- end }}
+    {{- if .Values.ike.http.secureTransport }}
+    http-tls:
+      ca-file: /var/http/secrets/{{ .Values.ike.http.secrets.caCertFile }}
+    http-basic-auth: {{ .Values.ike.http.secrets.basicAuth | quote }}
+    grpc-tls:
+      cert-file: /var/http/secrets/{{ .Values.ike.http.secrets.clientCertFile }}
+      key-file: /var/http/secrets/{{ .Values.ike.http.secrets.clientKeyFile }}
+      ca-file: /var/http/secrets/{{ .Values.ike.http.secrets.caCertFile }}
+    {{- end }}
+
+{{- if .Values.development.debugEndpointsEnabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ike-debug
+spec:
+  type: NodePort
+  selector:
+    app: ike
+  ports:
+    - name: ike-dlv
+      port: 32500
+      nodePort: 32501
+{{- end }}
+
+{{- if .Values.addons.prometheus.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ike-prometheus
+spec:
+  selector:
+    app: ike
+  ports:
+    - name: ike-prometheus
+      port: 9191
+{{- end }}
+
+{{- if and .Values.ike.http.secureTransport .Values.ike.http.secrets.loadFromFiles }}
+---
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: {{ .Values.ike.http.secrets.secretName }}
+data:
+  {{ .Values.ike.http.secrets.caCertFile }}: |-
+    {{ .Files.Get (printf "secrets/%s" .Values.ike.http.secrets.caCertFile) | b64enc }}
+  {{ .Values.ike.http.secrets.serverCertFile }}: |-
+    {{ .Files.Get (printf "secrets/%s" .Values.ike.http.secrets.serverCertFile) | b64enc }}
+  {{ .Values.ike.http.secrets.serverKeyFile }}: |-
+    {{ .Files.Get (printf "secrets/%s" .Values.ike.http.secrets.serverKeyFile) | b64enc }}
+  {{ .Values.ike.http.secrets.clientCertFile }}: |-
+    {{ .Files.Get (printf "secrets/%s" .Values.ike.http.secrets.clientCertFile) | b64enc }}
+  {{ .Values.ike.http.secrets.clientKeyFile }}: |-
+    {{ .Files.Get (printf "secrets/%s" .Values.ike.http.secrets.clientKeyFile) | b64enc }}
+{{- end }}
+
+{{- end }}
