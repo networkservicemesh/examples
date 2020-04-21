@@ -1,13 +1,12 @@
 #!/bin/bash
 
 #  Ping all the things!
-echo "Here"
 for nsc in $(kubectl get pods -o=name | grep -E "ucnf-client" | sed 's@.*/@@'); do
     echo "===== >>>>> PROCESSING ${nsc}  <<<<< ==========="
     for i in {1..10}; do
         EXIT_VAL=0
         echo Try ${i}
-        for ip in $(kubectl exec -it "${nsc}" -- vppctl show int addr | grep L3 | awk '{print $2}'); do
+        for ip in $(kubectl exec -it "${nsc}" -c=helloworld -- ip addr | grep nsm0 | grep inet | awk '{print $2}'); do
             if [[ "${ip}" == 172.31.0* ]];then
                 lastSegment=$(echo "${ip}" | cut -d . -f 4 | cut -d / -f 1)
                 nextOp=$((lastSegment + 1))
@@ -17,10 +16,10 @@ for nsc in $(kubectl get pods -o=name | grep -E "ucnf-client" | sed 's@.*/@@'); 
 
             if [ -n "${targetIp}" ]; then
                 # Prime the pump, its normal to get a packet loss due to arp
-                kubectl exec -it "${nsc}" -- vppctl ping "${targetIp}" repeat 10 > /dev/null 2>&1            
-                OUTPUT=$(kubectl exec -it "${nsc}" -- vppctl ping "${targetIp}" repeat 3)
+                kubectl exec -it "${nsc}" -c=helloworld -- ping "${targetIp}" -c 10 > /dev/null 2>&1
+                OUTPUT=$(kubectl exec -it "${nsc}" -c=helloworld -- ping "${targetIp}" -c 3)
                 echo "${OUTPUT}"
-                RESULT=$(echo "${OUTPUT}"| grep "packet loss" | awk '{print $6}')
+                RESULT=$(echo "${OUTPUT}"| grep "packet loss" | awk '{print $7}')
                 if [ "${RESULT}" = "0%" ]; then
                     echo "NSC ${nsc} with IP ${ip} pinging ${endpointName} TargetIP: ${targetIp} successful"
                     PingSuccess="true"
@@ -44,9 +43,8 @@ for nsc in $(kubectl get pods -o=name | grep -E "ucnf-client" | sed 's@.*/@@'); 
         echo "NSC ${nsc} failed to connect to an icmp-responder NetworkService"
         kubectl get pod "${nsc}" -o wide
         echo "POD ${nsc} Network dump -------------------------------"
-        kubectl exec -ti "${nsc}" -- vppctl show int
-        kubectl exec -ti "${nsc}" -- vppctl show int addr
-        kubectl exec -ti "${nsc}" -- vppctl show memif
+        kubectl exec -ti "${nsc}" -- ip addr
+        kubectl exec -ti "${nsc}" -- ip route
         echo "+++++++==ERROR==ERROR=============================================================================+++++"
     fi
     unset PingSuccess
