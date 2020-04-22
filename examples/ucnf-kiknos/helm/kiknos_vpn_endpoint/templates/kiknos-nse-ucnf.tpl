@@ -221,6 +221,9 @@ data:
       - name: "strongswan"
         executable-path: "/usr/local/libexec/ipsec/charon"
         executable-args: ["--use-syslog"]
+      - name: "cnf"
+        executable-path: "/bin/cnf-vppagent"
+        executable-args: []
     hooks:
       - cmd: "/usr/bin/init_hook.sh"
 
