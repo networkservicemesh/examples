@@ -5,12 +5,13 @@ kind: Pod
 metadata:
   name: ikester
 spec:
+  hostNetwork: true
   containers:
     - name: ikester
       image: {{ .Values.ikester.image.repository }}:{{ .Values.ikester.image.tag }}
       imagePullPolicy: {{ .Values.ikester.image.pullPolicy }}
       ports:
-        - containerPort: 9191
+        - containerPort: 9292
       env:
         - name: MICROSERVICE_LABEL
           value: ikester
@@ -20,7 +21,7 @@ spec:
       readinessProbe:
         httpGet:
           path: /ike-tester/summary
-          port: 9191
+          port: 9292
         periodSeconds: {{ .Values.probes.periodSeconds }}
         timeoutSeconds: {{ .Values.probes.timeoutSeconds }}
         failureThreshold: {{ .Values.probes.failureThreshold }}
@@ -28,7 +29,7 @@ spec:
       livenessProbe:
         httpGet:
           path: /ike-tester/summary
-          port: 9191
+          port: 9292
         periodSeconds: {{ .Values.probes.periodSeconds }}
         timeoutSeconds: {{ .Values.probes.timeoutSeconds }}
         failureThreshold: {{ .Values.probes.failureThreshold }}
@@ -52,8 +53,7 @@ data:
     programs:
       - name: "ike-tester"
         executable-path: "/go/bin/ike-tester"
-        executable-args: ["--ike-config=/opt/ike-tester/ike.conf"]
-        logfile-path: "/var/log/ike-tester.log"
+        executable-args: ["--ike-config=/opt/ike-tester/ike.conf", "--http-port=9292"]
     hooks:
       #- cmd: "/usr/bin/init_hook.sh"
 
@@ -68,16 +68,16 @@ data:
       {{- else }}
       use_raw_packet: true
       raw_packet_capture_info:
-        local_mac_addr: "02:00:00:00:00:04"
+        #local_mac_addr: "02:00:00:00:00:04"
         remote_mac_addr: "02:00:00:00:00:05"
         local_ip_address_base: "{{ .Values.ikester.network.ikeSourceIPBase }}"
-        remote_ip_address: "{{ if eq .Values.scenario "aio" }}{{ .Values.aio.network.redInterfaceIP }}{{ else }}{{ .Values.esp.network.redInterfaceIP }}{{ end }}"
-        local_ike_esp_port_name: "red"
+        remote_ip_address: "{{ .Values.ikester.network.remoteIP }}"
+        local_ike_esp_port_name: "eth0"
         local_arp_enabled: true
         num_arp_threads: 4
       {{- end }}
-      child_sa_local_ip_address_mask: "10.0.0.0"
-      child_sa_remote_ip_address_mask: "40.0.0.0"
+      child_sa_local_ip_address_mask: "172.31.23.0"
+      child_sa_remote_ip_address_mask: "172.31.22.0"
       udp_encap_enabled: true
       num_threads: 1
       thread_sleep_micro_secs: 10000
@@ -92,7 +92,7 @@ data:
       log_ike_level: 0
 
   http.client.conf: |
-    port: 9191
+    port: 9292
     use-https: false
 
 {{- end }}

@@ -6,10 +6,15 @@ metadata:
 data:
   responder.conf: |
     connections {
-      responder {
+      kiknos {
         version = 2
+        mobike = no
         proposals = aes256-sha1-modp2048
         local_addrs = {{ if eq .Values.scenario "aio" }}{{ .Values.aio.network.redInterfaceIP }}{{ else }}{{ .Values.esp.network.redInterfaceIP }}{{ end }}
+        {{- if .Values.strongswan.network.remoteAddr }}
+        remote_addrs = {{ .Values.strongswan.network.remoteAddr }}
+        auto = start
+        {{- end }}
         encap = yes
         local-1 {
           auth = psk
@@ -19,8 +24,8 @@ data:
         }
         children {
           responder {
-            local_ts = 40.0.0.0/8
-            remote_ts = 10.0.0.0/8
+            local_ts = {{ .Values.strongswan.network.localSubnet }}
+            remote_ts = {{ .Values.strongswan.network.remoteSubnet }}
             mode = tunnel
             esp_proposals = aes128-sha1
           }
@@ -61,22 +66,14 @@ spec:
           args:
             - |
               set -e
-              {{- range $i, $e := untilStep 1 ($.Values.ike.replicas|add 1|int) 1 }}
               {{if $.Values.development.useDevImages}}/go/bin/{{else}}/usr/bin/{{end}}kiknosctl \
                 --config-dir=/var/kiknosctl \
-                {{- if eq $.Values.scenario "aio" }}
                 --service-label={{ $.Values.aio.serviceLabel }} \
-                {{- else if eq ($.Values.ike.replicas|int) 1 }}
-                --service-label={{ $.Values.ike.serviceLabel }} \
-                {{- else }}
-                --service-label={{ $.Values.ike.serviceLabel }}-{{ $e }} \
-                {{- end }}
                 ssconfig \
                 {{- if $.Values.strongswan.secrets.encryption.enabled }}
                 --public-key=/var/strongswan/secrets/{{ $.Values.strongswan.secrets.encryption.publicKeyFile }} \
                 {{- end }}
                 /var/cfg/responder.conf
-              {{- end }}
           volumeMounts:
             - name: kiknosctl-config
               mountPath: /var/kiknosctl

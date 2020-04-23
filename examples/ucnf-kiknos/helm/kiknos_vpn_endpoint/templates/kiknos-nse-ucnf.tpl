@@ -1,8 +1,12 @@
+{{- if eq .Values.scenario "aio" }}
 ---
 apiVersion: apps/v1
 kind: Deployment
+metadata:
+  name: vpn-endpoint-{{ .Values.nsm.serviceName }}
+  namespace: {{ .Release.Namespace }}
 spec:
-  replicas: {{.Values.replicaCount}}
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       networkservicemesh.io/app: {{ .Values.nsm.serviceName | quote }}
@@ -12,25 +16,53 @@ spec:
       labels:
         networkservicemesh.io/app: {{ .Values.nsm.serviceName | quote }}
         networkservicemesh.io/impl: {{ .Values.nsm.destinationApp | quote }}
-        cnns/nse.servicename: {{ .Values.nsm.serviceName | quote }}
     spec:
+      hostNetwork: true
       containers:
         - name: ucnf-kiknos-vpn-nse
           image: {{ .Values.registry }}/{{ .Values.org }}/universal-cnf-vppagent:{{ .Values.tag }}
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: {{ .Values.pullPolicy }}
           env:
+            - name: ADVERTISE_NSE_NAME
+              value: {{ .Values.nsm.serviceName | quote }}
+            - name: ADVERTISE_NSE_LABELS
+              value: "app={{ .Values.nsm.serviceName }}"
             - name: TRACER_ENABLED
               value: "true"
+            - name: JAEGER_SERVICE_HOST
+              value: jaeger.nsm-system
+            - name: JAEGER_SERVICE_PORT_JAEGER
+              value: "6831"
+            - name: JAEGER_AGENT_HOST
+              value: jaeger.nsm-system
+            - name: JAEGER_AGENT_PORT
+              value: "6831"
+            - name: NSREGISTRY_ADDR
+              value: "nsmgr.nsm-system"
+            - name: NSREGISTRY_PORT
+              value: "5000"
+            - name: NSE_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
             - name: MICROSERVICE_LABEL
               value: {{ .Values.aio.serviceLabel }}
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+            privileged: true
           ports:
             - containerPort: 9113
-            - containerPort: 9191
+            - containerPort: 9192
+            {{- if .Values.development.debugEndpointsEnabled }}
+            - containerPort: 32500
+            {{- end }}
           {{- if .Values.probes.enabled }}
           readinessProbe:
             httpGet:
               path: /readiness
-              port: 9191
+              port: 9192
               {{- if .Values.aio.http.secureTransport }}
               scheme: HTTPS
               httpHeaders:
@@ -44,7 +76,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /liveness
-              port: 9191
+              port: 9192
               {{- if .Values.aio.http.secureTransport }}
               scheme: HTTPS
               httpHeaders:
@@ -66,13 +98,11 @@ spec:
           volumeMounts:
             - mountPath: /etc/universal-cnf/config.yaml
               subPath: config.yaml
-              name: ucnf-kiknos-vpn-nse
+              name: universal-cnf-config-volume
             - name: agent-config
               mountPath: /opt/aio-agent/dev
             - name: kiknosctl-config
               mountPath: /root/.agentctl/
-            - name: memif-sockets
-              mountPath: {{ .Values.vswitch.memifSocketDir }}
             - name: vpp-config
               mountPath: /etc/vpp/vpp.conf
               subPath: vpp.conf
@@ -94,19 +124,20 @@ spec:
             - name: strongswan-secrets
               mountPath: /var/strongswan/secrets
             {{- end }}
+            {{- if .Values.development.sourceDirMount.enabled }}
+            - name: source-dir
+              mountPath: {{ .Values.development.sourceDirMount.containerPath }}
+            {{- end }}
       volumes:
-        - name: ucnf-kiknos-vpn-nse
+        - name: universal-cnf-config-volume
           configMap:
-            name: ucnf-kiknos-vpn-nse
+            name: ucnf-kiknos-{{ .Values.nsm.serviceName }}
         - name: agent-config
           configMap:
             name: aio-agent-cfg
         - name: kiknosctl-config
           configMap:
             name: aio-kiknosctl-cfg
-        - name: memif-sockets
-          hostPath:
-            path: {{ .Values.vswitch.memifSocketDir }}
         - name: vpp-config
           configMap:
             name: kiknos-vpp-cfg
@@ -131,23 +162,26 @@ spec:
           secret:
             secretName: {{ .Values.strongswan.secrets.encryption.keysSecretName }}
         {{- end }}
+        {{- if .Values.development.sourceDirMount.enabled }}
+        - name: source-dir
+          hostPath:
+            path: {{ .Values.development.sourceDirMount.hostPath }}
+        {{- end }}
 
-
-metadata:
-  name: vpn-endpoint
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ucnf-kiknos-vpn-nse
+  name: ucnf-kiknos-{{ .Values.nsm.serviceName }}
 data:
   config.yaml: |
     endpoints:
-    - name: "icmp-responder"
+    - name: {{ .Values.nsm.serviceName | quote }}
       labels:
-        app: "vpn-endpoint"
+        app: "vl3-nse-{{ .Values.nsm.serviceName }}"
       ipam:
         prefixpool: {{ .Values.ipam.prefixPool | quote }}
+        routes: []
       ifname: "endpoint0"
 
 ---
@@ -167,7 +201,7 @@ data:
       {{- if .Values.etcd.useExternalEtcd }}
       - "{{ .Values.etcd.externalEtcdEndpoint }}"
       {{- else }}
-      - {{ .Values.etcd.serviceName }}:2379
+      - 127.0.0.1:32379
       {{- end }}
     {{- if .Values.etcd.secureTransport }}
     insecure-transport: false
@@ -198,7 +232,7 @@ data:
     network: tcp
     max-msg-size: 4096
   http.conf: |
-    endpoint: 0.0.0.0:9191
+    endpoint: 0.0.0.0:9192
     {{- if .Values.aio.http.secureTransport }}
     server-cert-file: /var/http/secrets/{{ .Values.aio.http.secrets.serverCertFile }}
     server-key-file: /var/http/secrets/{{ .Values.aio.http.secrets.serverKeyFile }}
@@ -216,7 +250,7 @@ data:
         executable-path: "/usr/bin/vpp"
         executable-args: ["-c", "/etc/vpp/vpp.conf"]
       - name: "aio-agent"
-        executable-path: "/usr/bin/aio-agent"
+        executable-path: "{{if.Values.development.useDevImages}}/go/bin/{{else}}/usr/bin/{{end}}aio-agent"
         executable-args: ["--config-dir=/opt/aio-agent/dev"]
       - name: "strongswan"
         executable-path: "/usr/local/libexec/ipsec/charon"
@@ -257,6 +291,22 @@ data:
       ca-file: /var/http/secrets/{{ .Values.aio.http.secrets.caCertFile }}
     {{- end }}
 
+{{- if .Values.development.debugEndpointsEnabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kiknos-debug
+spec:
+  type: NodePort
+  selector:
+    app: kiknos
+  ports:
+    - name: kiknos-dlv
+      port: 32500
+      nodePort: 32500
+{{- end }}
+
 {{- if and .Values.aio.http.secureTransport .Values.aio.http.secrets.loadFromFiles }}
 ---
 apiVersion: v1
@@ -275,4 +325,6 @@ data:
     {{ .Files.Get (printf "secrets/%s" .Values.aio.http.secrets.clientCertFile) | b64enc }}
   {{ .Values.aio.http.secrets.clientKeyFile }}: |-
     {{ .Files.Get (printf "secrets/%s" .Values.aio.http.secrets.clientKeyFile) | b64enc }}
+{{- end }}
+
 {{- end }}

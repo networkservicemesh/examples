@@ -5,6 +5,12 @@ org: networkservicemesh
 tag: latest
 pullPolicy: IfNotPresent
 
+cnns:
+  nsr:
+    port: 5005
+    # addr:
+#  domain: nsr.foo.com
+
 nsm:
   serviceName: icmp-responder
   sourceApp: ucnf-client
@@ -12,6 +18,7 @@ nsm:
 
 ipam:
   prefixPool: "172.31.0.0/16"
+  # uniqueOctet:
 
 global:
 
@@ -72,61 +79,10 @@ aio:
       clientKeyFile: kiknos-client.key
       basicAuth: user:pass
   network:
-    redInterfaceIP: 100.100.100.102
-    blackInterfaceIP: 10.10.20.100
-
-# Kiknos ESP (DCUPS component) deployment
-esp:
-  image:
-    repository: ciscolabs/esp
-    devRepository: ciscolabs/dev-esp
-    tag: latest
-  serviceLabel: esp
-  privileged: true
-  hugePages:
-    enabled: false
-    size: 512Mi
-  logs:
-    txnSummary: true
-  http:
-    secureTransport: false
-    secrets:
-      loadFromFiles: true
-      secretName: esp-http-secrets
-      caCertFile: ca.crt
-      serverCertFile: esp-server.crt
-      serverKeyFile: esp-server.key
-      clientCertFile: esp-client.crt
-      clientKeyFile: esp-client.key
-      basicAuth: user:pass
-  network:
-    redInterfaceIP: 100.100.100.102
-    blackInterfaceIP: 10.10.20.100
-
-# Kiknos IKE (DCUPS component) deployment
-ike:
-  image:
-    repository: ciscolabs/ike
-    devRepository: ciscolabs/dev-ike
-    tag: latest
-  serviceLabel: ike
-  replicas: 1
-  logs:
-    txnSummary: true
-  http:
-    secureTransport: false
-    secrets:
-      loadFromFiles: true
-      secretName: ike-http-secrets
-      caCertFile: ca.crt
-      serverCertFile: ike-server.crt
-      serverKeyFile: ike-server.key
-      clientCertFile: ike-client.crt
-      clientKeyFile: ike-client.key
-      basicAuth: user:pass
-  network:
-    redInterfaceIP: 100.100.100.200
-    redInterfaceIPBase: 100.100.100.20
+    redInterfaceName: eth0
+    redInterfaceIP: 172.17.0.200
+    # redInterfaceMAC needed for ikester only
+    redInterfaceMAC: 02:00:00:00:00:05
 
 # StrongSwan configuration
 strongswan:
@@ -138,10 +94,15 @@ strongswan:
       keysSecretName: strongswan-secrets-keys
       privateKeyFile: secrets-key.pem
       publicKeyFile: secrets-pub.pem
+  network:
+    localSubnet: 172.31.22.0/24
+    remoteSubnet: 172.31.23.0/24
+    # remoteAddr needs to be configured if this Kiknos instance should initiate the connection
+    remoteAddr:
 
 # IKE tester pod settings (used for testing)
 ikester:
-  enabled: true
+  enabled: false
   image:
     repository: ciscolabs/ikester
     tag: latest
@@ -149,9 +110,10 @@ ikester:
   preSharedKey: Vpp123
   useRawSocket: true
   network:
-    redInterfaceIP: 100.100.100.101
-    blackInterfaceIP: 10.10.10.100
+    remoteIP: 172.17.0.200
     ikeSourceIPBase: 200.0.0.0
+    # redInterfaceIP is required for a route from Kiknos to ikester
+    redInterfaceIP: 172.17.0.2
 
 # ETCD settings
 etcd:
@@ -180,29 +142,6 @@ etcd:
     - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
     - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 
-# vSwitch settings
-vswitch:
-  # controls whether Kiknos VPP vSwitch should be deployed, or external vSwitch (e.g. Contiv) will be used
-  useExternalVswitch: false
-  memifSocketDir: /var/run/contiv
-  # the options below are only applicable if useExternalVswitch is false
-  image:
-    repository: ligato/vpp-agent
-    tag: v3.0.1
-  dpdk:
-    enabled: false
-    pciDevices:
-      #- 0000:00:08.0
-  http:
-    secureTransport: false
-    secrets:
-      loadFromFiles: true
-      secretName: vswitch-http-secrets
-      caCertFile: ca.crt
-      serverCertFile: vswitch-server.crt
-      serverKeyFile: vswitch-server.key
-      basicAuth: user:pass
-
 # controls k8s liveness & readiness probes for Kiknos deployment
 probes:
   enabled: true
@@ -211,15 +150,6 @@ probes:
   periodSeconds: 3
   timeoutSeconds: 2
   failureThreshold: 3
-
-# addons to be deployed alongside with Kiknos
-addons:
-  prometheus:
-    enabled: false
-  iperfPods:
-    # names of the iperf pods to be deployed, e.g.:
-    #- client
-    #- server
 
 # settings used for development
 development:

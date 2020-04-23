@@ -1,22 +1,10 @@
-NAME = ucnf-kiknos
-DESCRIPTION = "Basic ICMP reposnder based on the Universal CNF with Kiknos VPP agent"
-CONTAINERS =
-AUX_CONTAINERS = universal-cnf-vppagent
-PODS = ucnf-client vpn-endpoint
-NETWORK_SERVICES = icmp-responder
-CHECK = scripts/check_icmp.sh
-
-export VPP_AGENT=ciscolabs/kiknos:latest
-
-
-# should not fail go linter
-FAIL_GOLINT =
-
 include $(TOP)/mk/targets.mk
+
+export TAG=kiknos
 
 .PHONY:kiknos-nse-deploy-endpoint
 kiknos-nse-deploy-endpoint:
-	helm template examples/ucnf-kiknos/helm/kiknos_vpn_endpoint | kubectl apply -f -
+	helm template examples/ucnf-kiknos/helm/kiknos_vpn_endpoint --set tag=${TAG}| kubectl apply -f -
 	kubectl wait -n default --timeout=150s --for condition=Ready --all pods --selector k8s-app
 	kubectl wait -n default --timeout=150s --for condition=Ready --all pods --selector networkservicemesh.io/app
 
