@@ -1,7 +1,9 @@
 {{- define "network-cfg.aio-kiknos" -}}
-# Kiknos memifs
-config/vpp/v2/interfaces/black {"name":"black","type":"MEMIF","enabled":true,"phys_address":"02:00:00:00:00:07","ip_addresses":["{{ .Values.aio.network.blackInterfaceIP }}/24"],"mtu":1500,"rx_modes":[{"mode":"ADAPTIVE"}],"memif":{"id":1,"socket_filename":"/var/run/contiv/memif_ts1-host4.sock"}}
-config/vpp/v2/interfaces/red {"name":"red","type":"MEMIF","enabled":true,"phys_address":"02:00:00:00:00:05","ip_addresses":["{{ .Values.aio.network.redInterfaceIP }}/24"],"mtu":1500,"rx_modes":[{"mode":"ADAPTIVE"}],"memif":{"id":2,"socket_filename":"/var/run/contiv/memif_ts1-host4.sock"}}
+# "red" interface config
+config/vpp/v2/interfaces/red {"name":"red","type":"AF_PACKET","enabled":true,"phys_address":"{{ .Values.aio.network.redInterfaceMAC }}","ip_addresses":["{{ .Values.aio.network.redInterfaceIP }}/24"],"mtu":1500,"rx_modes":[{"mode":"ADAPTIVE"}],"afpacket":{"host_if_name":"{{ .Values.aio.network.redInterfaceName }}"}}
+#
+# ACL on the "red" interface filtering everything except IPSec
+config/vpp/acls/v2/acl/acl-red {"name":"acl-red","interfaces":{"ingress":["red"]},"rules":[{"action":"PERMIT","ip_rule":{"ip":{"destination_network":"{{ .Values.aio.network.redInterfaceIP }}/32","source_network":"0.0.0.0/0"},"udp":{"destination_port_range":{"lower_port":500,"upper_port":500},"source_port_range":{"lower_port":0,"upper_port":65535}}}},{"action":"PERMIT","ip_rule":{"ip":{"destination_network":"{{ .Values.aio.network.redInterfaceIP }}/32","source_network":"0.0.0.0/0"},"udp":{"destination_port_range":{"lower_port":4500,"upper_port":4500},"source_port_range":{"lower_port":0,"upper_port":65535}}}}]}
 #
 {{- if .Values.ikester.useRawSocket }}
 # Route towards ikester source IP subnet

@@ -9,6 +9,7 @@ data:
       nodaemon
       cli-listen /run/vpp/cli.sock
       cli-no-pager
+      poll-sleep-usec 1000
     }
     punt {
       socket /etc/vpp/punt.sock

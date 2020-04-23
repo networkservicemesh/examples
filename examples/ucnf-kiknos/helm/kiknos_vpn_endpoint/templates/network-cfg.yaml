@@ -4,24 +4,8 @@ kind: ConfigMap
 metadata:
   name: network-cfg
 data:
-{{- if eq .Values.scenario "aio" }}
-  aio-vswitch.json: |
-{{ include "network-cfg.aio-vswitch" . | indent 4 }}
-
   aio-kiknos.json: |
 {{ include "network-cfg.aio-kiknos" . | indent 4 }}
-
-{{- else }}
-  dcups-vswitch.json: |
-{{ include "network-cfg.dcups-vswitch" . | indent 4 }}
-
-  dcups-esp.json: |
-{{ include "network-cfg.dcups-esp" . | indent 4 }}
-
-  dcups-ike.json: |
-{{ include "network-cfg.dcups-ike" . | indent 4 }}
-
-{{- end }}
 
 ---
 apiVersion: batch/v1
@@ -52,7 +36,6 @@ spec:
             - |
               set -e
             {{- if eq .Values.scenario "aio" }}
-              {{if.Values.development.useDevImages}}/go/bin/{{else}}/usr/bin/{{end}}kiknosctl --config-dir=/var/kiknosctl --service-label=$NODE_NAME import /var/cfg/aio-vswitch.json && \
               {{if.Values.development.useDevImages}}/go/bin/{{else}}/usr/bin/{{end}}kiknosctl --config-dir=/var/kiknosctl --service-label={{ .Values.aio.serviceLabel }} import /var/cfg/aio-kiknos.json
             {{- else }}
               {{if.Values.development.useDevImages}}/go/bin/{{else}}/usr/bin/{{end}}kiknosctl --config-dir=/var/kiknosctl --service-label=$NODE_NAME import /var/cfg/dcups-vswitch.json && \
