@@ -180,8 +180,8 @@ data:
       labels:
         app: "vl3-nse-{{ .Values.nsm.serviceName }}"
       ipam:
-        prefixpool: {{ .Values.ipam.prefixPool | quote }}
-        routes: []
+        prefixpool: {{ .Values.strongswan.network.localSubnet | quote }}
+        routes: [{{ .Values.strongswan.network.remoteSubnet | quote}}]
       ifname: "endpoint0"
 
 ---

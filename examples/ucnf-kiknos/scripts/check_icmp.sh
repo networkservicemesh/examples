@@ -7,10 +7,10 @@ for nsc in $(kubectl get pods -o=name | grep -E "ucnf-client" | sed 's@.*/@@'); 
         EXIT_VAL=0
         echo Try ${i}
         for ip in $(kubectl exec -it "${nsc}" -c=helloworld -- ip addr | grep nsm0 | grep inet | awk '{print $2}'); do
-            if [[ "${ip}" == 172.31.0* ]];then
+            if [[ "${ip}" == 172.31.22* ]];then
                 lastSegment=$(echo "${ip}" | cut -d . -f 4 | cut -d / -f 1)
                 nextOp=$((lastSegment + 1))
-                targetIp="172.31.0.${nextOp}"
+                targetIp="172.31.22.${nextOp}"
                 endpointName="vpn-endpoint"
             fi
 
