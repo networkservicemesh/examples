@@ -56,6 +56,27 @@ for cluster in "$CLUSTER1" "$CLUSTER2"; do
 done
 
 echo "Install NSE into cluster: $CLUSTER1"
+ip=$(kubectl --context "kind-$CLUSTER1" get nodes \
+  --selector='node-role.kubernetes.io/master' \
+  -o jsonpath='{ $.items[*].status.addresses[?(@.type=="InternalIP")].address }')
+baseaddr="$(echo "${ip}" | cut -d. -f1-3)"
+lsv="$(echo "${ip}" | cut -d. -f4)"
+lsv=$(( $lsv + 1 ))
+helm template ./examples/ucnf-kiknos/helm/kiknos_vpn_endpoint --set org=${NSE_HUB} \
+  --set tag=${NSE_TAG} \
+  --set pullPolicy="${PULLPOLICY}" \
+  ${IPAMPOOL:+ --set ipam.prefixPool=${IPAMPOOL}} \
+  ${IPAMOCTET:+ --set ipam.uniqueOctet=${IPAMOCTET}} \
+  ${CNNS_NSRADDR:+ --set cnns.nsr.addr=${CNNS_NSRADDR}} \
+  ${CNNS_NSRPORT:+ --set cnns.nsr.port=${CNNS_NSRPORT}} \
+  --set nsm.serviceName="${SERVICENAME}" \
+  --set ikester.network.redInterfaceIP="${baseaddr}.${lsv}" | kubectl --context "kind-$CLUSTER1" apply -f -
+
+kubectl --context "kind-$CLUSTER1" wait -n default --timeout=150s --for condition=Ready --all pods --selector k8s-app &
+kubectl --context "kind-$CLUSTER1" wait -n default --timeout=150s --for condition=Ready --all pods --selector networkservicemesh.io/app &
+wait
+
+echo "Install NSE into cluster: $CLUSTER2"
 helm template ./examples/ucnf-kiknos/helm/kiknos_vpn_endpoint \
   --set org=${NSE_HUB} --set tag=${NSE_TAG} \
   --set pullPolicy="${PULLPOLICY}" \
@@ -70,27 +91,9 @@ helm template ./examples/ucnf-kiknos/helm/kiknos_vpn_endpoint \
   --set strongswan.network.localSubnet=172.31.23.0/24 \
   --set strongswan.network.remoteSubnet=172.31.22.0/24 \
   --set ikester.enabled=true \
-  --set ikester.network.remoteIP=172.17.0.200 | kubectl --context "kind-$CLUSTER1" apply -f -
+  --set ikester.network.remoteIP=172.17.0.200 | kubectl --context "kind-$CLUSTER2" apply -f -
 
-echo "Install NSE into cluster: $CLUSTER2"
-ip=$(kubectl --context "kind-$CLUSTER2" get nodes \
-  --selector='node-role.kubernetes.io/master' \
-  -o jsonpath='{ $.items[*].status.addresses[?(@.type=="InternalIP")].address }')
-baseaddr="$(echo "${ip}" | cut -d. -f1-3)"
-lsv="$(echo "${ip}" | cut -d. -f4)"
-lsv=$(( $lsv + 1 ))
-helm template ./examples/ucnf-kiknos/helm/kiknos_vpn_endpoint --set org=${NSE_HUB} \
-  --set tag=${NSE_TAG} \
-  --set pullPolicy="${PULLPOLICY}" \
-  ${IPAMPOOL:+ --set ipam.prefixPool=${IPAMPOOL}} \
-  ${IPAMOCTET:+ --set ipam.uniqueOctet=${IPAMOCTET}} \
-  ${CNNS_NSRADDR:+ --set cnns.nsr.addr=${CNNS_NSRADDR}} \
-  ${CNNS_NSRPORT:+ --set cnns.nsr.port=${CNNS_NSRPORT}} \
-  --set nsm.serviceName="${SERVICENAME}" \
-  --set ikester.network.redInterfaceIP="${baseaddr}.${lsv}" | kubectl --context "kind-$CLUSTER2" apply -f -
-wait
-
-kubectl --context "kind-$CLUSTER1" wait -n default --timeout=150s --for condition=Ready --all pods --selector k8s-app &
+kubectl --context "kind-$CLUSTER2" wait -n default --timeout=150s --for condition=Ready --all pods --selector k8s-app &
 kubectl --context "kind-$CLUSTER2" wait -n default --timeout=150s --for condition=Ready --all pods --selector networkservicemesh.io/app &
 wait
 
