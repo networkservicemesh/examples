@@ -1,10 +1,4 @@
 {{- define "network-cfg.aio-kiknos" -}}
-# "red" interface config
-config/vpp/v2/interfaces/red {"name":"red","type":"AF_PACKET","enabled":true,"phys_address":"{{ .Values.aio.network.redInterfaceMAC }}","ip_addresses":["{{ .Values.aio.network.redInterfaceIP }}/24"],"mtu":1500,"rx_modes":[{"mode":"ADAPTIVE"}],"afpacket":{"host_if_name":"{{ .Values.aio.network.redInterfaceName }}"}}
-#
-# ACL on the "red" interface filtering everything except IPSec
-config/vpp/acls/v2/acl/acl-red {"name":"acl-red","interfaces":{"ingress":["red"]},"rules":[{"action":"PERMIT","ip_rule":{"ip":{"destination_network":"{{ .Values.aio.network.redInterfaceIP }}/32","source_network":"0.0.0.0/0"},"udp":{"destination_port_range":{"lower_port":500,"upper_port":500},"source_port_range":{"lower_port":0,"upper_port":65535}}}},{"action":"PERMIT","ip_rule":{"ip":{"destination_network":"{{ .Values.aio.network.redInterfaceIP }}/32","source_network":"0.0.0.0/0"},"udp":{"destination_port_range":{"lower_port":4500,"upper_port":4500},"source_port_range":{"lower_port":0,"upper_port":65535}}}}]}
-#
 {{- if .Values.ikester.useRawSocket }}
 # Route towards ikester source IP subnet
 config/vpp/v2/route/if/red/vrf/0/dst/{{ .Values.ikester.network.ikeSourceIPBase }}/8/gw/{{ .Values.ikester.network.redInterfaceIP }} {"type":"INTRA_VRF","dst_network":"{{ .Values.ikester.network.ikeSourceIPBase }}/8","next_hop_addr":"{{ .Values.ikester.network.redInterfaceIP }}","outgoing_interface":"red"}

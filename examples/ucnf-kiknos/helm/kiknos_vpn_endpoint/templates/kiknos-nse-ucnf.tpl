@@ -18,6 +18,19 @@ spec:
         networkservicemesh.io/impl: {{ .Values.nsm.destinationApp | quote }}
     spec:
       hostNetwork: true
+      initContainers:
+          - name: af-packet-init
+            image: {{ .Values.registry }}/{{ .Values.org }}/universal-cnf-vppagent:{{ .Values.tag }}
+            imagePullPolicy: {{ .Values.pullPolicy }}
+            command: ["/usr/bin/af-packet-init"]
+            env:
+              - name: ETCD_CONFIG
+                value: /opt/kiknos/etcd.conf
+              - name: MICROSERVICE_LABEL
+                value: {{ .Values.aio.serviceLabel }}
+            volumeMounts:
+              - name: agent-config
+                mountPath: /opt/kiknos
       containers:
         - name: ucnf-kiknos-vpn-nse
           image: {{ .Values.registry }}/{{ .Values.org }}/universal-cnf-vppagent:{{ .Values.tag }}
