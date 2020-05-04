@@ -3,28 +3,31 @@
 This replaces the VPP agent in the universal-cnf with the Kiknos VPP aio-agent
 
 # Prerequisites
-Please follow the instructions on where the NSM project should be in the [Examples README.md](../../README.md)
+- Please follow the instructions on where the NSM project should be in the [Examples README.md](../../README.md)
 
-# Testing 
+# Versions
+The script has been tested with the following versions
+- kind v0.7.x
+- helm v2.16.x
+- kubectl v1.17.x - v.18.x
+- kubernetes version v1.17.x
+- NSM version 0.2.0
+ 
+# Testing
 
-Follow the following sequence to verify that the NSE works as expected. All `make` commands should be given from the project root.
 
-```bash
-# Deploy the NSM
-make kind-start
+`./examples/ucnf-kiknos/scripts/kind_topo.sh`
+Starts 2 kind clusters configured with kiknos and then opens an IPSec tunnel between them.
 
-SPIRE_ENABLED=false INSECURE=true make helm-init helm-install-nsm
+`./examples/ucnf-kiknos/scripts/test_vpn_conn.sh`
+Tests connectivity between pods in different clusters using a curl command
 
-# Build the docker image # Using a custom build untill the Kiknos issue is resolved
-VPP_AGENT=rastislavszabo/vl3_ucnf-vl3-nse:v4 TAG=kiknos make k8s-universal-cnf-save
+# Cleanup
+The following command will delete the kind clusters.
 
-# Load the image in the kind cluster
-make k8s-universal-cnf-load-images
+`./examples/ucnf-kiknos/scripts/kind_topo.sh cleanup`
 
-# Deploy the kiknos NSE and test clients
-make kiknos-nse-deploy
+# Known issues
+These issues require further investigation:
 
-# Check that the clients can connect to the endpoint
-make kiknos-check-deployment
-
-```
+1. If the NSE restarts it loses all the interfaces  

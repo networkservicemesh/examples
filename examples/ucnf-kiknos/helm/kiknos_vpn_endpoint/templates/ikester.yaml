@@ -69,7 +69,7 @@ data:
       use_raw_packet: true
       raw_packet_capture_info:
         #local_mac_addr: "02:00:00:00:00:04"
-        remote_mac_addr: "02:00:00:00:00:05"
+        remote_mac_addr: "{{ .Values.ikester.network.remoteMAC }}"
         local_ip_address_base: "{{ .Values.ikester.network.ikeSourceIPBase }}"
         remote_ip_address: "{{ .Values.ikester.network.remoteIP }}"
         local_ike_esp_port_name: "eth0"

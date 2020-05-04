@@ -10,7 +10,6 @@ data:
         version = 2
         mobike = no
         proposals = aes256-sha1-modp2048
-        local_addrs = {{ if eq .Values.scenario "aio" }}{{ .Values.aio.network.redInterfaceIP }}{{ else }}{{ .Values.esp.network.redInterfaceIP }}{{ end }}
         {{- if .Values.strongswan.network.remoteAddr }}
         remote_addrs = {{ .Values.strongswan.network.remoteAddr }}
         auto = start
