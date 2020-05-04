@@ -5,7 +5,7 @@
 global:
 
   
-replicaCount: 4
+replicaCount: 2
 
 nsm:
   serviceName: icmp-responder

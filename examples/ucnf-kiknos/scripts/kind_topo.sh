@@ -1,70 +1,36 @@
 #!/usr/bin/env bash
 
-pushd "$(dirname $0)/../../../"
-pwd
-
 CLUSTER1=${CLUSTER1:-cl1}
 CLUSTER2=${CLUSTER2:-cl2}
-VPP_AGENT=${VPP_AGENT:-rastislavszabo/vl3_ucnf-vl3-nse:v5}
-NSE_HUB=networkservicemesh
-NSE_TAG=kiknos
-PULLPOLICY=${PULLPOLICY:-IfNotPresent}
-SERVICENAME=${SERVICENAME:-icmp-responder}
-KUBECONFDIR=${KUBECONFDIR:-~/kubeconfigdir}
+VPP_AGENT=${VPP_AGENT:-ciscolabs/kiknos:latest}
+NSE_ORG=${NSE_ORG:-networkservicemesh}
+NSE_TAG=${NSE_TAG:-kiknos}
+PULL_POLICY=${PULL_POLICY:-IfNotPresent}
+SERVICE_NAME=${SERVICE_NAME:-icmp-responder}
 
-if [ "$1" == "--delete" ]; then
+pushd "$(dirname "$0")/../../../"
+
+if [ "$1" == "cleanup" ]; then
   echo "Delete clusters: $CLUSTER1, $CLUSTER2"
   KIND_CLUSTER_NAME=$CLUSTER1 make kind-stop
   KIND_CLUSTER_NAME=$CLUSTER2 make kind-stop
   exit 0
 fi
 
-K8S_STARTPORT=${K8S_STARTPORT:-38790}
-JAEGER_STARTPORT=${JAEGER_STARTPORT:-38900}
-
-function kindCreateCluster {
-    local name=$1; shift
-    local kconf=$1; shift
-    if [[ $# > 1 ]]; then
-        local hostip=$1; shift
-        local portoffset=$1; shift
-    fi
-
-    if [[ -n ${hostip} ]]; then
-        HOSTIP=${hostip}
-        K8S_HOSTPORT=$((${K8S_STARTPORT} + $portoffset))
-        JAEGER_HOSTPORT=$((${JAEGER_STARTPORT} + $portoffset))
-        cat <<EOF > ${KINDCFGDIR}/${name}.yaml
-kind: Cluster
-apiVersion: kind.sigs.k8s.io/v1alpha3
-kubeadmConfigPatchesJson6902:
-- group: kubeadm.k8s.io
-  version: v1beta2
-  kind: ClusterConfiguration
-  patch: |
-    - op: add
-      path: /apiServer/certSANs/-
-      value: "${HOSTIP}"
-nodes:
-- role: control-plane
-  extraPortMappings:
-  - containerPort: 6443
-    hostPort: ${K8S_HOSTPORT}
-    listenAddress: ${HOSTIP}
-  - containerPort:  31922
-    hostPort: ${JAEGER_HOSTPORT}
-    listenAddress: ${HOSTIP}
-EOF
-        kind create cluster --name ${name} --config ${KINDCFGDIR}/${name}.yaml
-    else
-        kind create cluster --name ${name}
-    fi
-    kind get kubeconfig --name=${name} > ${kconf}
-}
-
 echo "Build ucnf image with kiknos base"
-VPP_AGENT=${VPP_AGENT} TAG=kiknos make k8s-universal-cnf-save &
+VPP_AGENT=$VPP_AGENT ORG=$NSE_ORG TAG=$NSE_TAG make k8s-universal-cnf-save &
 dockerBuildProcess=$!
+
+function startCluster() {
+  local cluster=$1; shift
+
+  echo "Start kind clusters: $cluster"
+  kind create cluster --name "$cluster"
+
+  wait $dockerBuildProcess
+  echo "Load images into: $cluster"
+  KIND_CLUSTER_NAME=$cluster make k8s-universal-cnf-load-images
+}
 
 function installNSM() {
   local cluster=$1; shift
@@ -79,15 +45,21 @@ function installNSM() {
   kubectl wait --context "kind-$cluster" --timeout=150s --for condition=Ready -l "app in (nsm-admission-webhook,nsmgr-daemonset,proxy-nsmgr-daemonset,nsm-vpp-plane)" -n nsm-system pod
 }
 
-function startCluster() {
+function installNSE() {
   local cluster=$1; shift
+  local opts=$*
 
-  echo "Start kind clusters: $cluster"
-  kindCreateCluster "$cluster" "$KUBECONFDIR/$cluster.kubeconfig"
+  echo "TEST: $opts"
 
-  wait $dockerBuildProcess
-  echo "Load images into: $cluster"
-  KIND_CLUSTER_NAME=$cluster make k8s-universal-cnf-load-images
+  echo "Install NSE into cluster: $cluster"
+  helm template ./examples/ucnf-kiknos/helm/kiknos_vpn_endpoint \
+    --set org="$NSE_ORG" \
+    --set tag="$NSE_TAG" \
+    --set pullPolicy="$PULL_POLICY" \
+    --set nsm.serviceName="$SERVICE_NAME" $opts | kubectl --context "kind-$cluster" apply -f -
+
+  kubectl --context "kind-$cluster" wait -n default --timeout=150s --for condition=Ready --all pods -l k8s-app
+  kubectl --context "kind-$cluster" wait -n default --timeout=150s --for condition=Ready --all pods -l networkservicemesh.io/app
 }
 
 for cluster in "$CLUSTER1" "$CLUSTER2"; do
@@ -100,53 +72,27 @@ for cluster in "$CLUSTER1" "$CLUSTER2"; do
   installNSM "$cluster"
 done
 
-KIND1_IP=$(docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$CLUSTER1-control-plane")
-KIND1_MAC=$(docker inspect --format='{{range .NetworkSettings.Networks}}{{.MacAddress}}{{end}}' "$CLUSTER1-control-plane")
-KIND2_IP=$(docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$CLUSTER2-control-plane")
+CLUSTER1_IP=$(docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$CLUSTER1-control-plane")
+CLUSTER1_MAC=$(docker inspect --format='{{range .NetworkSettings.Networks}}{{.MacAddress}}{{end}}' "$CLUSTER1-control-plane")
+CLUSTER2_IP=$(docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$CLUSTER2-control-plane")
 
-echo "Install NSE into cluster: $CLUSTER1"
-helm template ./examples/ucnf-kiknos/helm/kiknos_vpn_endpoint --set org=${NSE_HUB} \
-  --set tag=${NSE_TAG} \
-  --set pullPolicy="${PULLPOLICY}" \
-  ${IPAMPOOL:+ --set ipam.prefixPool=${IPAMPOOL}} \
-  ${IPAMOCTET:+ --set ipam.uniqueOctet=${IPAMOCTET}} \
-  ${CNNS_NSRADDR:+ --set cnns.nsr.addr=${CNNS_NSRADDR}} \
-  ${CNNS_NSRPORT:+ --set cnns.nsr.port=${CNNS_NSRPORT}} \
-  --set nsm.serviceName="${SERVICENAME}" \
-  --set strongswan.network.localSubnet=172.31.22.0/24 \
+installNSE "$CLUSTER1" --set strongswan.network.localSubnet=172.31.22.0/24 \
   --set strongswan.network.remoteSubnet=172.31.23.0/24 \
-  --set ikester.network.redInterfaceIP="${KIND2_IP}" | kubectl --context "kind-$CLUSTER1" apply -f -
+  --set ikester.network.redInterfaceIP="$CLUSTER2_IP"
 
-kubectl --context "kind-$CLUSTER1" wait -n default --timeout=150s --for condition=Ready --all pods --selector k8s-app &
-kubectl --context "kind-$CLUSTER1" wait -n default --timeout=150s --for condition=Ready --all pods --selector networkservicemesh.io/app &
-wait
-
-echo "Install NSE into cluster: $CLUSTER2"
-helm template ./examples/ucnf-kiknos/helm/kiknos_vpn_endpoint \
-  --set org=${NSE_HUB} --set tag=${NSE_TAG} \
-  --set pullPolicy="${PULLPOLICY}" \
-  ${IPAMPOOL:+ --set ipam.prefixPool=${IPAMPOOL}} \
-  ${IPAMOCTET:+ --set ipam.uniqueOctet=${IPAMOCTET}} \
-  ${CNNS_NSRADDR:+ --set cnns.nsr.addr=${CNNS_NSRADDR}} \
-  ${CNNS_NSRPORT:+ --set cnns.nsr.port=${CNNS_NSRPORT}} \
-  --set nsm.serviceName="${SERVICENAME}" \
-  --set strongswan.network.remoteAddr="${KIND1_IP}" \
+installNSE "$CLUSTER2" --set strongswan.network.remoteAddr="$CLUSTER1_IP" \
   --set strongswan.network.localSubnet=172.31.23.0/24 \
   --set strongswan.network.remoteSubnet=172.31.22.0/24 \
   --set ikester.enabled=true \
-  --set ikester.network.remoteIP="${KIND1_IP}" \
-  --set ikester.network.remoteMAC="${KIND1_MAC}" | kubectl --context "kind-$CLUSTER2" apply -f -
+  --set ikester.network.remoteIP="$CLUSTER1_IP" \
+  --set ikester.network.remoteMAC="$CLUSTER1_MAC"
 
-kubectl --context "kind-$CLUSTER2" wait -n default --timeout=150s --for condition=Ready --all pods --selector k8s-app &
-kubectl --context "kind-$CLUSTER2" wait -n default --timeout=150s --for condition=Ready --all pods --selector networkservicemesh.io/app &
-wait
-
-echo "Create hello world pods"
-helm template ./examples/ucnf-kiknos/helm/vl3_hello | kubectl --context "kind-$CLUSTER1" apply -f -
-helm template ./examples/ucnf-kiknos/helm/vl3_hello --set nsm.serviceName="$SERVICENAME" | kubectl --context "kind-$CLUSTER2" apply -f -
+helm template ./examples/ucnf-kiknos/helm/vl3_hello --set nsm.serviceName="$SERVICE_NAME" | kubectl --context "kind-$CLUSTER1" apply -f -
+helm template ./examples/ucnf-kiknos/helm/vl3_hello --set nsm.serviceName="$SERVICE_NAME" | kubectl --context "kind-$CLUSTER2" apply -f -
 
 kubectl --context "kind-$CLUSTER1" wait -n default --timeout=150s --for condition=Ready --all pods -l app=icmp-responder &
 kubectl --context "kind-$CLUSTER2" wait -n default --timeout=150s --for condition=Ready --all pods -l app=icmp-responder &
 wait
 
-CLUSTER1=$CLUSTER1 CLUSTER2=$CLUSTER2 SERVICENAME=$SERVICENAME ./examples/ucnf-kiknos/scripts/test_vpn_conn.sh
+nsePod=$(kubectl --context "kind-$CLUSTER2" get pods -l "networkservicemesh.io/app=${SERVICE_NAME}" -o=name)
+kubectl --context "kind-$CLUSTER2" exec -it "$nsePod" -- ipsec up kiknos
