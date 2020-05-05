@@ -17,12 +17,10 @@ e2e-kind-test: &e2e-kind-test
         at: /go/src/_save
     - run:
         name: Start KinD Clusters
-        working_directory: /go/src/github.com/networkservicemesh
         command: |
           mkdir -p kubeconfigs
           kind create cluster --name cl1 --kubeconfig=kubeconfigs/config
           kind create cluster --name cl2 --kubeconfig=kubeconfigs/config
-          export KUBECONFIG+=$(pwd)/kubeconfigs/config;
     - run:
         name: Restore built images
         command: |
@@ -32,6 +30,7 @@ e2e-kind-test: &e2e-kind-test
     - run:
         name: Install NSM
         command: |
+          export KUBECONFIG+=$(pwd)/kubeconfigs/config;
           for cluster in cl1 cl2; do
             kubectl config use-context "kind-$cluster"
             SPIRE_ENABLED=false INSECURE=true make helm-init
