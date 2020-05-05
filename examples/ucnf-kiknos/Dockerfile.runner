@@ -8,3 +8,6 @@ RUN  git clone $nsm_repo /go/src/github.com/networkservicemesh/networkservicemes
 RUN mkdir -p /go/src/github.com/networkservicemesh/examples
 COPY examples  /go/src/github.com/networkservicemesh/examples
 
+COPY kubeconfigs/config /go/src/kubeconfigs/config
+
+ENV KUBECONFIG=/go/src/kubeconfigs/config

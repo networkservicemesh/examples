@@ -17,9 +17,12 @@ e2e-kind-test: &e2e-kind-test
         at: /go/src/_save
     - run:
         name: Start KinD Clusters
+        working_directory: /go/src/github.com/networkservicemesh
         command: |
-          kind create cluster --name cl1
-          kind create cluster --name cl2
+          mkdir -p kubeconfigs
+          kind create cluster --name cl1 --kubeconfig=kubeconfigs/config
+          kind create cluster --name cl2 --kubeconfig=kubeconfigs/config
+          export KUBECONFIG+=$(pwd)/kubeconfigs/config;
     - run:
         name: Restore built images
         command: |
@@ -39,8 +42,9 @@ e2e-kind-test: &e2e-kind-test
 
     - run:
         name: Build NSE runner container
+        working_directory: /go/src/github.com/networkservicemesh
         command: |
-          docker build -t kiknos_nse:latest -f examples/ucnf-kiknos/Dockerfile.runner ..
+          docker build -t kiknos_nse:latest -f examples/examples/ucnf-kiknos/Dockerfile.runner .
 
     - run:
         name: Install VPN components
