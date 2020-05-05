@@ -1,5 +1,86 @@
 version: 2.1
+
+# Docker environment.
+defaults: &defaults
+  working_directory: /go/src/github.com/networkservicemesh/examples
+  docker:
+    - image: mmatache/kind_runner:latest
+  environment:
+    GOPATH: /go
+
+e2e-kind-test: &e2e-kind-test
+  steps:
+    - setup_remote_docker
+    - checkout:
+        path: /go/src/github.com/networkservicemesh/examples
+    - attach_workspace:
+        at: /go/src/_save
+    - run:
+        name: Start KinD Clusters
+        command: |
+          kind create cluster --name cl1
+          kind create cluster --name cl2
+    - run:
+        name: Restore built images
+        command: |
+          for cluster in cl1 cl2; do
+            kind load image-archive --name $cluster /go/src/_save/images.tar
+          done
+    - run:
+        name: Install NSM
+        command: |
+          for cluster in cl1 cl2; do
+            kubectl config use-context "kind-$cluster"
+            SPIRE_ENABLED=false INSECURE=true make helm-init
+            kubectl --context "kind-$cluster" wait -n kube-system --timeout=150s --for condition=Ready --all pods -l app=helm
+            SPIRE_ENABLED=false INSECURE=true make helm-install-nsm
+            kubectl wait --context "kind-$cluster" --timeout=150s --for condition=Ready -l "app in (nsm-admission-webhook,nsmgr-daemonset,proxy-nsmgr-daemonset,nsm-vpp-plane)" -n nsm-system pod
+          done
+
+    - run:
+        name: Build NSE runner container
+        command: |
+          docker build -t kiknos_nse:latest -f examples/ucnf-kiknos/Dockerfile.runner ..
+
+    - run:
+        name: Install VPN components
+        command: |
+          docker run --name=nse_install --network=host -t kiknos_nse:latest \
+          bash -c "/go/src/github.com/networkservicemesh/examples/examples/ucnf-kiknos/scripts/kind_topo.sh --clusters_present --tag=${CIRCLE_SHA1}"
+
+    - run:
+        name: Run VPN test
+        command: |
+          docker run --name=nse_run --network=host -t kiknos_nse:latest \
+           bash -c "/go/src/github.com/networkservicemesh/examples/examples/ucnf-kiknos/scripts/test_vpn_conn.sh"
+
+    - store_artifacts:
+        path: /tmp/cluster_state
+
 jobs:
+  build-vl3:
+    <<: *defaults
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Clone networkservicemesh
+          working_directory: /go/src/github.com/networkservicemesh
+          command: |
+            git clone https://github.com/networkservicemesh/networkservicemesh.git
+      - run:
+          name: Build docker images
+          working_directory: /go/src/github.com/networkservicemesh/examples
+          command: |
+            VPP_AGENT=ciscolabs/kiknos:latest ORG=mmatache TAG=${CIRCLE_SHA1} make k8s-universal-cnf-save
+            images_to_save+=("mmatache/universal-cnf-vppagent:${CIRCLE_SHA1}")
+            mkdir -p _save
+            docker save "${images_to_save[@]}" >_save/images.tar
+      - persist_to_workspace:
+          root: _save
+          paths:
+            - images.tar
+
   sanity-check:
     resource_class: large
     working_directory: ~/project/examples
@@ -15,7 +96,7 @@ jobs:
       - run:
           name: Install golangci-lint
           command: |
-            export GOLANGCI_LINT_VER=1.23.8
+            export GOLANGCI_LINT_VER=1.20.1
             wget https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_LINT_VER}/golangci-lint-${GOLANGCI_LINT_VER}-linux-amd64.tar.gz
             tar -xvf golangci-lint-${GOLANGCI_LINT_VER}-linux-amd64.tar.gz
             sudo mv golangci-lint-${GOLANGCI_LINT_VER}-linux-amd64/golangci-lint /usr/local/bin/
@@ -77,8 +158,11 @@ jobs:
             ORG=<< parameters.org >> TAG=<< parameters.tag >> make push-all
 
   test:
-    resource_class: large
     parameters:
+      example:
+        type: string
+      description:
+        type: string
       nsmbranch:
         type: string
         default: "master"
@@ -89,15 +173,14 @@ jobs:
       enabled: true
       docker_layer_caching: true
     working_directory: ~/project/examples
-    parallelism: 2
     steps:
       - run:
-          name: Update go to 1.14
+          name: Update go to 1.13
           working_directory: /tmp
           command: |
-            wget https://dl.google.com/go/go1.14.linux-amd64.tar.gz
+            wget https://dl.google.com/go/go1.13.linux-amd64.tar.gz
             sudo rm -rf /usr/local/go
-            sudo tar -C /usr/local -xzf go1.14.linux-amd64.tar.gz
+            sudo tar -C /usr/local -xzf go1.13.linux-amd64.tar.gz
       - run:
           name: Install kubectl
           command: |
@@ -107,7 +190,7 @@ jobs:
       - run:
           name: Install kind
           command: |
-            GO111MODULE="on" go get -u sigs.k8s.io/kind@master
+            GO111MODULE="on" go get sigs.k8s.io/kind@master
             kind version
       - checkout
       - run:
@@ -123,14 +206,6 @@ jobs:
       - run:
           name: Start kind
           command: |
-            echo "
-            ---
-            kind: Cluster
-            apiVersion: kind.sigs.k8s.io/v1alpha3
-            nodes:
-              - role: control-plane
-              - role: worker
-            " > ../networkservicemesh/scripts/kind.yaml
             make kind-start
             kubectl config use-context kind-nsm
       - run:
@@ -142,56 +217,44 @@ jobs:
           enable-cluster-wide-admin-access: true
       - helm/install-helm-chart:
           chart: "../networkservicemesh/deployments/helm/nsm"
-          namespace: "nsm-system"
-          values-to-override: "org=networkservicemesh,tag=<< parameters.nsmbranch >>,global.JaegerTracing=false,forwardingPlane=vpp,admission-webhook.org=networkservicemesh,admission-webhook.tag=<< parameters.nsmbranch >>,prefix-service.org=networkservicemesh,prefix-service.tag=<< parameters.nsmbranch >>,prometheus=false,metricsCollectorEnabled=false,spire.enabled=false,insecure=true"
+          values-to-override: |
+            "org=networkservicemesh,tag=<< parameters.nsmbranch >>,admission-webhook.org=networkservicemesh,admission-webhook.tag=<< parameters.nsmbranch >>,spire.enabled=false,insecure=true"
       - run:
-          name: Test
+          name: Build << parameters.example >> images
           command: |
-            make $(make list-tests | circleci tests split --split-by=timings)
+            make k8s-<< parameters.example >>-save
+      - run:
+          name: << parameters.description >> deploy
+          command: |
+            make k8s-<< parameters.example >>-load-images k8s-<< parameters.example >>-deploy
+            kubectl wait -n default --timeout=150s --for condition=Ready --all pods
+      - run:
+          name: << parameters.description >> check
+          command: |
+            make k8s-<< parameters.example >>-check
+      - run:
+          name: << parameters.description >> delete
+          command: |
+            make k8s-<< parameters.example >>-delete
       - run:
           name: Dump cluster state
           when: always
           command: |
-            kubectl get nodes
-            kubectl get pods -o wide --namespace=nsm-system
-            kubectl get pods -o wide
-            kubectl describe pods --namespace=nsm-system
-            kubectl describe pods
-            make k8s-nsmgr-logs
-            make k8s-nsm-vpp-forwarder-logs
+            kubectl get nodes --all-namespaces
+            kubectl get pods -o wide --all-namespaces
+            kubectl describe pods --all-namespaces
+
+  e2e-kind-integration:
+    <<: *defaults
+    <<: *e2e-kind-test
 
 orbs:
-  helm: circleci/helm@0.2.3
+  helm: circleci/helm@0.2.1
 workflows:
   version: 2
   test-and-push:
     jobs:
-      - sanity-check
-      - test:
-          name: "Test Parallel"
+      - build-vl3
+      - e2e-kind-integration:
           requires:
-            - sanity-check
-      - push-all:
-          name: "Push all"
-          org: "networkservicemesh"
-          tag: "master"
-          filters:
-            branches:
-              only: master
-          requires:
-            - "Test Parallel"
-  nightly-test:
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-      - sanity-check
-      - test:
-          name: "Test Parallel"
-          nightly: "true"
-          requires:
-            - sanity-check
+            - build-vl3
