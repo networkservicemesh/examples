@@ -13,6 +13,11 @@ e2e-kind-test: &e2e-kind-test
     - setup_remote_docker
     - checkout:
         path: /go/src/github.com/networkservicemesh/examples
+    - run:
+        name: Clone networkservicemesh
+        working_directory: /go/src/github.com/networkservicemesh
+        command: |
+          git clone https://github.com/networkservicemesh/networkservicemesh.git
     - attach_workspace:
         at: /go/src/_save
     - run:
