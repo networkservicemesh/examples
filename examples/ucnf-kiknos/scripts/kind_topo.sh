@@ -13,6 +13,7 @@ SERVICE_NAME=${SERVICE_NAME:-icmp-responder}
 DELETE=${DELETE:-false}
 CLEAN=${CLEAN:=false}
 CLUSTERS_PRESENT=${CLUSTERS_PRESENT:-false}
+NSM_INSTALLED=${NSM_INSTALLED:-false}
 OPERATION=${OPERATION:-apply}
 BUILD_IMAGE=${BUILD_IMAGE:-false}
 
@@ -35,6 +36,7 @@ Options:
   --build_image         Indicates whether the NSE image should be built or just pulled
                         from the image repository                                           env var: BUILD_IMAGE      - (Default: $BUILD_IMAGE)
   --clusters_present    Set if you already have kind clusters present                       env var: CLUSTERS_PRESENT - (Default: $CLUSTERS_PRESENT)
+  --nsm_installed       Set if the NSM is already installed on the clusters                 env var: NSM_INSTALLED    - (Default: $NSM_INSTALLED)
   --clean               Removes the NSEs and Clients from the clusters                      env var: CLEAN            - (Default: $CLEAN)
   --delete              Delete the Kind clusters                                            env var: DELETE           - (Default: $DELETE)
 " >&2
@@ -133,17 +135,17 @@ if [ "$DELETE" == "true" ]; then
 fi
 
 if [ "$CLUSTERS_PRESENT" == "false" ]; then
-
   for cluster in "$CLUSTER1" "$CLUSTER2"; do
     startCluster "$cluster" &
   done
 
   wait
+fi
 
+if [ "$NSM_INSTALLED" == "false" ]; then
   for cluster in "$CLUSTER1" "$CLUSTER2"; do
     installNSM "$cluster"
   done
-
 fi
 
 if [ "$BUILD_IMAGE" == "true" ]; then

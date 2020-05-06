@@ -24,24 +24,13 @@ e2e-kind-test: &e2e-kind-test
         name: Start KinD Clusters
         command: |
           mkdir -p kubeconfigs
-          kind create cluster --name cl1 --kubeconfig=${HOME}/.kube/config
-          kind create cluster --name cl2 --kubeconfig=${HOME}/.kube/config
-          cp ${HOME}/.kube/config kubeconfigs
+          kind create cluster --name cl1 --kubeconfig=kubeconfigs/config
+          kind create cluster --name cl2 --kubeconfig=kubeconfigs/config
     - run:
         name: Restore built images
         command: |
           for cluster in cl1 cl2; do
             kind load image-archive --name $cluster /go/src/_save/images.tar
-          done
-    - run:
-        name: Install NSM
-        command: |
-          for cluster in cl1 cl2; do
-            kubectl config use-context "kind-$cluster"
-            SPIRE_ENABLED=false INSECURE=true make helm-init
-            kubectl --context "kind-$cluster" wait -n kube-system --timeout=150s --for condition=Ready --all pods -l app=helm
-            SPIRE_ENABLED=false INSECURE=true make helm-install-nsm
-            kubectl wait --context "kind-$cluster" --timeout=150s --for condition=Ready -l "app in (nsm-admission-webhook,nsmgr-daemonset,proxy-nsmgr-daemonset,nsm-vpp-plane)" -n nsm-system pod
           done
 
     - run:
