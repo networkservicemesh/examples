@@ -9,6 +9,7 @@ defaults: &defaults
     GOPATH: /go
 
 e2e-kind-test: &e2e-kind-test
+  resource_class: large
   steps:
     - setup_remote_docker
     - checkout:
