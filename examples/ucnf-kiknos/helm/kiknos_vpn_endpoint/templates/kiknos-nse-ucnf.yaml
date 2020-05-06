@@ -22,7 +22,7 @@ spec:
           - name: af-packet-init
             image: {{ .Values.registry }}/{{ .Values.org }}/universal-cnf-vppagent:{{ .Values.tag }}
             imagePullPolicy: {{ .Values.pullPolicy }}
-            command: ["/usr/bin/af-packet-init"]
+            command: ['sh', '-c', '/usr/bin/af-packet-init && sleep 5']
             env:
               - name: ETCD_CONFIG
                 value: /opt/kiknos/etcd.conf
