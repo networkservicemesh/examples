@@ -22,14 +22,12 @@ spec:
           - name: af-packet-init
             image: {{ .Values.registry }}/{{ .Values.org }}/universal-cnf-vppagent:{{ .Values.tag }}
             imagePullPolicy: {{ .Values.pullPolicy }}
-            command: ['sh', '-c', '/usr/bin/af-packet-init && sleep 5']
+            command: ['sh', '-c', '/usr/bin/af-packet-init && sleep 60']
             env:
               - name: ETCD_CONFIG
                 value: /opt/kiknos/etcd.conf
               - name: MICROSERVICE_LABEL
                 value: {{ .Values.aio.serviceLabel }}
-              - name: INTERFACE_NAME
-                value: "test"
             volumeMounts:
               - name: agent-config
                 mountPath: /opt/kiknos
