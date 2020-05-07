@@ -1,6 +1,0 @@
-{{- define "network-cfg.aio-kiknos" -}}
-{{- if .Values.ikester.useRawSocket }}
-# Route towards ikester source IP subnet
-config/vpp/v2/route/if/red/vrf/0/dst/{{ .Values.ikester.network.ikeSourceIPBase }}/8/gw/{{ .Values.ikester.network.redInterfaceIP }} {"type":"INTRA_VRF","dst_network":"{{ .Values.ikester.network.ikeSourceIPBase }}/8","next_hop_addr":"{{ .Values.ikester.network.redInterfaceIP }}","outgoing_interface":"red"}
-{{- end -}}
-{{- end -}}
