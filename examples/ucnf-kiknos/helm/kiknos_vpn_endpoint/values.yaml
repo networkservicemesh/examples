@@ -81,8 +81,6 @@ aio:
   network:
     redInterfaceName: eth0
     redInterfaceIP: 172.17.0.200
-    # redInterfaceMAC needed for ikester only
-    redInterfaceMAC: 02:00:00:00:00:05
 
 # StrongSwan configuration
 strongswan:
@@ -99,21 +97,6 @@ strongswan:
     remoteSubnet: 172.31.23.0/24
     # remoteAddr needs to be configured if this Kiknos instance should initiate the connection
     remoteAddr:
-
-# IKE tester pod settings (used for testing)
-ikester:
-  enabled: false
-  image:
-    repository: ciscolabs/ikester
-    tag: latest
-    pullPolicy: IfNotPresent
-  preSharedKey: Vpp123
-  useRawSocket: true
-  network:
-    remoteIP: 172.17.0.200
-    ikeSourceIPBase: 200.0.0.0
-    # redInterfaceIP is required for a route from Kiknos to ikester
-    redInterfaceIP: 172.17.0.2
 
 # ETCD settings
 etcd:

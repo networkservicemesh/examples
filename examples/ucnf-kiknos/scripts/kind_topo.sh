@@ -159,23 +159,16 @@ if [ "$BUILD_IMAGE" == "true" ]; then
   wait
 fi
 
-CLUSTER2_IP=$(docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$CLUSTER2-control-plane")
-
 performNSE "$CLUSTER1" $OPERATION --set strongswan.network.localSubnet=172.31.22.0/24 \
-  --set strongswan.network.remoteSubnet=172.31.23.0/24 \
-  --set ikester.network.redInterfaceIP="$CLUSTER2_IP"
+  --set strongswan.network.remoteSubnet=172.31.23.0/24
 
 echo "Retrieving IP and MAC addr of interface"
 POD_NAME=$(kubectl --context "kind-$CLUSTER1" get pods -o name | grep icmp-responder | cut -d / -f 2)
-HW_MAC=$(kubectl --context "kind-$CLUSTER1" exec -it "$POD_NAME" -- ip addr | grep "netnsid 0" | awk '{print $2}')
 IP_ADDR=$(kubectl --context "kind-$CLUSTER1" exec -it "$POD_NAME" -- ip addr | grep "global eth0" | grep inet | awk '{print $2}' | cut -d / -f 1)
 
 performNSE "$CLUSTER2" $OPERATION --set strongswan.network.remoteAddr="$IP_ADDR" \
   --set strongswan.network.localSubnet=172.31.23.0/24 \
-  --set strongswan.network.remoteSubnet=172.31.22.0/24 \
-  --set ikester.enabled=true \
-  --set ikester.network.remoteIP="${IP_ADDR}" \
-  --set ikester.network.remoteMAC="${HW_MAC}"
+  --set strongswan.network.remoteSubnet=172.31.22.0/24
 
 echo "$OPERATION hello world pods"
 helm template ./examples/ucnf-kiknos/helm/vl3_hello --set nsm.serviceName="$SERVICE_NAME" | kubectl --context "kind-$CLUSTER1" $OPERATION -f -
