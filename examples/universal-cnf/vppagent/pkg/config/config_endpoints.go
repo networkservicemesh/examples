@@ -62,7 +62,7 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint, nsc
 			EndpointLabels:         labelStringFromMap(e.Labels),
 			ClientLabels:           nsconfig.ClientLabels,
 			MechanismType:          memif.MECHANISM,
-			IPAddress:              nsconfig.IPAddress,
+			IPAddress:              ipPrefix,
 			Routes:                 nil,
 		}
 
@@ -78,6 +78,7 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint, nsc
 		}
 
 		if e.Ipam != nil {
+		/*
 			compositeEndpoints = append(compositeEndpoints, endpoint.NewIpamEndpoint((&common.NSConfiguration{
 				NsmServerSocket:        nsconfig.NsmServerSocket,
 				NsmClientSocket:        nsconfig.NsmClientSocket,
@@ -90,6 +91,7 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint, nsc
 				IPAddress:              e.Ipam.PrefixPool,
 				Routes:                 nil,
 			})))
+		*/
 
 			if len(e.Ipam.Routes) > 0 {
 				routeAddr := makeRouteMutator(e.Ipam.Routes)
