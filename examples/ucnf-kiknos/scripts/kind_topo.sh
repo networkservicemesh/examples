@@ -111,13 +111,13 @@ function installNSM() {
   local cluster=$1; shift
 
   echo "Helm init: $cluster"
-  kubectl config use-context "kind-$cluster"
+  kubectl config use-context "$cluster"
   SPIRE_ENABLED=false INSECURE=true make helm-init
 
   echo "Install NSM: $cluster"
-  kubectl --context "kind-$cluster" wait -n kube-system --timeout=150s --for condition=Ready --all pods -l app=helm
+  kubectl --context "$cluster" wait -n kube-system --timeout=150s --for condition=Ready --all pods -l app=helm
   SPIRE_ENABLED=false INSECURE=true make helm-install-nsm
-  kubectl wait --context "kind-$cluster" --timeout=150s --for condition=Ready -l "app in (nsm-admission-webhook,nsmgr-daemonset,proxy-nsmgr-daemonset,nsm-vpp-plane)" -n nsm-system pod
+  kubectl wait --context "$cluster" --timeout=150s --for condition=Ready -l "app in (nsm-admission-webhook,nsmgr-daemonset,proxy-nsmgr-daemonset,nsm-vpp-plane)" -n nsm-system pod
 }
 
 # Perform the given kubectl operation for the NSE
@@ -130,11 +130,11 @@ function performNSE() {
     --set org="$NSE_ORG" \
     --set tag="$NSE_TAG" \
     --set pullPolicy="$PULL_POLICY" \
-    --set nsm.serviceName="$SERVICE_NAME" $opts | kubectl --context "kind-$cluster" "$operation" -f -
+    --set nsm.serviceName="$SERVICE_NAME" $opts | kubectl --context "$cluster" "$operation" -f -
 
   if [ "$operation" == "apply" ]; then
-    kubectl --context "kind-$cluster" wait -n default --timeout=150s --for condition=Ready --all pods -l k8s-app
-    kubectl --context "kind-$cluster" wait -n default --timeout=150s --for condition=Ready --all pods -l networkservicemesh.io/app
+    kubectl --context "$cluster" wait -n default --timeout=150s --for condition=Ready --all pods -l k8s-app
+    kubectl --context "$cluster" wait -n default --timeout=150s --for condition=Ready --all pods -l networkservicemesh.io/app
   fi
 }
 
@@ -184,7 +184,7 @@ performNSE "$CLUSTER2" $OPERATION --set strongswan.network.remoteAddr="$IP_ADDR"
 if [ "$ISTIO" == "true" ]; then
   echo "Installing Istio control plane"
   kubectl --context "$CLUSTER1" apply -f ./examples/ucnf-kiknos/k8s/istio_cfg.yaml
-  kubectl --context "kind-$cluster" wait -n istio-system --timeout=150s --for condition=Ready --all pods
+  kubectl --context "$cluster" wait -n istio-system --timeout=150s --for condition=Ready --all pods
   rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
   ./examples/ucnf-kiknos/scripts/start_clients.sh --cluster1="$CLUSTER1" --cluster2="$CLUSTER2" --istio_client
 else
