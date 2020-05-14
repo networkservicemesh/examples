@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # Topology information
-CLUSTER1=${CLUSTER1:-cl1}
-CLUSTER2=${CLUSTER2:-cl2}
+CLUSTER1=${CLUSTER1:-kind-cl1}
+CLUSTER2=${CLUSTER2:-kind-cl2}
 VPP_AGENT=${VPP_AGENT:-ciscolabs/kiknos:latest}
 NSE_ORG=${NSE_ORG:-mmatache}
 NSE_TAG=${NSE_TAG:-kiknos}
@@ -174,24 +174,25 @@ performNSE "$CLUSTER1" $OPERATION --set strongswan.network.localSubnet=172.31.22
   --set strongswan.network.remoteSubnet=172.31.23.0/24
 
 echo "Retrieving IP and MAC addr of interface"
-POD_NAME=$(kubectl --context "kind-$CLUSTER1" get pods -o name | grep icmp-responder | cut -d / -f 2)
-IP_ADDR=$(kubectl --context "kind-$CLUSTER1" exec -it "$POD_NAME" -- ip addr | grep "global eth0" | grep inet | awk '{print $2}' | cut -d / -f 1)
+POD_NAME=$(kubectl --context "$CLUSTER1" get pods -o name | grep icmp-responder | cut -d / -f 2)
+IP_ADDR=$(kubectl --context "$CLUSTER1" exec -it "$POD_NAME" -- ip addr | grep "global eth0" | grep inet | awk '{print $2}' | cut -d / -f 1)
 
 performNSE "$CLUSTER2" $OPERATION --set strongswan.network.remoteAddr="$IP_ADDR" \
   --set strongswan.network.localSubnet=172.31.23.0/24 \
   --set strongswan.network.remoteSubnet=172.31.22.0/24
 
-sleep 2
-CLUSTER2="$CLUSTER2" SERVICE_NAME="$SERVICE_NAME" ./examples/ucnf-kiknos/scripts/start_vpn.sh
-
 if [ "$ISTIO" == "true" ]; then
   echo "Installing Istio control plane"
   kubectl --context "$CLUSTER1" apply -f ./examples/ucnf-kiknos/k8s/istio_cfg.yaml
-
-  ./examples/ucnf-kiknos/scripts/start_clients.sh --cluster1="kind-$CLUSTER1" --cluster2="kind-$CLUSTER2" --istio_client
+  kubectl --context "kind-$cluster" wait -n istio-system --timeout=150s --for condition=Ready --all pods
+  rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+  ./examples/ucnf-kiknos/scripts/start_clients.sh --cluster1="$CLUSTER1" --cluster2="$CLUSTER2" --istio_client
 else
-  ./examples/ucnf-kiknos/scripts/start_clients.sh --cluster1="kind-$CLUSTER1" --cluster2="kind-$CLUSTER2"
+  ./examples/ucnf-kiknos/scripts/start_clients.sh --cluster1="$CLUSTER1" --cluster2="$CLUSTER2"
 fi
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
-
+sleep 2
+CLUSTER2="$CLUSTER2" SERVICE_NAME="$SERVICE_NAME" ./examples/ucnf-kiknos/scripts/start_vpn.sh
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
