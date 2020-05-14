@@ -14,7 +14,7 @@ DELETE=${DELETE:-false}
 CLEAN=${CLEAN:=false}
 CLUSTERS_PRESENT=${CLUSTERS_PRESENT:-false}
 NSM_INSTALLED=${NSM_INSTALLED:-false}
-ISTIO=${ISTIO:-false}
+NO_ISTIO=${NO_ISTIO:-false}
 OPERATION=${OPERATION:-apply}
 BUILD_IMAGE=${BUILD_IMAGE:-false}
 
@@ -38,7 +38,7 @@ Options:
                         from the image repository                                           env var: BUILD_IMAGE      - (Default: $BUILD_IMAGE)
   --clusters_present    Set if you already have kind clusters present                       env var: CLUSTERS_PRESENT - (Default: $CLUSTERS_PRESENT)
   --nsm_installed       Set if the NSM is already installed on the clusters                 env var: NSM_INSTALLED    - (Default: $NSM_INSTALLED)
-  --istio               Set one of the clients to be an istio ingress gateway               env var: ISTIO            - (Default: $ISTIO)
+  --no_istio               Set one of the clients to be an istio ingress gateway            env var: NO_ISTIO         - (Default: $ISTIO)
   --clean               Removes the NSEs and Clients from the clusters                      env var: CLEAN            - (Default: $CLEAN)
   --delete              Delete the Kind clusters                                            env var: DELETE           - (Default: $DELETE)
 " >&2
@@ -71,8 +71,8 @@ for i in "$@"; do
   --operation=*)
     OPERATION="${i#*=}"
     ;;
-  --istio)
-    ISTIO=true
+  --no_istio)
+    NO_ISTIO=true
     ;;
   --build_image)
     BUILD_IMAGE=true
@@ -181,7 +181,7 @@ performNSE "$CLUSTER2" $OPERATION --set strongswan.network.remoteAddr="$IP_ADDR"
   --set strongswan.network.localSubnet=172.31.23.0/24 \
   --set strongswan.network.remoteSubnet=172.31.22.0/24
 
-if [ "$ISTIO" == "true" ]; then
+if [ "$NO_ISTIO" == "false" ]; then
   echo "Installing Istio control plane"
   kubectl --context "$CLUSTER1" apply -f ./examples/ucnf-kiknos/k8s/istio_cfg.yaml
   sleep 2
