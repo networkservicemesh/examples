@@ -48,16 +48,20 @@ for i in "$@"; do
   esac
 done
 
+helm template ./examples/ucnf-kiknos/helm/vl3_hello --set nsm.serviceName="$SERVICE_NAME" | kubectl --context "$CLUSTER1" apply -f -
+helm template ./examples/ucnf-kiknos/helm/vl3_hello --set nsm.serviceName="$SERVICE_NAME" | kubectl --context "$CLUSTER2" apply -f -
 
 if [ "$ISTIO_CLIENT" == "true" ]; then
+  helm template ./examples/ucnf-kiknos/helm/istio_ingress --set nsm.serviceName="$SERVICE_NAME" | kubectl --context "$CLUSTER1" apply -f -
+  sleep 1
+  echo "Waiting for Istio gateway to be ready"
+  kubectl --context "$CLUSTER1" wait -n istio-system --timeout=500s --for condition=Ready --all pods
   kubectl --context "$CLUSTER1" label namespace default istio-injection=enabled
   helm template ./examples/ucnf-kiknos/helm/istio_clients --set app=icmp-responder | kubectl --context "$CLUSTER1" apply -f -
 fi
 
-
-helm template ./examples/ucnf-kiknos/helm/vl3_hello --set nsm.serviceName="$SERVICE_NAME" | kubectl --context "$CLUSTER1" apply -f -
-helm template ./examples/ucnf-kiknos/helm/vl3_hello --set nsm.serviceName="$SERVICE_NAME" | kubectl --context "$CLUSTER2" apply -f -
-
+sleep 2
+echo "Waiting for client pods to be ready"
 kubectl --context "$CLUSTER2" wait -n default --timeout=150s --for condition=Ready --all pods -l app=icmp-responder &
 kubectl --context "$CLUSTER1" wait -n default --timeout=150s --for condition=Ready --all pods -l app=icmp-responder &
 wait
