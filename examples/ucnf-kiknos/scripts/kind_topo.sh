@@ -14,6 +14,7 @@ DELETE=${DELETE:-false}
 CLEAN=${CLEAN:=false}
 CLUSTERS_PRESENT=${CLUSTERS_PRESENT:-false}
 NSM_INSTALLED=${NSM_INSTALLED:-false}
+ISTIO=${ISTIO:-false}
 OPERATION=${OPERATION:-apply}
 BUILD_IMAGE=${BUILD_IMAGE:-false}
 
@@ -37,6 +38,7 @@ Options:
                         from the image repository                                           env var: BUILD_IMAGE      - (Default: $BUILD_IMAGE)
   --clusters_present    Set if you already have kind clusters present                       env var: CLUSTERS_PRESENT - (Default: $CLUSTERS_PRESENT)
   --nsm_installed       Set if the NSM is already installed on the clusters                 env var: NSM_INSTALLED    - (Default: $NSM_INSTALLED)
+  --istio               Set one of the clients to be an istio ingress gateway               env var: ISTIO            - (Default: $ISTIO)
   --clean               Removes the NSEs and Clients from the clusters                      env var: CLEAN            - (Default: $CLEAN)
   --delete              Delete the Kind clusters                                            env var: DELETE           - (Default: $DELETE)
 " >&2
@@ -62,6 +64,15 @@ for i in "$@"; do
     ;;
   --pull_policy=*)
     PULL_POLICY="${i#*=}"
+    ;;
+  --service_name=*)
+    SERVICE_NAME="${i#*=}"
+    ;;
+  --operation=*)
+    OPERATION="${i#*=}"
+    ;;
+  --istio)
+    ISTIO=true
     ;;
   --build_image)
     BUILD_IMAGE=true
@@ -170,15 +181,15 @@ performNSE "$CLUSTER2" $OPERATION --set strongswan.network.remoteAddr="$IP_ADDR"
   --set strongswan.network.localSubnet=172.31.23.0/24 \
   --set strongswan.network.remoteSubnet=172.31.22.0/24
 
-echo "$OPERATION hello world pods"
-helm template ./examples/ucnf-kiknos/helm/vl3_hello --set nsm.serviceName="$SERVICE_NAME" | kubectl --context "kind-$CLUSTER1" $OPERATION -f -
-helm template ./examples/ucnf-kiknos/helm/vl3_hello --set nsm.serviceName="$SERVICE_NAME" | kubectl --context "kind-$CLUSTER2" $OPERATION -f -
+sleep 2
+CLUSTER2="$CLUSTER2" SERVICE_NAME="$SERVICE_NAME" ./examples/ucnf-kiknos/scripts/start_vpn.sh
 
-if [ "$OPERATION" == "apply" ]; then
-  kubectl --context "kind-$CLUSTER1" wait -n default --timeout=150s --for condition=Ready --all pods -l app=icmp-responder &
-  kubectl --context "kind-$CLUSTER2" wait -n default --timeout=150s --for condition=Ready --all pods -l app=icmp-responder &
-  wait
-  CLUSTER2="$CLUSTER2" SERVICE_NAME="$SERVICE_NAME" ./examples/ucnf-kiknos/scripts/start_vpn.sh
+if [ "$ISTIO" == "true" ]; then
+  ./examples/ucnf-kiknos/scripts/install_istio.sh --cluster="kind-$CLUSTER1" --service_name="$SERVICE_NAME"
+  ./examples/ucnf-kiknos/scripts/start_clients.sh --cluster1="kind-$CLUSTER1" --cluster2="kind-$CLUSTER2" --istio_client
+else
+  ./examples/ucnf-kiknos/scripts/start_clients.sh --cluster1="kind-$CLUSTER1" --cluster2="kind-$CLUSTER2"
 fi
+
 
 
