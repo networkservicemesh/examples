@@ -185,7 +185,9 @@ sleep 2
 CLUSTER2="$CLUSTER2" SERVICE_NAME="$SERVICE_NAME" ./examples/ucnf-kiknos/scripts/start_vpn.sh
 
 if [ "$ISTIO" == "true" ]; then
-  ./examples/ucnf-kiknos/scripts/install_istio.sh --cluster="kind-$CLUSTER1" --service_name="$SERVICE_NAME"
+  echo "Installing Istio control plane"
+  kubectl --context "$CLUSTER1" apply -f ./examples/ucnf-kiknos/k8s/istio_cfg.yaml
+
   ./examples/ucnf-kiknos/scripts/start_clients.sh --cluster1="kind-$CLUSTER1" --cluster2="kind-$CLUSTER2" --istio_client
 else
   ./examples/ucnf-kiknos/scripts/start_clients.sh --cluster1="kind-$CLUSTER1" --cluster2="kind-$CLUSTER2"

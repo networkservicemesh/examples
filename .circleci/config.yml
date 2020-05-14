@@ -60,6 +60,7 @@ e2e-kind-test: &e2e-kind-test
 
     - run:
         name: Dump clusters state
+        when: always
         command: |
           mkdir -p /tmp/cluster_state
           docker run --name=nse_dump --network=host -t kiknos_nse:latest \
