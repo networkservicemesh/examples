@@ -184,6 +184,7 @@ performNSE "$CLUSTER2" $OPERATION --set strongswan.network.remoteAddr="$IP_ADDR"
 if [ "$ISTIO" == "true" ]; then
   echo "Installing Istio control plane"
   kubectl --context "$CLUSTER1" apply -f ./examples/ucnf-kiknos/k8s/istio_cfg.yaml
+  sleep 2
   kubectl --context "$cluster" wait -n istio-system --timeout=150s --for condition=Ready --all pods
   rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
   ./examples/ucnf-kiknos/scripts/start_clients.sh --cluster1="$CLUSTER1" --cluster2="$CLUSTER2" --istio_client
