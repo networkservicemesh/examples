@@ -1,0 +1,4 @@
+
+nsm:
+  serviceName: icmp-responder
+
