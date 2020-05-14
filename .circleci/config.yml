@@ -71,7 +71,7 @@ e2e-kind-test: &e2e-kind-test
         path: /tmp/cluster_state
 
 jobs:
-  build-vl3:
+  build-kiknos-nse:
     <<: *defaults
     steps:
       - checkout
@@ -267,7 +267,7 @@ workflows:
   version: 2
   test-and-push:
     jobs:
-      - build-vl3
+      - build-kiknos-nse
       - e2e-kind-integration:
           requires:
-            - build-vl3
+            - build-kiknos-nse
