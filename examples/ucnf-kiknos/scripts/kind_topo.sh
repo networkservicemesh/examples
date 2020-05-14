@@ -38,7 +38,7 @@ Options:
                         from the image repository                                           env var: BUILD_IMAGE      - (Default: $BUILD_IMAGE)
   --clusters_present    Set if you already have kind clusters present                       env var: CLUSTERS_PRESENT - (Default: $CLUSTERS_PRESENT)
   --nsm_installed       Set if the NSM is already installed on the clusters                 env var: NSM_INSTALLED    - (Default: $NSM_INSTALLED)
-  --no_istio               Set one of the clients to be an istio ingress gateway            env var: NO_ISTIO         - (Default: $ISTIO)
+  --no_istio            Set if you do not want the istio service mesh to be deployed        env var: NO_ISTIO         - (Default: $ISTIO)
   --clean               Removes the NSEs and Clients from the clusters                      env var: CLEAN            - (Default: $CLEAN)
   --delete              Delete the Kind clusters                                            env var: DELETE           - (Default: $DELETE)
 " >&2
