@@ -44,13 +44,27 @@ e2e-kind-test: &e2e-kind-test
         name: Install VPN components
         command: |
           docker run --name=nse_install --network=host -t kiknos_nse:latest \
-          bash -c "/go/src/github.com/networkservicemesh/examples/examples/ucnf-kiknos/scripts/kind_topo.sh --clusters_present --tag=${CIRCLE_SHA1}"
+          bash -c "/go/src/github.com/networkservicemesh/examples/examples/ucnf-kiknos/scripts/kind_topo.sh --clusters_present --tag=${CIRCLE_SHA1} --istio"
 
     - run:
-        name: Run VPN test
+        name: Run Direct VPN test
         command: |
           docker run --name=nse_run --network=host -t kiknos_nse:latest \
            bash -c "/go/src/github.com/networkservicemesh/examples/examples/ucnf-kiknos/scripts/test_vpn_conn.sh"
+
+    - run:
+        name: Run Istio VPN test
+        command: |
+          docker run --name=nse_run_istio --network=host -t kiknos_nse:latest \
+           bash -c "/go/src/github.com/networkservicemesh/examples/examples/ucnf-kiknos/scripts/test_istio_vpn_conn.sh"
+
+    - run:
+        name: Dump clusters state
+        command: |
+          mkdir -p /tmp/cluster_state
+          docker run --name=nse_dump --network=host -t kiknos_nse:latest \
+           bash -c "/go/src/github.com/networkservicemesh/examples/examples/ucnf-kiknos/scripts/dump_clusters_state.sh"
+          docker logs nse_dump > /tmp/cluster_state/nse_dump.txt
 
     - store_artifacts:
         path: /tmp/cluster_state
