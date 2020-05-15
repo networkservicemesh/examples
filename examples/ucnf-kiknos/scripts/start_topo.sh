@@ -20,6 +20,7 @@ KIND_LOAD=${KIND_LOAD:-true}
 PUSH_IMAGE=${PUSH_IMAGE:-false}
 AWS=${AWS:-false}
 DRY_RUN=${DRY_RUN:-false}
+NO_ISTIO=${NO_ISTIO:-false}
 
 pushd "$(dirname "${BASH_SOURCE[0]}")/../../../" || exit 1
 
@@ -49,6 +50,7 @@ Options:
   --delete              Delete the Kind clusters                                            env var: DELETE           - (Default: $DELETE)
   --aws                 Creates aws clusters (requires python >= v2.7 and eksctl v0.18.0)   env var: AWS              - (Default: $AWS)
   --dry_run             Display commands instead of executing them (useful for debugging)   env var: DRY_RUN          - (Default: $DRY_RUN)
+  --no_istio            Set if you do not want the istio service mesh to be deployed        env var: NO_ISTIO         - (Default: $ISTIO)
   --help -h             Help
 " >&2
 
@@ -99,7 +101,9 @@ for i in "$@"; do
   --dry_run)
     DRY_RUN=true
     ;;
-
+   --no_istio)
+    NO_ISTIO=true
+    ;;
   -h | --help)
     print_usage
     exit 0
@@ -264,15 +268,20 @@ performNSE "$CLUSTER2" $OPERATION --set strongswan.network.remoteAddr="$IP_ADDR"
   --set strongswan.network.localSubnet=172.31.23.0/24 \
   --set strongswan.network.remoteSubnet=172.31.22.0/24
 
-echo "# Executing '$OPERATION' on hello world pods"
-helm template ./examples/ucnf-kiknos/helm/vl3_hello --set nsm.serviceName="$SERVICE_NAME" | kubectl --context "$CLUSTER1" $OPERATION -f -
-helm template ./examples/ucnf-kiknos/helm/vl3_hello --set nsm.serviceName="$SERVICE_NAME" | kubectl --context "$CLUSTER2" $OPERATION -f -
-
-if [ "$OPERATION" == "apply" ]; then
-  kubectl --context "$CLUSTER1" wait -n default --timeout=150s --for condition=Ready --all pods -l app=icmp-responder &
-  kubectl --context "$CLUSTER2" wait -n default --timeout=150s --for condition=Ready --all pods -l app=icmp-responder &
-  wait
-  CLUSTER="$CLUSTER2" SERVICE_NAME="$SERVICE_NAME" bash ./examples/ucnf-kiknos/scripts/start_vpn.sh
+if [ "$NO_ISTIO" == "false" ]; then
+  echo "Installing Istio control plane"
+  kubectl --context "$CLUSTER1" apply -f ./examples/ucnf-kiknos/k8s/istio_cfg.yaml
+  sleep 2
+  kubectl --context "$CLUSTER1" wait -n istio-system --timeout=150s --for condition=Ready --all pods
+  rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+  ./examples/ucnf-kiknos/scripts/start_clients.sh --cluster1="$CLUSTER1" --cluster2="$CLUSTER2" --istio_client
+else
+  ./examples/ucnf-kiknos/scripts/start_clients.sh --cluster1="$CLUSTER1" --cluster2="$CLUSTER2"
 fi
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+
+sleep 2
+CLUSTER="$CLUSTER2" SERVICE_NAME="$SERVICE_NAME" ./examples/ucnf-kiknos/scripts/start_vpn.sh
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 

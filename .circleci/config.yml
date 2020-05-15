@@ -44,7 +44,7 @@ e2e-kind-test: &e2e-kind-test
         name: Install VPN components
         command: |
           docker run --name=nse_install --network=host -t kiknos_nse:latest \
-          bash -c "/go/src/github.com/networkservicemesh/examples/examples/ucnf-kiknos/scripts/kind_topo.sh --clusters_present --tag=${CIRCLE_SHA1}"
+          bash -c "/go/src/github.com/networkservicemesh/examples/examples/ucnf-kiknos/scripts/start_topo.sh --clusters_present --tag=${CIRCLE_SHA1}"
 
     - run:
         name: Run Direct VPN test

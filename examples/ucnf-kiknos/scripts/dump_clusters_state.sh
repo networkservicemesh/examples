@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # Topology information
-CLUSTER1=${CLUSTER1:-kind-cl1}
-CLUSTER2=${CLUSTER2:-kind-cl2}
+CLUSTER1=${CLUSTER1:-kiknos-demo-1}
+CLUSTER2=${CLUSTER2:-kiknos-demo-2}
 
 
 pushd "$(dirname "$0")/../../../"
@@ -53,8 +53,16 @@ function dump_addresses_of_endpoints() {
   echo "##################################### Dumping NSE interfaces for $cluster #########################################"
   for NSE in $(kubectl --context "$cluster" get pods -l networkservicemesh.io/impl=vpn-endpoint -o=name); do
     echo "--------------------------------------- NSE $NSE interfaces --------------------------------------------------"
-    echo " Addresses:"
+    echo "-------------------------------------------Addresses----------------------------------------------------------"
     kubectl --context "$cluster" exec -it "$NSE" -- vppctl show interf addr
+    echo "-------------------------------------------Interfaces---------------------------------------------------------"
+    kubectl --context "$cluster" exec -it "$NSE" -- vppctl show interf
+    echo "---------------------------------------------Mode-------------------------------------------------------------"
+    kubectl --context "$cluster" exec -it "$NSE" -- vppctl sh mode
+    echo "-------------------------------------------VxLan Tunnel-------------------------------------------------------"
+    kubectl --context "$cluster" exec -it "$NSE" -- vppctl sh vxlan tunnel
+    echo "----------------------------------------------Fib-------------------------------------------------------------"
+    kubectl --context "$cluster" exec -it "$NSE" -- vppctl sh ip fib
   done
 }
 

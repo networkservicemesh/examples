@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # Topology information
-CLUSTER1=${CLUSTER:-kind-cl1}
-CLUSTER2=${CLUSTER:-kind-cl2}
+CLUSTER1=${CLUSTER:-kiknos-demo-1}
+CLUSTER2=${CLUSTER:-kiknos-demo-2}
 SERVICE_NAME=${SERVICE_NAME:-icmp-responder}
 ISTIO_CLIENT=${ISTIO_CLIENT:-false}
 
