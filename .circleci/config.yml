@@ -25,12 +25,12 @@ e2e-kind-test: &e2e-kind-test
         name: Start KinD Clusters
         command: |
           mkdir -p kubeconfigs
-          kind create cluster --name cl1 --kubeconfig=kubeconfigs/config
-          kind create cluster --name cl2 --kubeconfig=kubeconfigs/config
+          kind create cluster --name kiknos-demo-1 --kubeconfig=kubeconfigs/config
+          kind create cluster --name kiknos-demo-2 --kubeconfig=kubeconfigs/config
     - run:
         name: Restore built images
         command: |
-          for cluster in cl1 cl2; do
+          for cluster in kiknos-demo-1 kiknos-demo-2; do
             kind load image-archive --name $cluster /go/src/_save/images.tar
           done
 
