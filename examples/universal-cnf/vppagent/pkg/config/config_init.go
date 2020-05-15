@@ -51,8 +51,8 @@ func NewProcessInitActions(backend UniversalCNFBackend, initactions []*Action,
 			labels := labelStringFromMap(c.Labels)
 
 			// Call the NS Client initiation
-			nsConfig.OutgoingNscName = c.Name
-			nsConfig.OutgoingNscLabels = labels
+			nsConfig.ClientNetworkService = c.Name
+			nsConfig.ClientLabels = labels
 			nsConfig.Routes = c.Routes
 
 			nsmClient, err = client.NewNSMClient(context.TODO(), nsConfig)

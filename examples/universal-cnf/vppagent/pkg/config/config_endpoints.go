@@ -54,14 +54,16 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint, nsc
 			ipPrefix = e.Ipam.PrefixPool
 		}
 		configuration := &common.NSConfiguration{
-			NsmServerSocket:    nsconfig.NsmServerSocket,
-			NsmClientSocket:    nsconfig.NsmClientSocket,
-			Workspace:          nsconfig.Workspace,
-			AdvertiseNseName:   e.Name,
-			OutgoingNscName:    nsconfig.OutgoingNscName,
-			AdvertiseNseLabels: labelStringFromMap(e.Labels),
-			MechanismType:      memif.MECHANISM,
-			IPAddress:          ipPrefix,
+			NsmServerSocket:        nsconfig.NsmServerSocket,
+			NsmClientSocket:        nsconfig.NsmClientSocket,
+			Workspace:              nsconfig.Workspace,
+			EndpointNetworkService: e.Name,
+			ClientNetworkService:   nsconfig.ClientNetworkService,
+			EndpointLabels:         labelStringFromMap(e.Labels),
+			ClientLabels:           nsconfig.ClientLabels,
+			MechanismType:          memif.MECHANISM,
+			IPAddress:              ipPrefix,
+			Routes:                 nil,
 		}
 
 		// Build the list of composites
@@ -76,11 +78,20 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*Endpoint, nsc
 		}
 
 		if e.Ipam != nil {
-			/*
-				compositeEndpoints = append(compositeEndpoints, endpoint.NewIpamEndpoint(&common.NSConfiguration{
-					IPAddress: e.Ipam.PrefixPool,
-				}))
-			*/
+		/*
+			compositeEndpoints = append(compositeEndpoints, endpoint.NewIpamEndpoint((&common.NSConfiguration{
+				NsmServerSocket:        nsconfig.NsmServerSocket,
+				NsmClientSocket:        nsconfig.NsmClientSocket,
+				Workspace:              nsconfig.Workspace,
+				EndpointNetworkService: nsconfig.EndpointNetworkService,
+				ClientNetworkService:   nsconfig.ClientNetworkService,
+				EndpointLabels:         nsconfig.EndpointLabels,
+				ClientLabels:           nsconfig.ClientLabels,
+				MechanismType:          nsconfig.MechanismType,
+				IPAddress:              e.Ipam.PrefixPool,
+				Routes:                 nil,
+			})))
+		*/
 
 			if len(e.Ipam.Routes) > 0 {
 				routeAddr := makeRouteMutator(e.Ipam.Routes)

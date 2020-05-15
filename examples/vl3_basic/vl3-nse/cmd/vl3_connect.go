@@ -197,7 +197,7 @@ func (vxc *vL3ConnectComposite) Request(ctx context.Context,
 				logger.Infof("vL3ConnectComposite found network service; processing endpoints")
 				go vxc.processNsEndpoints(context.TODO(), response, "")
 			}
-			vxc.nsmClient.Configuration.OutgoingNscName = req.NetworkServiceName
+			vxc.nsmClient.Configuration.ClientNetworkService = req.NetworkServiceName
 			logger.Infof("vL3ConnectComposite check remotes for endpoints")
 			for _, remoteIp := range vxc.remoteNsIpList {
 				req.NetworkServiceName = req.NetworkServiceName + "@" + remoteIp
@@ -315,7 +315,7 @@ func (vxc *vL3ConnectComposite) createPeerConnectionRequest(ctx context.Context,
 func (vxc *vL3ConnectComposite) performPeerConnectRequest(ctx context.Context, peer *vL3NsePeer, routes []string, dpconfig interface{}, logger logrus.FieldLogger) (*connection.Connection, error) {
 	/* expected to be called with peer.Lock() */
     ifName := peer.endpointName
-	vxc.nsmClient.OutgoingNscLabels[LABEL_NSESOURCE] = vxc.GetMyNseName()
+	vxc.nsmClient.ClientLabels[LABEL_NSESOURCE] = vxc.GetMyNseName()
 	conn, err := vxc.nsmClient.ConnectToEndpoint(ctx, peer.remoteIp, peer.endpointName, peer.networkServiceManagerName, ifName, memif.MECHANISM, "VPP interface "+ifName, routes)
 	if err != nil {
 		logger.Errorf("Error creating %s: %v", ifName, err)
@@ -459,12 +459,12 @@ func newVL3ConnectComposite(configuration *common.NSConfiguration, ipamCidr stri
 	*/
 	// Call the NS Client initiation
 	/* nsConfig := &common.NSConfiguration{
-		OutgoingNscName:   configuration.AdvertiseNseName,
-		OutgoingNscLabels: "",
+		ClientNetworkService:   configuration.EndpointNetworkService,
+		ClientLabels: "",
 		Routes:            configuration.Routes,
 	} */
 	nsConfig := configuration
-	nsConfig.OutgoingNscLabels = ""
+	nsConfig.ClientLabels = ""
 	var nsmClient *client.NsmClient
 	nsmClient, err = client.NewNSMClient(context.TODO(), nsConfig)
 	if err != nil {

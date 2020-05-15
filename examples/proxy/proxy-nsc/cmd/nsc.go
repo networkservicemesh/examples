@@ -54,16 +54,16 @@ func nsmDirector(req *http.Request) {
 	defer state.Unlock()
 
 	// Convert the request headers to labels
-	state.client.OutgoingNscLabels = make(map[string]string)
+	state.client.ClientLabels = make(map[string]string)
 
 	// Ensure we always label ourselves as `app=proxy`
-	state.client.OutgoingNscLabels["app"] = "proxy"
+	state.client.ClientLabels["app"] = "proxy"
 
 	for name, headers := range req.Header {
 		name = strings.ToLower(name)
 		if strings.HasPrefix(name, proxyHeaderPrefix) {
 			name = strings.TrimPrefix(name, proxyHeaderPrefix)
-			state.client.OutgoingNscLabels[name] = strings.ToLower(headers[0])
+			state.client.ClientLabels[name] = strings.ToLower(headers[0])
 		}
 	}
 
