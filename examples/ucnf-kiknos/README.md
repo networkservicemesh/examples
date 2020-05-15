@@ -5,14 +5,18 @@ This replaces the VPP agent in the universal-cnf with the Kiknos VPP aio-agent
 # Prerequisites
 You first need to clone the [Network Service Mesh repo](https://github.com/networkservicemesh/networkservicemesh)
 - Please follow the instructions on where the NSM project should be in the [Examples README.md](../../README.md)
-
-# Versions
-The script has been tested with the following versions
-- kind v0.7.x
-- helm v2.16.x
-- kubectl v1.17.x - v.18.x
-- kubernetes version v1.17.x
+- helm v2.16.3
+- kubectl v1.18.2
 - NSM version 0.2.0
+
+##### Kind deployment
+- kind v0.7.0 
+
+##### AWS deployment
+- aws-cli v2.0.11
+- eksctl v0.18.0
+- python >= 2.7
+
  
  # Scenarios
  ## 1. Direct connection between workloads and NSE
@@ -29,6 +33,7 @@ The script has been tested with the following versions
  
 # Testing
 
+> :warning: **For the current version build image are available only with `ORG=vladcodaniel` env **
 ## Deploy the environment
 Run the following script from the repository top directory as so:
 ```bash
@@ -70,6 +75,9 @@ Options:
   --clean               Removes the NSEs and Clients from the clusters                      env var: CLEAN            - (Default: false)
   --delete              Delete the Kind clusters                                            env var: DELETE           - (Default: false)
 
+- deploy on aws `make kiknos-aws`
+- deploy on kind `make kiknos-kind`
+- test connectivity `make kiknos-test-conn` 
 ```
 ## Check connectivity between workloads (Scenario 1)
 In order to check the connectivity between worker pods run the following script:
