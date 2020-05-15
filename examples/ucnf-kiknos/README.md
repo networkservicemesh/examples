@@ -4,15 +4,19 @@ This replaces the VPP agent in the universal-cnf with the Kiknos VPP aio-agent
 
 # Prerequisites
 You first need to clone the [Network Service Mesh repo](https://github.com/networkservicemesh/networkservicemesh)
-- Please follow the instructions on where the NSM project should be in the [Examples README.md](../../README.md)
+Please follow the instructions on where the NSM project should be in the [Examples README.md](../../README.md)
 
-# Versions
-The script has been tested with the following versions
-- kind v0.7.x
-- helm v2.16.x
-- kubectl v1.17.x - v.18.x
-- kubernetes version v1.17.x
-- NSM version 0.2.0
+- helm v2.16.3
+- kubectl v1.18.2
+
+##### Kind deployment
+- kind v0.7.0 
+
+##### AWS deployment
+- aws-cli v2.0.11
+- eksctl v0.18.0
+- python >= 2.7
+
  
  # Scenarios
  ## 1. Direct connection between workloads and NSE
@@ -29,13 +33,23 @@ The script has been tested with the following versions
  
 # Testing
 
+> :warning: **For the current version build image are available only with `ORG=vladcodaniel` env **
 ## Deploy the environment
-Run the following script from the repository top directory as so:
+
+* Deploy kind environment:
 ```bash
-./examples/ucnf-kiknos/scripts/kind_topo.sh
+make kiknos-kind
 ```
-This script:
-* Starts 2 kind clusters
+* Deploy on aws:
+```bash
+make kiknos-aws
+```
+Both make targets use the script:
+```bash
+./examples/ucnf-kiknos/scripts/start_topo.sh
+```
+This make target performs the following actions:
+* Starts 2 clusters
 * Installs NSM in both clusters
 * Deploys the kiknos NSEs on both clusters:
     * In one of the clusters it will act as a VPN client
@@ -69,17 +83,35 @@ Options:
   --no_istio            Set if you do not want the istio service mesh to be deployed        env var: NO_ISTIO         - (Default: )
   --clean               Removes the NSEs and Clients from the clusters                      env var: CLEAN            - (Default: false)
   --delete              Delete the Kind clusters                                            env var: DELETE           - (Default: false)
-
 ```
 ## Check connectivity between workloads (Scenario 1)
-In order to check the connectivity between worker pods run the following script:
+In order to check the connectivity between worker pods run the following make target:
+```bash
+make kiknos-test-conn
+```
+Alternatively use the script:
 ```
 ./examples/ucnf-kiknos/scripts/test_vpn_conn.sh
 ```
 This will attempt to perform `curl` commands from the workers in the VPN Gateway cluster to the workers in the VPN client cluster directly.
 
+Output:
+```bash
+CLUSTER1=kiknos-demo-1 CLUSTER2=kiknos-demo-2 /home/mihai/go/src/github.com/networkservicemesh/examples/examples/ucnf-kiknos/scripts/test_vpn_conn.sh
+Detected pod with nsm interface ip: 172.31.22.5
+Detected pod with nsm interface ip: 172.31.22.1
+Hello version: v1, instance: helloworld-ucnf-client-7bd94648d-d2gbh 
+Hello version: v1, instance: helloworld-ucnf-client-7bd94648d-nksbm
+Hello version: v1, instance: helloworld-ucnf-client-7bd94648d-d2gbh
+Hello version: v1, instance: helloworld-ucnf-client-7bd94648d-nksbm
+```
+
 ## Check connectivity to workloads through the Istio gateway (Scenario 2)
-In order to check the connectivity to workloads through the Istio gateway run the following script:
+In order to check the connectivity to workloads through the Istio gateway run the following make target:
+```sh
+make kiknos-test-istio-conn
+```
+Alternatively use the script:
 ```sh
 ./examples/ucnf-kiknos/scripts/test_istio_vpn_conn.sh
 ```
@@ -90,19 +122,53 @@ between workloads by specifying different ports or URL paths.
 In our current example, we deploy 2 services, and expose each service twice. In all cases, the request goes through the
 IP address of the Ingress gateway that was supplied by the NSE.
 
+Output:
+```sh
+CLUSTER1=kiknos-demo-1 CLUSTER2=kiknos-demo-2 /home/mihai/go/src/github.com/networkservicemesh/examples/examples/ucnf-kiknos/scripts/test_istio_vpn_conn.sh
+Detected pod with nsm interface ip: 172.31.22.9
+------------------------- Source pod/helloworld-ucnf-client-7bd94648d-2t7zj -------------------------
+Connecting to: http://172.31.22.9/hello
+Hello version: v1, instance: icmp-responder-v1-88bcb54bf-vt8jv
+Connecting to: http://172.31.22.9/hello-v2
+Hello version: v2, instance: icmp-responder-v2-7474975c44-mwflt
+Connecting to: http://172.31.22.9:8000/hello
+Hello version: v1, instance: icmp-responder-v1-88bcb54bf-vt8jv
+Connecting to: http://172.31.22.9:8000/hello-v2
+Hello version: v2, instance: icmp-responder-v2-7474975c44-mwflt
+-----------------------------------------------------------------------------------------------------
+------------------------- Source pod/helloworld-ucnf-client-7bd94648d-vl5nn -------------------------
+Connecting to: http://172.31.22.9/hello
+Hello version: v1, instance: icmp-responder-v1-88bcb54bf-vt8jv
+Connecting to: http://172.31.22.9/hello-v2
+Hello version: v2, instance: icmp-responder-v2-7474975c44-mwflt
+Connecting to: http://172.31.22.9:8000/hello
+Hello version: v1, instance: icmp-responder-v1-88bcb54bf-vt8jv
+Connecting to: http://172.31.22.9:8000/hello-v2
+Hello version: v2, instance: icmp-responder-v2-7474975c44-mwflt
+-----------------------------------------------------------------------------------------------------
+
+```
 ## Dumping the state of the cluster
-This will excute a script that will give you information about the health of the system.
-You will find:
-- state of the meaningful pods in the system
-- state of the NSM provisioned interfaces
+In order to dump the clusters state run the following make target:
+
+```bash
+make kiknos-dump-clusters-state
+```
+
+Alternatively run the script:
 ```sh
 ./examples/ucnf-kiknos/scripts/dump_clusters_state.sh
-``` 
+```
+
+This will give you information regarding:
+- state of the meaningful pods in the system
+- state of the NSM provisioned interfaces
+ 
 
 # Cleanup
 The following command will delete the kind clusters.
 
-`./examples/ucnf-kiknos/scripts/kind_topo.sh --delete`
+`./examples/ucnf-kiknos/scripts/start_topo.sh --delete`
 
 # Known issues
 These issues require further investigation:

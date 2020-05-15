@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-CLUSTER1=${CLUSTER1:-kind-cl1}
-CLUSTER2=${CLUSTER2:-kind-cl2}
+CLUSTER1=${CLUSTER1:-kiknos-demo-1}
+CLUSTER2=${CLUSTER2:-kiknos-demo-2}
 
 function curl_to() {
   local cluster=$1; shift
