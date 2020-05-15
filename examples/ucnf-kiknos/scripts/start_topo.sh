@@ -168,8 +168,6 @@ else
 
     echo "# Start kind clusters: $cluster"
     kind create cluster --name "$cluster"
-
-    kubectl config rename-context "kind-$cluster" "$cluster"
   }
 fi
 
@@ -228,6 +226,10 @@ if [ "$CLUSTERS_PRESENT" == "false" ]; then
     startCluster "$cluster"
   done
 fi
+
+for cluster in "$CLUSTER1" "$CLUSTER2"; do
+    kubectl config rename-context "kind-$cluster" "$cluster"
+done
 
 if [ "$NSM_INSTALLED" == "false" ]; then
   for cluster in "$CLUSTER1" "$CLUSTER2"; do
