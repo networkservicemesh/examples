@@ -61,8 +61,23 @@ function dump_addresses_of_endpoints() {
     kubectl --context "$cluster" exec -it "$NSE" -- vppctl sh mode
     echo "-------------------------------------------VxLan Tunnel-------------------------------------------------------"
     kubectl --context "$cluster" exec -it "$NSE" -- vppctl sh vxlan tunnel
-    echo "----------------------------------------------Fib-------------------------------------------------------------"
-    kubectl --context "$cluster" exec -it "$NSE" -- vppctl sh ip fib
+    echo "-------------------------------------------IpIP Tunnel--------------------------------------------------------"
+    kubectl --context "$cluster" exec -it "$NSE" -- vppctl sh ipip tunnel
+    echo "--------------------------------------------Ip Sec Sa---------------------------------------------------------"
+    kubectl --context "$cluster" exec -it "$NSE" -- vppctl sh ipsec sa
+    echo "--------------------------------------------Ip Sec Sa 0-------------------------------------------------------"
+    kubectl --context "$cluster" exec -it "$NSE" -- vppctl sh ipsec sa 0
+    echo "--------------------------------------------Ip Sec Sa 1-------------------------------------------------------"
+    kubectl --context "$cluster" exec -it "$NSE" -- vppctl sh ipsec sa 1
+    echo "--------------------------------------------Ip Sec Protect----------------------------------------------------"
+    kubectl --context "$cluster" exec -it "$NSE" -- vppctl sh ipsec sa
+    echo "--------------------------------------------Crypto Engines----------------------------------------------------"
+    kubectl --context "$cluster" exec -it "$NSE" -- vppctl sh crypto engines
+    echo "--------------------------------------------Crypto Handlers---------------------------------------------------"
+    kubectl --context "$cluster" exec -it "$NSE" -- vppctl sh crypto handlers
+    echo "--------------------------------------------Vpp Log-----------------------------------------------------------"
+    kubectl --context "$cluster" exec -it "$NSE" -- vppctl sh log
+
   done
 }
 
