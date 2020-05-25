@@ -99,4 +99,4 @@ data:
           defaultPrefixPool: {{ .Values.ipam.prefixPool | quote }}
           prefixLength: 2
           routes: []
-       ifname: "endpoint0"
+       ifName: "endpoint0"

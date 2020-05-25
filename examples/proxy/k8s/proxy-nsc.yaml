@@ -20,7 +20,7 @@ spec:
           image: networkservicemesh/proxy-proxy-nsc:latest
           imagePullPolicy: IfNotPresent
           env:
-            - name: OUTGOING_NSC_NAME
+            - name: CLIENT_NETWORK_SERVICE
               value: "web-service"
             - name: PROXY_HOST
               value: "0.0.0.0:8080"

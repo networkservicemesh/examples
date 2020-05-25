@@ -459,8 +459,8 @@ func newVL3ConnectComposite(configuration *common.NSConfiguration, ipamCidr stri
 	*/
 	// Call the NS Client initiation
 	/* nsConfig := &common.NSConfiguration{
-		OutgoingNscName:   configuration.AdvertiseNseName,
-		OutgoingNscLabels: "",
+		ClientNetworkService:   configuration.EndpointNetworkService,
+		ClientLabels: "",
 		Routes:            configuration.Routes,
 	} */
 	nsConfig := configuration
