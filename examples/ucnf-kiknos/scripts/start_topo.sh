@@ -256,7 +256,7 @@ if [ "$BUILD_IMAGE" == "true" ]; then
 fi
 
 performNSE "$CLUSTER1" $OPERATION --set strongswan.network.localSubnet=172.31.22.0/24 \
-  --set strongswan.network.remoteSubnet=172.31.23.0/24
+  --set strongswan.network.remoteSubnets="{172.31.23.0/24,172.31.100.0/24}"
 
 echo "# Retrieving IP and MAC addr of interface"
 INTERFACE="global eth0"
@@ -268,7 +268,7 @@ IP_ADDR=$(kubectl --context "$CLUSTER1" exec -it "$POD_NAME" -- ip addr | grep "
 
 performNSE "$CLUSTER2" $OPERATION --set strongswan.network.remoteAddr="$IP_ADDR" \
   --set strongswan.network.localSubnet=172.31.23.0/24 \
-  --set strongswan.network.remoteSubnet=172.31.22.0/24
+  --set strongswan.network.remoteSubnets="{172.31.22.0/24}"
 
 if [ "$NO_ISTIO" == "false" ]; then
   echo "Installing Istio control plane"
