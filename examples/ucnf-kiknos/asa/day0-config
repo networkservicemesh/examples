@@ -1,0 +1,48 @@
+interface management0/0
+nameif management
+ security-level 100
+ ip address 192.168.1.2 255.255.255.0
+ no shutdown
+interface gigabitethernet0/0
+ nameif inside
+ security-level 100
+ ip address 172.31.100.2 255.255.255.0
+ no shutdown
+interface gigabitethernet0/1
+ nameif outside
+ security-level 0
+ ip address 198.51.100.2 255.255.255.0
+ no shutdown
+route outside 0.0.0.0 0.0.0.0 198.51.100.10
+dns domain-lookup outside
+dns server-group DefaultDNS
+ name-server 8.8.8.8
+http server enable
+http 192.168.1.0 255.255.255.0 management
+crypto key generate rsa modulus 1024
+username cisco password cisco123
+ssh 192.168.1.0 255.255.255.0 management
+ssh version 2
+ssh key-exchange group dh-group14-sha1
+aaa authentication ssh console LOCAL
+access-list ikev2-list extended permit ip 172.31.100.0 255.255.255.0 172.31.22.0 255.255.255.0
+route outside 172.17.0.0 255.255.0.0 198.51.100.10 1
+crypto ipsec ikev2 ipsec-proposal ikev2-proposal
+ protocol esp encryption aes
+ protocol esp integrity sha-1
+crypto map ikev2-map 1 match address ikev2-list
+crypto map ikev2-map 1 set peer 172.17.0.2 
+crypto map ikev2-map 1 set ikev2 ipsec-proposal ikev2-proposal
+crypto map ikev2-map interface outside
+crypto ikev2 policy 1
+ encryption aes-256
+ integrity sha
+ group 14     
+ prf sha
+ lifetime seconds 86400
+crypto ikev2 enable outside
+tunnel-group 172.17.0.2 type ipsec-l2l
+tunnel-group 172.17.0.2 ipsec-attributes
+ ikev2 remote-authentication pre-shared-key Vpp123
+ ikev2 local-authentication pre-shared-key Vpp123
+

@@ -24,7 +24,7 @@ data:
         children {
           responder {
             local_ts = {{ .Values.strongswan.network.localSubnet }}
-            remote_ts = {{ .Values.strongswan.network.remoteSubnet }}
+            remote_ts = {{ join "," .Values.strongswan.network.remoteSubnets }}
             mode = tunnel
             esp_proposals = aes128-sha1
           }

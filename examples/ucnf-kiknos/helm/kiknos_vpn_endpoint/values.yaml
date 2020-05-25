@@ -94,7 +94,9 @@ strongswan:
       publicKeyFile: secrets-pub.pem
   network:
     localSubnet: 172.31.22.0/24
-    remoteSubnet: 172.31.23.0/24
+    # remoteSubnets is an array of remote subnets
+    remoteSubnets:
+      - 172.31.23.0/24
     # remoteAddr needs to be configured if this Kiknos instance should initiate the connection
     remoteAddr:
 

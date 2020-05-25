@@ -1,0 +1,8 @@
+<network>
+ <name>virbr3</name>
+<!-- <forward dev='docker0' mode='route'/>-->
+ <forward mode='nat'/>
+ <bridge name='virbr3' stp='on' delay='0' />
+ <mac address='52:54:00:05:6e:02' />
+ <ip address='198.51.100.10' netmask='255.255.255.0' />
+</network>
