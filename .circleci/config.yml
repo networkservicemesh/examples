@@ -39,7 +39,7 @@ e2e-kind-test: &e2e-kind-test
         name: Build vl3 runner container
         working_directory: /go/src/github.com/networkservicemesh/examples/examples/vl3_basic/ci/runner
         command: |
-          docker build --build-arg vl3_branch=${CIRCLE_SHA1:-master} -t vl3-runner:latest -f Dockerfile.runner .
+          docker build --build-arg vl3_branch=${CIRCLE_SHA1:-master} --build-arg nsm_branch=v0.2.0-vl3 -t vl3-runner:latest -f Dockerfile.runner .
 
     - run:
         name: Run vl3 test
@@ -73,7 +73,7 @@ jobs:
           command: |
             git clone https://github.com/tiswanso/networkservicemesh.git
             cd networkservicemesh
-            git checkout vl3_api_rebase
+            git checkout v0.2.0-vl3
       - run:
           name: Build docker images
           working_directory: /go/src/github.com/networkservicemesh/examples

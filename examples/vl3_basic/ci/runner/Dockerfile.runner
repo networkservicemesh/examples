@@ -4,7 +4,7 @@ ARG  vl3_repo=https://github.com/tiswanso/examples.git
 # set this to branch or $CIRCLE_SHA1
 ARG  vl3_branch=master
 ARG  nsm_repo=https://github.com/tiswanso/networkservicemesh.git
-ARG  nsm_branch=vl3_api_rebase
+ARG  nsm_branch=vl3_latest
 
 RUN  git clone $vl3_repo /go/src/github.com/networkservicemesh/examples && \
      cd /go/src/github.com/networkservicemesh/examples && \
