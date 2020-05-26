@@ -29,7 +29,7 @@ replace (
 	github.com/networkservicemesh/networkservicemesh/controlplane/api => github.com/networkservicemesh/networkservicemesh/controlplane/api v0.0.0-20200513050041-9a17692e4a5b
 	github.com/networkservicemesh/networkservicemesh/forwarder/api => github.com/networkservicemesh/networkservicemesh/forwarder/api v0.0.0-20200513050041-9a17692e4a5b
 	github.com/networkservicemesh/networkservicemesh/pkg => github.com/networkservicemesh/networkservicemesh/pkg v0.0.0-20200513050041-9a17692e4a5b
-	github.com/networkservicemesh/networkservicemesh/sdk => ../networkservicemesh/sdk
+	github.com/networkservicemesh/networkservicemesh/sdk => github.com/tiswanso/networkservicemesh/sdk v0.2.0-vl3
 	github.com/networkservicemesh/networkservicemesh/utils => github.com/networkservicemesh/networkservicemesh/utils v0.0.0-20200513050041-9a17692e4a5b
 )
 
