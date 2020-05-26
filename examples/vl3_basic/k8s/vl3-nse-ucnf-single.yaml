@@ -19,9 +19,9 @@ spec:
           image: tiswanso/vl3_ucnf-vl3-nse:unified_api
           imagePullPolicy: Always
           env:
-            - name: ADVERTISE_NSE_NAME
+            - name: ENDPOINT_NETWORK_SERVICE
               value: "vl3-service"
-            - name: ADVERTISE_NSE_LABELS
+            - name: ENDPOINT_LABELS
               value: "app=vl3-nse-ucnf"
             - name: TRACER_ENABLED
               value: "true"

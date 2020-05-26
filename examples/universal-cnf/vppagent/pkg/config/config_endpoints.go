@@ -51,14 +51,16 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*nseconfig.End
 	for _, e := range endpoints {
 
 		configuration := &common.NSConfiguration{
-			NsmServerSocket:    nsconfig.NsmServerSocket,
-			NsmClientSocket:    nsconfig.NsmClientSocket,
-			Workspace:          nsconfig.Workspace,
-			AdvertiseNseName:   e.Name,
-			OutgoingNscName:    nsconfig.OutgoingNscName,
-			AdvertiseNseLabels: labelStringFromMap(e.Labels),
-			MechanismType:      memif.MECHANISM,
-			IPAddress:          e.VL3.IPAM.PrefixPool,
+			NsmServerSocket:        nsconfig.NsmServerSocket,
+			NsmClientSocket:        nsconfig.NsmClientSocket,
+			Workspace:              nsconfig.Workspace,
+			EndpointNetworkService: e.Name,
+			ClientNetworkService:   nsconfig.ClientNetworkService,
+			EndpointLabels:         labelStringFromMap(e.Labels),
+			ClientLabels:           nsconfig.ClientLabels,
+			MechanismType:          memif.MECHANISM,
+			IPAddress:              e.VL3.IPAM.DefaultPrefixPool,
+			Routes:                 nil,
 		}
 
 		// Build the list of composites
