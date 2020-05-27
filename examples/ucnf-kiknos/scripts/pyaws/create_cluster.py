@@ -1,9 +1,12 @@
 import argparse
 import json
 import logging
-import re
 import subprocess
 import sys
+
+from eks import AwsCluster
+from shell import run_out, run_in
+from utils import reduce_subnets, get_current_region
 
 logging.basicConfig()
 LOG = logging.getLogger(__name__)
@@ -12,75 +15,8 @@ LOG.setLevel(logging.DEBUG)
 DEFAULT_CIDR_BLOCK = "192.168.0.0/16"
 
 
-def push(mp, key, val):
-    mp[key] = val
-    return mp
-
-
-def reduce_subnets(subnets):
-    return reduce(lambda cum, sub: push(cum, sub['AvailabilityZone'], {'id': sub['SubnetId']}),
-                  subnets, {})
-
-
-def run_in(*cmd, **data):
-    p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
-    json.dump(data, p.stdin)
-    p.communicate()
-    if p.returncode > 0:
-        raise subprocess.CalledProcessError(p.returncode, cmd)
-
-
-def run_out(*cmd):
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    data = json.load(p.stdout)
-    p.communicate()
-    if p.returncode > 0:
-        raise subprocess.CalledProcessError(p.returncode, cmd)
-    return data
-
-
-def get_current_region():
-    return subprocess.check_output(["aws", "configure", "get", "default.region"]).decode().rstrip()
-
-
 def create_cluster(data):
     run_in("eksctl", "create", "cluster", "-f", "-", **data)
-
-
-class AwsCluster(object):
-    def __init__(self, cluster_name, region):
-        self.name = cluster_name
-        self.region = region
-        self.clusterInfo = self.get_cluster_info()
-
-    def get_security_group_id(self):
-        sgs = self.clusterInfo['cluster']['resourcesVpcConfig']['securityGroupIds']
-
-        if len(sgs) < 1:
-            raise Exception("cluster doesn't have any security groups, please make sure that you have active security "
-                            "groups enabled on your cluster")
-        return sgs[0]
-
-    def get_cluster_info(self):
-        return run_out("aws", "eks", "describe-cluster", "--name", self.name, "--region", self.region, "--output",
-                       "json")
-
-    def get_subnets_by_ids(self):
-        return run_out("aws", "ec2", "describe-subnets", "--region", self.region, "--subnet-ids",
-                       *self.clusterInfo['cluster']['resourcesVpcConfig']['subnetIds'])
-
-    def get_vpcid(self):
-        return self.clusterInfo['cluster']['resourcesVpcConfig']['vpcId']
-
-    def get_subnets(self, name):
-        return reduce(lambda cum, sub:
-                      reduce(lambda tag_cum, tag:
-                             tag_cum + [sub] if tag['Key'] == "Name" and bool(re.search(name, tag['Value']))
-                             else tag_cum,
-                             sub['Tags'],
-                             []) + cum if sub['Tags'] else cum,
-                      self.get_subnets_by_ids()['Subnets'],
-                      [])
 
 
 def generate_cluster_cfg(name, region, cidr, vpcid, private, public):

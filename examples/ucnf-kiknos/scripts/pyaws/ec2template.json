@@ -1,0 +1,55 @@
+{
+  "Instances": [
+    {
+      "Monitoring": {
+        "State": "disabled"
+      },
+      "ProductCodes": [],
+      "VpcId": "vpc-0ff0ddc536c1e4005",
+      "CpuOptions": {
+        "CoreCount": 1,
+        "ThreadsPerCore": 2
+      },
+      "ImageId": "ami-0fe62e1a9161ec45e",
+      "KeyName": "mihai-asa",
+      "ClientToken": "",
+      "SubnetId": "subnet-00c1dd7ac65e8b7ee",
+      "InstanceType": "c4.large",
+      "CapacityReservationSpecification": {
+        "CapacityReservationPreference": "open"
+      },
+      "NetworkInterfaces": [
+        {
+          "VpcId": "vpc-0ff0ddc536c1e4005",
+          "Description": "asa-inside",
+          "InterfaceType": "interface",
+          "SubnetId": "subnet-062d68b6adb3cecdf"
+        },
+        {
+          "VpcId": "vpc-0ff0ddc536c1e4005",
+          "InterfaceType": "interface",
+          "OwnerId": "738304443349",
+          "SubnetId": "subnet-062d68b6adb3cecdf"
+        },
+        {
+          "VpcId": "vpc-0ff0ddc536c1e4005",
+          "Description": "Primary network interface",
+          "NetworkInterfaceId": "eni-001bb04feaf13ff6f",
+          "InterfaceType": "interface",
+          "SubnetId": "subnet-00c1dd7ac65e8b7ee"
+        }
+      ],
+      "Placement": {
+        "Tenancy": "default",
+        "GroupName": "",
+        "AvailabilityZone": "us-east-2c"
+      },
+      "Tags": [
+        {
+          "Value": "temp-asa-templ",
+          "Key": "Name"
+        }
+      ]
+    }
+  ]
+}
