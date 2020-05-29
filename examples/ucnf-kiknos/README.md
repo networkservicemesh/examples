@@ -58,6 +58,10 @@ This make target performs the following actions:
 * Deploys worker pods as NSC in both clusters
 * Deploys the Istio ingress gateway as a NSC in the VPN client cluster
 * Deploys two pods that will be exposed through an Istio virtual service to the ingress gateway.
+>Note: Only the AWS target will perform the following steps
+* Deploys an ASAv and Ubuntu EC2 instances to act as Kiknos clients. The Ubuntu client needs to be manually configured.
+
+>Note: Make sure to check the deletion of items in AWS as they can sometimes be redeployed
 
 For more script options use `--help`:
 ```bash
@@ -148,6 +152,13 @@ Hello version: v2, instance: icmp-responder-v2-7474975c44-mwflt
 -----------------------------------------------------------------------------------------------------
 
 ```
+## AWS ASA Deployment
+
+When using the `make kiknos-aws` target, an ASAv and an Ubuntu client are deployed in AWS. 
+Then an additional IPSec tunnel gets created which connects to the Kiknos deployment.
+
+The ASA uses a [day0](./scripts/day0.txt) configuration in order to be able to create the IPSec tunnel.
+
 ## Dumping the state of the cluster
 In order to dump the clusters state run the following make target:
 
