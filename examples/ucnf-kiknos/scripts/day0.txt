@@ -1,0 +1,48 @@
+interface management0/0
+ management-only
+ nameif management
+ security-level 100
+ ip address dhcp setroute
+ no shut
+!
+interface GigabitEthernet0/0
+ nameif outside
+ security-level 0
+ ip address dhcp setroute 
+ no shutdown
+!
+interface GigabitEthernet0/1
+ nameif inside
+ security-level 100
+ ip address dhcp setroute
+ no shutdown
+!
+same-security-traffic permit inter-interface
+same-security-traffic permit intra-interface
+!
+crypto key generate rsa modulus 2048
+ssh 0 0 management
+ssh timeout 30
+username admin nopassword privilege 15
+username admin attributes
+service-type admin
+!
+access-list ikev2-list extended permit ip <HOST_NETWORK> 255.255.255.0 172.31.22.0 255.255.255.0
+crypto ipsec ikev2 ipsec-proposal ikev2-proposal                                                                                                                                                              
+ protocol esp encryption aes                                                                                                                                                                                  
+ protocol esp integrity sha-1                                                                                                                                                                                 
+crypto map ikev2-map 1 match address ikev2-list
+crypto map ikev2-map 1 set peer <PEER_CONNECT_IP>
+crypto map ikev2-map 1 set ikev2 ipsec-proposal ikev2-proposal
+crypto map ikev2-map interface outside
+crypto ikev2 policy 1
+ encryption aes-256
+ integrity sha
+ group 14     
+ prf sha
+ lifetime seconds 86400
+crypto ikev2 enable outside
+tunnel-group <PEER_CONNECT_IP> type ipsec-l2l
+tunnel-group <PEER_CONNECT_IP> ipsec-attributes
+ ikev2 remote-authentication pre-shared-key Vpp123
+ ikev2 local-authentication pre-shared-key Vpp123
