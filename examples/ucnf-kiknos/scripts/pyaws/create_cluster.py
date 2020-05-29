@@ -1,16 +1,11 @@
 import argparse
 import json
-import logging
 import subprocess
 import sys
 
 from eks import AwsCluster
 from shell import run_out, run_in
 from utils import reduce_subnets, get_current_region
-
-logging.basicConfig()
-LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 DEFAULT_CIDR_BLOCK = "192.168.0.0/16"
 
@@ -79,7 +74,6 @@ def open_security_groups(cluster_name, region):
     subprocess.check_call(
         ["aws", "ec2", "authorize-security-group-ingress", "--group-id", sg[0]['GroupId'], "--protocol", "-1",
          "--port", "-1", "--cidr", "0.0.0.0/0", "--region", region])
-
 
 def main():
     parser = argparse.ArgumentParser(description='Utility for dealing with AWS clusters')
