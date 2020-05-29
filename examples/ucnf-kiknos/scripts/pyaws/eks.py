@@ -10,18 +10,22 @@ class AwsCluster(object):
         self.clusterInfo = self.get_cluster_info()
 
     def get_security_group_id(self):
-        sgs = self.clusterInfo['cluster']['resourcesVpcConfig']['securityGroupIds']
+        res = run_out("aws", "ec2", "describe-security-groups",
+                      "--region", self.region, "--filters",
+                      "Name=tag:aws:cloudformation:logical-id,Values=SG",
+                      "Name=tag:alpha.eksctl.io/cluster-name,Values=" + self.name)
 
+        sgs = res['SecurityGroups']
         if len(sgs) < 1:
-            raise Exception("cluster doesn't have any security groups, please make sure that you have active security "
-                            "groups enabled on your cluster")
-        return sgs[0]
+            raise Exception("no security group found for cluster {0} nodegroup".format(self.name))
+        return sgs[0]["GroupId"]
 
     def get_cluster_info(self):
         return run_out("aws", "eks", "describe-cluster", name=self.name, region=self.region, output="json")
 
     def get_subnets_by_ids(self):
-        return run_out("aws", "ec2", "describe-subnets", "--subnet-ids", *self.clusterInfo['cluster']['resourcesVpcConfig']['subnetIds'],
+        return run_out("aws", "ec2", "describe-subnets", "--subnet-ids",
+                       *self.clusterInfo['cluster']['resourcesVpcConfig']['subnetIds'],
                        region=self.region)
 
     def get_vpcid(self):
