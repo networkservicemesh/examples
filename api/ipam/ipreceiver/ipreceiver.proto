@@ -1,0 +1,27 @@
+
+syntax = "proto3";
+
+import "github.com/networkservicemesh/examples/api/ipam/ipprovider/ipprovider.proto";
+
+package ippool;
+option go_package = "ipreceiver";
+
+
+
+service PrefixRangeAllocator {
+    rpc AssignRange (IpRange) returns (Empty) {}
+    rpc UnassignRange (IpRange) returns (Empty) {}
+}
+
+message IpRange {
+    RangeIdentifier identifier = 1;
+    IpPrefix prefix = 2;
+}
+
+
+message RangeIdentifier {
+    string fqdn = 1;
+    string connectivity_domain = 3;
+}
+
+

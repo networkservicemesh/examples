@@ -1,0 +1,48 @@
+
+syntax = "proto3";
+
+
+package ippool;
+option go_package = "ipprovider";
+
+
+
+service Allocator {
+    rpc AllocateSubnet (SubnetRequest) returns (Subnet) {} // Request a new subnet from the server
+    rpc FreeSubnet (Subnet) returns (Empty) {} // Communicate to the server that you will no longer use this subnet so it can be reallocated
+    rpc RenewSubnetLease (Subnet) returns (Subnet) {} // Update the lease for the given subnet. If not done, subnet will be returned to the free pool
+}
+
+message IpFamily {
+    enum Family {
+        IPV4 = 0;
+        IPV6 = 1;
+    }
+    Family family = 1;
+}
+
+message SubnetRequest {
+    Identifier identifier = 1;
+    IpFamily addr_family = 2;
+    uint32 prefix_len = 3;
+}
+
+
+message Subnet {
+    Identifier identifier = 1;
+    IpPrefix prefix = 2;
+    int32 lease_timeout = 3; // Amount of time a lease can be held without an update in hours
+}
+
+message IpPrefix {
+    IpFamily addr_family = 1;
+    string subnet = 2;
+}
+
+message Identifier {
+    string fqdn = 1;
+    string name = 2;
+    string connectivity_domain = 3;
+}
+
+message Empty{}
