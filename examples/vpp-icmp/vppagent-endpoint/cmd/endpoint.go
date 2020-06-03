@@ -47,6 +47,8 @@ func main() {
 		logrus.Panicf("%v", err)
 	}
 
+	logrus.Infof(">>>>>>>>>>> Starting the Endpoint")
+
 	if err := nsmEndpoint.Start(); err != nil {
 		logrus.Panicf("Error starting the endpoint: %v", err)
 	}

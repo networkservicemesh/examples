@@ -21,11 +21,11 @@ import (
 	"os/exec"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/ligato/vpp-agent/api/models/vpp"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection/mechanisms/memif"
 	"github.com/networkservicemesh/networkservicemesh/sdk/client"
 	"github.com/sirupsen/logrus"
+	"go.ligato.io/vpp-agent/v3/proto/ligato/vpp"
 	"gopkg.in/yaml.v2"
 )
 
@@ -110,11 +110,11 @@ type IPAM struct {
 
 // Endpoint is a struct to describe a NS Endpoint setup and the related VPP config changes
 type Endpoint struct {
-	Name   string
-	Labels map[string]string
-	IfName string
-	Ipam   *IPAM
-	Action *Action
+	Name    string
+	Labels  map[string]string
+	IfName  string
+	Ipam    *IPAM
+	Action  *Action
 	NseName string
 }
 

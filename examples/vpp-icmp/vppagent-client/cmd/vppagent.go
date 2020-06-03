@@ -5,10 +5,10 @@ import (
 	"path"
 	"time"
 
-	"github.com/ligato/vpp-agent/api/configurator"
-	"github.com/ligato/vpp-agent/api/models/vpp"
-	vpp_interfaces "github.com/ligato/vpp-agent/api/models/vpp/interfaces"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection/mechanisms/memif"
+	"go.ligato.io/vpp-agent/v3/proto/ligato/configurator"
+	"go.ligato.io/vpp-agent/v3/proto/ligato/vpp"
+	vpp_interfaces "go.ligato.io/vpp-agent/v3/proto/ligato/vpp/interfaces"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection"
@@ -54,7 +54,7 @@ func CreateVppInterface(nscConnection *connection.Connection, baseDir, vppAgentE
 		},
 	}
 
-	client := configurator.NewConfiguratorClient(conn)
+	client := configurator.NewConfiguratorServiceClient(conn)
 
 	logrus.Infof("Sending DataChange to vppagent: %v", dataChange)
 
@@ -94,7 +94,7 @@ func Reset(vppAgentEndpoint string) error {
 
 	defer func() { _ = conn.Close() }()
 
-	client := configurator.NewConfiguratorClient(conn)
+	client := configurator.NewConfiguratorServiceClient(conn)
 
 	logrus.Infof("Resetting vppagent...")
 

@@ -28,7 +28,14 @@ else
 HTTPSBUILD=--build-arg HTTPS_PROXY=$(HTTPS_PROXY)
 endif
 
-DOCKERBUILD=docker build --network="host" --build-arg VPP_AGENT=$(VPP_AGENT) ${HTTPBUILD} ${HTTPSBUILD}
+# Go 1.14 which we use to build our code in golang:alpine docker images
+# aparenlty has some issues, which are fixed by setting these flags
+# as described here:
+# https://github.com/docker-library/golang/issues/320
+#
+DOCKERGOFIX=--ulimit memlock=-1
+
+DOCKERBUILD=docker build --network="host" --build-arg VPP_AGENT=$(VPP_AGENT) ${HTTPBUILD} ${HTTPSBUILD} ${DOCKERGOFIX}
 
 define generate-docker-targets
 .PHONY: docker-$1-$2-build
