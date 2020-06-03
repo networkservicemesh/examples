@@ -3,7 +3,7 @@ package ucnf
 import (
 	"github.com/danielvladco/k8s-vnet/pkg/nseconfig"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/pkg/config"
+	"github.com/tiswanso/examples/examples/universal-cnf/vppagent/pkg/config"
 	"github.com/networkservicemesh/networkservicemesh/sdk/common"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
