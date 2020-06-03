@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/pkg/config"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection/mechanisms/memif"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connectioncontext"
@@ -17,6 +16,7 @@ import (
 	"github.com/networkservicemesh/networkservicemesh/sdk/common"
 	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
 	"github.com/sirupsen/logrus"
+	"github.com/tiswanso/examples/examples/universal-cnf/vppagent/pkg/config"
 	"go.ligato.io/vpp-agent/v3/proto/ligato/vpp"
 	"google.golang.org/grpc"
 )
