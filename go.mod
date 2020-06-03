@@ -1,4 +1,4 @@
-module github.com/networkservicemesh/examples
+module github.com/tiswanso/examples
 
 go 1.14
 
@@ -14,6 +14,7 @@ require (
 	github.com/networkservicemesh/networkservicemesh/pkg v0.3.0
 	github.com/networkservicemesh/networkservicemesh/sdk v0.3.0
 	github.com/opentracing/opentracing-go v1.1.0
+	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/viper v1.5.0
 	go.ligato.io/vpp-agent/v3 v3.1.0
