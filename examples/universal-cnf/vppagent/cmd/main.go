@@ -19,8 +19,8 @@ import (
 	"flag"
 	"os"
 
-	"github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/pkg/ucnf"
-	"github.com/networkservicemesh/examples/examples/universal-cnf/vppagent/pkg/vppagent"
+	"github.com/tiswanso/examples/examples/universal-cnf/vppagent/pkg/ucnf"
+	"github.com/tiswanso/examples/examples/universal-cnf/vppagent/pkg/vppagent"
 	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
 
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
