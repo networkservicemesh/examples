@@ -3,7 +3,7 @@
 # Topology information
 CLUSTER1=${CLUSTER:-kiknos-demo-1}
 CLUSTER2=${CLUSTER:-kiknos-demo-2}
-SERVICE_NAME=${SERVICE_NAME:-icmp-responder}
+SERVICE_NAME=${SERVICE_NAME:-hello-world}
 ISTIO_CLIENT=${ISTIO_CLIENT:-false}
 
 pushd "$(dirname "$0")/../../../"

@@ -7,7 +7,7 @@ VPP_AGENT=${VPP_AGENT:-ciscolabs/kiknos:latest}
 NSE_ORG=${NSE_ORG:-mmatache}
 NSE_TAG=${NSE_TAG:-kiknos}
 PULL_POLICY=${PULL_POLICY:-IfNotPresent}
-SERVICE_NAME=${SERVICE_NAME:-icmp-responder}
+SERVICE_NAME=${SERVICE_NAME:-hello-world}
 AWS_KEY_PAIR=${KEY_PAIR:-kiknos-asa}
 
 # Script run information

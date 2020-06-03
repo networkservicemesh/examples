@@ -1,9 +1,8 @@
 import argparse
 import json
-import sys
 import time
 
-from shell import run_out, run_in
+from shell import run_out
 from eks import AwsCluster
 from utils import get_current_region, reduce_subnets, create_elastic_allocation, tag_resource, associate_interface
 
@@ -18,10 +17,13 @@ def create_ec2(key_name, image_id, instance_type, sec_group, network_interfaces,
                    "--network-interfaces", network_interfaces)["Instances"][0]
     instance_id = data["InstanceId"]
     for i in range(0, 10):
-        status = run_out("aws", "ec2", " describe-instance-status",
-                         " --instance-ids", instance_id)["InstanceStatuses"][0]["InstanceState"]["Name"]
-        if status == "running":
-            break
+        try:
+            status = run_out("aws", "ec2", "describe-instance-status",
+                             "--instance-id", instance_id)["InstanceStatuses"][0]["InstanceState"]["Name"]
+            if status == "running":
+                break
+        except IndexError:
+            pass
         time.sleep(10)
     return data
 
