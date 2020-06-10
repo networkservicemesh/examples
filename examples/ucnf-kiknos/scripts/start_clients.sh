@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
 # Topology information
-CLUSTER1=${CLUSTER:-kiknos-demo-1}
-CLUSTER2=${CLUSTER:-kiknos-demo-2}
+CLUSTER1=${CLUSTER1:-kiknos-demo-1}
+CLUSTER2=${CLUSTER2:-kiknos-demo-2}
 SERVICE_NAME=${SERVICE_NAME:-hello-world}
 ISTIO_CLIENT=${ISTIO_CLIENT:-false}
+OPERATION=${OPERATION:-apply}
 
 pushd "$(dirname "$0")/../../../"
 
@@ -19,6 +20,7 @@ Options:
   --cluster2             Name of Kind cluster one - Represents the client network            env var: CLUSTER         - (Default: $CLUSTER2)
   --service_name         NSM service                                                         env var: SERVICE_NAME    - (Default: $SERVICE_NAME)
   --istio_client         If an istio client should be deployed instead of a regular client   env var: ISTIO_CLIENT    - (Default: $ISTIO_CLIENT)
+  --delete
 " >&2
 
 }
@@ -37,6 +39,9 @@ for i in "$@"; do
   --istio_client)
     ISTIO_CLIENT=true
     ;;
+  --delete)
+    OPERATION=delete
+    ;;
   -h | --help)
     print_usage
     exit 0
@@ -48,16 +53,16 @@ for i in "$@"; do
   esac
 done
 
-helm template ./examples/ucnf-kiknos/helm/vl3_hello --set nsm.serviceName="$SERVICE_NAME" | kubectl --context "$CLUSTER1" apply -f -
-helm template ./examples/ucnf-kiknos/helm/vl3_hello --set nsm.serviceName="$SERVICE_NAME" | kubectl --context "$CLUSTER2" apply -f -
+helm template ./examples/ucnf-kiknos/helm/vl3_hello --set nsm.serviceName="$SERVICE_NAME" | kubectl --context "$CLUSTER1" "$OPERATION" -f -
+helm template ./examples/ucnf-kiknos/helm/vl3_hello --set nsm.serviceName="$SERVICE_NAME" | kubectl --context "$CLUSTER2" "$OPERATION" -f -
 
 if [ "$ISTIO_CLIENT" == "true" ]; then
-  helm template ./examples/ucnf-kiknos/helm/istio_ingress --set nsm.serviceName="$SERVICE_NAME" | kubectl --context "$CLUSTER1" apply -f -
+  helm template ./examples/ucnf-kiknos/helm/istio_ingress --set nsm.serviceName="$SERVICE_NAME" | kubectl --context "$CLUSTER1" "$OPERATION" -f -
   sleep 1
   echo "Waiting for Istio gateway to be ready"
   kubectl --context "$CLUSTER1" wait -n istio-system --timeout=500s --for condition=Ready --all pods
   kubectl --context "$CLUSTER1" label namespace default istio-injection=enabled
-  helm template ./examples/ucnf-kiknos/helm/istio_clients --set app=icmp-responder | kubectl --context "$CLUSTER1" apply -f -
+  helm template ./examples/ucnf-kiknos/helm/istio_clients --set app=icmp-responder | kubectl --context "$CLUSTER1" "$OPERATION" -f -
 fi
 
 sleep 2

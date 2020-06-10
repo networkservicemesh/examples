@@ -126,31 +126,7 @@ for i in "$@"; do
 done
 
 if [ $DRY_RUN == "true" ]; then
-  function aws() { echo "aws $*"; }
-  function python() { echo "python $*"; }
-  function eksctl() { echo "eksctl $*"; }
-  function helm() { echo "helm $*"; }
-  function helm() { echo "kubectl $*"; }
-  function kind() { echo "kind $*"; }
-  function make() { echo "make $*"; }
-  function bash() { echo "bash $*"; }
-  function pipe() {
-    local cmd=$1; shift
-    while read -r in; do s="$s$in"; done
-    echo "$s | $cmd $*"
-  }
-  function grep() { pipe grep $*;}
-  function awk() { pipe awk $*;}
-  function cut() { pipe cut $*;}
-  function kubectl() {
-    if [[ $* =~ (-f|--filename)([[:space:]]+|[[:space:]]*=[[:space:]]*)- ]]; then
-      local all=""
-      while read -r data; do all="$all$data"; done
-      echo "$all | kubectl $*"
-      return
-    fi
-    echo "kubectl $*"
-  }
+  source ./examples/ucnf-kiknos/scripts/dry_run.sh
 fi
 
 if [ $AWS == "true" ]; then
@@ -230,7 +206,7 @@ fi
 
 if [ "$CLUSTERS_PRESENT" == "false" ]; then
   for cluster in "$CLUSTER1" "$CLUSTER2"; do
-    if [[ $(kubectl config get-contexts) == *"$cluster"* ]]; then
+    if [[ $(kubectl config get-contexts) == "$cluster" ]]; then
       echo "Cluster with this context already configured on this machine! please use other cluster name or delete the the cluster if you previously run this script";
       exit 1
     fi
@@ -266,18 +242,19 @@ if [ "$BUILD_IMAGE" == "true" ]; then
   fi
 fi
 
-performNSE "$CLUSTER1" $OPERATION --set strongswan.network.localSubnet=172.31.22.0/24 \
-  --set strongswan.network.remoteSubnets="{172.31.23.0/24,192.168.254.0/24}"
-
-echo "# Retrieving IP and MAC addr of interface"
-INTERFACE="global eth0"
-if [ $AWS == "true" ]; then
-  INTERFACE="global dynamic eth0"
+if [[ "$OPERATION" == "delete" ]]; then
+    bash ./examples/ucnf-kiknos/scripts/install_kiknos.sh --cluster="$CLUSTER1" --delete
+    bash ./examples/ucnf-kiknos/scripts/install_kiknos.sh --cluster="$CLUSTER2" --delete
+    exit 0
 fi
-POD_NAME=$(kubectl --context "$CLUSTER1" get pods -o name | grep endpoint | cut -d / -f 2)
-IP_ADDR=$(kubectl --context "$CLUSTER1" exec -it "$POD_NAME" -- ip addr | grep "$INTERFACE" | grep inet | awk '{print $2}' | cut -d / -f 1)
 
-if [ "$DEPLOY_ASA" == "true" ] && [ "$AWS" == "true" ]; then
+bash ./examples/ucnf-kiknos/scripts/install_kiknos.sh --cluster="$CLUSTER1"
+
+if [[ "$DEPLOY_ASA" == "true" ]] && [[ "$AWS" == "true" ]]; then
+  echo "# Retrieving IP and MAC addr of interface"
+  POD_NAME=$(kubectl --context "$CLUSTER1" get pods -o name | grep endpoint | cut -d / -f 2)
+  IP_ADDR=$(kubectl --context "$CLUSTER1" exec -it "$POD_NAME" -- ip addr | grep "$INTERFACE" | grep inet | awk '{print $2}' | cut -d / -f 1)
+
   # Update ASA config file
   day0=$(sed -e "s/<PEER_CONNECT_IP>/${IP_ADDR}/g" -e "s/<HOST_NETWORK>/192.168.254.0/g" "examples/ucnf-kiknos/scripts/day0.txt")
   # Deploy ASA
@@ -288,22 +265,20 @@ if [ "$DEPLOY_ASA" == "true" ] && [ "$AWS" == "true" ]; then
       --ref "$CLUSTER1"  --image-id ami-07c1207a9d40bc3bd --instance-type t2.micro --interface-count 1 --interface-in-subnet "192.168.254.0/24"
 fi
 
-performNSE "$CLUSTER2" $OPERATION --set strongswan.network.remoteAddr="$IP_ADDR" \
-  --set strongswan.network.localSubnet=172.31.23.0/24 \
-  --set strongswan.network.remoteSubnets="{172.31.22.0/24}"
+bash ./examples/ucnf-kiknos/scripts/install_kiknos.sh --cluster="$CLUSTER2" --cluster-ref="$CLUSTER1"
 
-if [ "$NO_ISTIO" == "false" ]; then
+if [[ "$NO_ISTIO" == "false" ]]; then
   echo "Installing Istio control plane"
   kubectl --context "$CLUSTER1" apply -f ./examples/ucnf-kiknos/k8s/istio_cfg.yaml
   sleep 2
   kubectl --context "$CLUSTER1" wait -n istio-system --timeout=150s --for condition=Ready --all pods
   rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
-  ./examples/ucnf-kiknos/scripts/start_clients.sh --cluster1="$CLUSTER1" --cluster2="$CLUSTER2" --istio_client
+  bash ./examples/ucnf-kiknos/scripts/start_clients.sh --cluster1="$CLUSTER1" --cluster2="$CLUSTER2" --istio_client
 else
-  ./examples/ucnf-kiknos/scripts/start_clients.sh --cluster1="$CLUSTER1" --cluster2="$CLUSTER2"
+  bash ./examples/ucnf-kiknos/scripts/start_clients.sh --cluster1="$CLUSTER1" --cluster2="$CLUSTER2"
 fi
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 sleep 2
-CLUSTER="$CLUSTER2" SERVICE_NAME="$SERVICE_NAME" ./examples/ucnf-kiknos/scripts/start_vpn.sh
+CLUSTER="$CLUSTER2" SERVICE_NAME="$SERVICE_NAME" bash ./examples/ucnf-kiknos/scripts/start_vpn.sh
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
