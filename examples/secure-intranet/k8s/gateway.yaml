@@ -32,5 +32,9 @@ spec:
         - name: nginx
           image: networkservicemesh/nginx
           imagePullPolicy: IfNotPresent
+        - name: python
+          image: python:slim
+          command: ["python", "-m", "http.server", "8080"]
+          imagePullPolicy: IfNotPresent
 metadata:
   name: gateway

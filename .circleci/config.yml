@@ -181,12 +181,12 @@ jobs:
     working_directory: ~/project/examples
     steps:
       - run:
-          name: Update go to 1.13
+          name: Update go to 1.14
           working_directory: /tmp
           command: |
-            wget https://dl.google.com/go/go1.13.linux-amd64.tar.gz
+            wget https://dl.google.com/go/go1.14.linux-amd64.tar.gz
             sudo rm -rf /usr/local/go
-            sudo tar -C /usr/local -xzf go1.13.linux-amd64.tar.gz
+            sudo tar -C /usr/local -xzf go1.14.linux-amd64.tar.gz
       - run:
           name: Install kubectl
           command: |

@@ -22,12 +22,12 @@ import (
 	"path"
 	"strconv"
 
-	"github.com/ligato/vpp-agent/api/models/vpp"
-	interfaces "github.com/ligato/vpp-agent/api/models/vpp/interfaces"
-	vpp_l3 "github.com/ligato/vpp-agent/api/models/vpp/l3"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection"
 	"github.com/networkservicemesh/networkservicemesh/controlplane/api/connection/mechanisms/memif"
 	"github.com/sirupsen/logrus"
+	"go.ligato.io/vpp-agent/v3/proto/ligato/vpp"
+	interfaces "go.ligato.io/vpp-agent/v3/proto/ligato/vpp/interfaces"
+	vpp_l3 "go.ligato.io/vpp-agent/v3/proto/ligato/vpp/l3"
 )
 
 // UniversalCNFVPPAgentBackend is the VPP CNF backend struct
@@ -64,7 +64,7 @@ func (b *UniversalCNFVPPAgentBackend) ProcessClient(
 	socketFilename := path.Join(getBaseDir(), memif.ToMechanism(conn.GetMechanism()).GetSocketFilename())
 
 	ipAddresses := []string{}
-	if len(srcIP) > 4 {
+	if len(srcIP) > net.IPv4len {
 		ipAddresses = append(ipAddresses, srcIP)
 	}
 
@@ -108,7 +108,7 @@ func (b *UniversalCNFVPPAgentBackend) ProcessEndpoint(
 	socketFilename := path.Join(getBaseDir(), memif.ToMechanism(conn.GetMechanism()).GetSocketFilename())
 
 	ipAddresses := []string{}
-	if len(dstIP) > 4 {
+	if len(dstIP) > net.IPv4len {
 		ipAddresses = append(ipAddresses, dstIP)
 	}
 
