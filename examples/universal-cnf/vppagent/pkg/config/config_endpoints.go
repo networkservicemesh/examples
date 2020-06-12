@@ -45,7 +45,7 @@ type CompositeEndpointAddons interface {
 }
 
 // NewProcessEndpoints returns a new ProcessInitCommands struct
-func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*nseconfig.Endpoint, nsconfig *common.NSConfiguration, ceAddons CompositeEndpointAddons) *ProcessEndpoints {
+func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*nseconfig.Endpoint, nsconfig *common.NSConfiguration, ceAddons CompositeEndpointAddons, ctx context.Context) *ProcessEndpoints {
 	result := &ProcessEndpoints{}
 
 	for _, e := range endpoints {
@@ -62,7 +62,18 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*nseconfig.End
 			IPAddress:              e.VL3.IPAM.DefaultPrefixPool,
 			Routes:                 nil,
 		}
-
+		if e.VL3.IPAM.ServerAddress != "" {
+			var err error
+			ipamService, err := NewIpamService(ctx, e.VL3.IPAM.ServerAddress)
+			if err != nil {
+				logrus.Error(err)
+			} else {
+				configuration.IPAddress, err = ipamService.AllocateSubnet(e)
+				if err != nil {
+					logrus.Error(err)
+				}
+			}
+		}
 		// Build the list of composites
 		compositeEndpoints := []networkservice.NetworkServiceServer{
 			endpoint.NewMonitorEndpoint(configuration),

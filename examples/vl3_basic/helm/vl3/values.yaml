@@ -10,15 +10,16 @@ pullPolicy: Always
 cnns:
   nsr:
     port: 5005
-    # addr: 
+    addr: vl3-service.cnns-cisco.com
+    cd: vl3-service-connectivity-domain
 #  domain: nsr.foo.com
+  ipam:
+    defaultPrefixPool: 192.168.0.0/16
+    prefixLength: 28
+    serverAddress: ipam-vl3-service:50051
 
 nsm:
   serviceName: vl3-service
-
-ipam:
-  prefixPool: "172.31.0.0/16"
-  # uniqueOctet: 
 
 global:
   

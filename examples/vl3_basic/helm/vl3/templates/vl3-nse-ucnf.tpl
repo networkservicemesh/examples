@@ -50,10 +50,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-{{- if .Values.ipam.uniqueOctet }}
-            - name: NSE_IPAM_UNIQUE_OCTET
-              value: {{ .Values.ipam.uniqueOctet | quote }}
-{{- end }}
             - name: NSM_REMOTE_NS_IP_LIST
               valueFrom:
                 configMapKeyRef:
@@ -92,11 +88,12 @@ data:
 {{- end }}
       cnns:
         name: {{ .Values.nsm.serviceName | quote }}
-        address: "{{ .Values.cnns.nsr.addr }}:{{ .Values.cnns.nsr.port }}"
+        address: "{{ .Values.cnns.nsr.addr }}"
         connectivityDomain: "{{ .Values.nsm.serviceName }}-connectivity-domain"
       vl3:
        ipam:
-          defaultPrefixPool: {{ .Values.ipam.prefixPool | quote }}
-          prefixLength: 2
+          defaultPrefixPool: {{ .Values.cnns.ipam.defaultPrefixPool | quote }}
+          serverAddress: "ipam-{{ .Values.cnns.nsr.addr }}:50051"
+          prefixLength: 22
           routes: []
        ifName: "endpoint0"

@@ -8,7 +8,8 @@ require (
 	github.com/danielvladco/k8s-vnet v0.3.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.4.7
-	github.com/golang/protobuf v1.3.3
+	github.com/gofrs/uuid v3.2.0+incompatible
+	github.com/golang/protobuf v1.3.5
 	github.com/grpc-ecosystem/grpc-opentracing v0.0.0-20180507213350-8e809c8a8645
 	github.com/networkservicemesh/networkservicemesh/controlplane/api v0.3.0
 	github.com/networkservicemesh/networkservicemesh/pkg v0.3.0
@@ -18,8 +19,10 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/viper v1.5.0
 	go.ligato.io/vpp-agent/v3 v3.1.0
+	golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa
+	golang.org/x/sync v0.0.0-20190423024810-112230192c58
 	google.golang.org/grpc v1.27.1
-	gopkg.in/yaml.v2 v2.2.4
+	gopkg.in/yaml.v2 v2.2.8
 )
 
 replace (
@@ -27,6 +30,8 @@ replace (
 	github.com/networkservicemesh/networkservicemesh/controlplane => github.com/tiswanso/networkservicemesh/controlplane v0.2.0-vl3
 	github.com/networkservicemesh/networkservicemesh/controlplane/api => github.com/tiswanso/networkservicemesh/controlplane/api v0.2.0-vl3
 	github.com/networkservicemesh/networkservicemesh/forwarder/api => github.com/tiswanso/networkservicemesh/forwarder/api v0.2.0-vl3
+	github.com/networkservicemesh/networkservicemesh/k8s => github.com/tiswanso/networkservicemesh/k8s v0.2.0-vl3
+	github.com/networkservicemesh/networkservicemesh/k8s/pkg/apis => github.com/tiswanso/networkservicemesh/k8s/pkg/apis v0.2.0-vl3
 	github.com/networkservicemesh/networkservicemesh/pkg => github.com/tiswanso/networkservicemesh/pkg v0.2.0-vl3
 	github.com/networkservicemesh/networkservicemesh/sdk => github.com/tiswanso/networkservicemesh/sdk v0.2.0-vl3
 	github.com/networkservicemesh/networkservicemesh/utils => github.com/tiswanso/networkservicemesh/utils v0.2.0-vl3
