@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-SERVICE_NAME=${SERVICE_NAME:-hello-world}
-
 function print_usage() {
     echo "1"
 }
@@ -10,9 +8,6 @@ for i in "$@"; do
   case $i in
   --cluster=*)
     CLUSTER="${i#*=}"
-    ;;
-   --service_name=*)
-    SERVICE_NAME="${i#*=}"
     ;;
   -h | --help)
     print_usage
@@ -27,6 +22,11 @@ done
 
 [[ -z "$CLUSTER" ]] && echo "env var: CLUSTER is required!" && print_usage && exit 1
 
-nsePod=$(kubectl --context "$CLUSTER" get pods -l "networkservicemesh.io/app=${SERVICE_NAME}" -o=name)
+pushd "$(dirname "${BASH_SOURCE[0]}")/../../../" || exit 1
 
-kubectl --context "$CLUSTER" exec -it "$nsePod" -- ipsec up kiknos
+echo "Installing Istio control plane"
+kubectl --context "$CLUSTER" apply -f ./examples/ucnf-kiknos/k8s/istio_cfg.yaml
+
+sleep 2
+
+kubectl --context "$CLUSTER" wait -n istio-system --timeout=150s --for condition=Ready --all pods || exit $?

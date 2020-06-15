@@ -13,6 +13,12 @@ function print_usage() {
 
 for i in "$@"; do
   case $i in
+  --org=*)
+    NSE_ORG="${i#*=}"
+    ;;
+  --tag=*)
+    NSE_TAG="${i#*=}"
+    ;;
   --cluster=*)
     CLUSTER="${i#*=}"
     ;;
@@ -24,9 +30,6 @@ for i in "$@"; do
     ;;
   --delete)
     OPERATION=delete
-    ;;
-  --dry-run)
-    DRY_RUN=true
     ;;
   -h | --help)
     print_usage
@@ -41,11 +44,7 @@ done
 
 [[ -z "$CLUSTER" ]] && echo "env var: CLUSTER is required!" && print_usage && exit 1
 
-if [[ "$DRY_RUN" == true ]]; then
-  source $(pwd)/$(dirname "${BASH_SOURCE[0]}")/dry_run.sh
-fi
-
-pushd $(dirname "${BASH_SOURCE[0]}")/../../../
+pushd "$(dirname "${BASH_SOURCE[0]}")/../../../" || exit 1
 
 # Perform the given kubectl operation for the NSE
 function performNSE() {
@@ -67,10 +66,7 @@ function performNSE() {
 
 if [[ -n "$CLUSTER_REF" ]]; then
     POD_NAME=$(kubectl --context "$CLUSTER_REF" get pods -o name | grep endpoint | cut -d / -f 2)
-    IP_ADDR=$(kubectl --context "$CLUSTER_REF" exec -it "$POD_NAME" -- ip addr | grep 'global[\w ]*eth0' | grep inet | awk '{print $2}' | cut -d / -f 1)
-
-    echo POD_NAME $POD_NAME
-    echo IP_ADDR $IP_ADDR
+    IP_ADDR=$(kubectl --context "$CLUSTER_REF" exec -it "$POD_NAME" -- ip addr | grep -E "global (dynamic )?eth0" | grep inet | awk '{print $2}' | cut -d / -f 1)
 
     performNSE "$CLUSTER" --set strongswan.network.remoteAddr="$IP_ADDR" \
       --set strongswan.network.localSubnet=172.31.23.0/24 \
