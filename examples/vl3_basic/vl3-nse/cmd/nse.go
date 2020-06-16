@@ -73,7 +73,8 @@ func (e vL3CompositeEndpoint) AddCompositeEndpoints(nsConfig *common.NSConfigura
 		newVL3ConnectComposite(nsConfig, nsConfig.IPAddress,
 			&vppagent.UniversalCNFVPPAgentBackend{}, nsRemoteIpList, func() string {
 				return ucnfEndpoint.NseName
-			}, ucnfEndpoint.VL3.IPAM.DefaultPrefixPool),
+			}, ucnfEndpoint.VL3.IPAM.DefaultPrefixPool
+                        ucnfEndpoint.VL3.IPAM.ServerAddress, ucnfEndpoint.CNNS.ConnectivityDomain),
 	}
 
 	return &compositeEndpoints
