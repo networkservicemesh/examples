@@ -27,6 +27,9 @@ spec:
         - name: vl3-nse
           image: {{ .Values.registry }}/{{ .Values.org }}/vl3_ucnf-vl3-nse:{{ .Values.tag }}
           imagePullPolicy: {{ .Values.pullPolicy }}
+          ports:
+          - name: monitoring
+            containerPort: 9191
           env:
             - name: ENDPOINT_NETWORK_SERVICE
               value: {{ .Values.nsm.serviceName | quote }}
@@ -97,3 +100,19 @@ data:
           prefixLength: 22
           routes: []
        ifName: "endpoint0"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "nse-pod-service-{{ .Values.nsm.serviceName }}"
+  labels:
+    cnns/monitoring: vpp
+spec:
+  type: ClusterIP
+  selector:
+      cnns/nse.servicename: {{ .Values.nsm.serviceName | quote }}
+  ports:
+    - name: monitoring
+      port: 9191
+      targetPort: monitoring
+      protocol: TCP
