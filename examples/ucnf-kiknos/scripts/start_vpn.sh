@@ -3,7 +3,16 @@
 SERVICE_NAME=${SERVICE_NAME:-hello-world}
 
 function print_usage() {
-    echo "1"
+    echo "$(basename "$0") - Deploy NSM Kiknos topology. All properties can also be provided through env variables
+
+NOTE: The defaults will change to the env values for the ones set.
+
+Usage: $(basename "$0") [options...]
+Options:
+  --cluster             Cluster name            env var: CLUSTER          - (Default: $CLUSTER)
+  --service-name        NSM service             env var: SERVICE_NAME     - (Default: $SERVICE_NAME)
+  --help -h             Help
+" >&2
 }
 
 for i in "$@"; do
@@ -11,7 +20,7 @@ for i in "$@"; do
   --cluster=*)
     CLUSTER="${i#*=}"
     ;;
-   --service_name=*)
+   --service-name=*)
     SERVICE_NAME="${i#*=}"
     ;;
   -h | --help)

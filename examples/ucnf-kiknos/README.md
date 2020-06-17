@@ -38,64 +38,56 @@ Please follow the instructions on where the NSM project should be in the [Exampl
 
 * Deploy kind environment:
 ```bash
-make kiknos-kind
+make deploy-kiknos-clients CLUSTER=kiknos-demo-1
+make deploy-kiknos-start-vpn BUILD_IMAGE=false DEPLOY_ISTIO=false CLUSTER=kiknos-demo-2 CLUSTER_REF=kiknos-demo-1 
 ```
+
 * Deploy on aws:
 ```bash
-make kiknos-aws
+make deploy-kiknos-clients AWS=true CLUSTER=kiknos-demo-1
+make deploy-kiknos-start-vpn AWS=true BUILD_IMAGE=false DEPLOY_ISTIO=false CLUSTER=kiknos-demo-2 CLUSTER_REF=kiknos-demo-1
 ```
-Both make targets use the script:
-```bash
-./examples/ucnf-kiknos/scripts/start_topo.sh
-```
-This make target performs the following actions:
-* Starts 2 clusters
-* Installs NSM in both clusters
-* Deploys the kiknos NSEs on both clusters:
-    * In one of the clusters it will act as a VPN client
-    * In one of the clusters it will act as a VPN Gateway
-* Installs Istio on the VPN client cluster
-* Deploys worker pods as NSC in both clusters
-* Deploys the Istio ingress gateway as a NSC in the VPN client cluster
-* Deploys two pods that will be exposed through an Istio virtual service to the ingress gateway.
+
+Makefile consists of the following rules: 
+* *provide-image*: Builds docker image and pushes or executes a `kind-load`.
+* *docker-push*: Pushes the docker image to the registry specified in `ORG`. 
+* *create-cluster*: Creates a cluster whether kind or aws (if set `AWS=true`). use `CLUSTER` variable for cluster name.
+* *helm-init*: Deploys Tiller for helm version 2.x.
+* *helm-install-nsm*: Installs NSM.
+* *deploy-kiknos*: Deploys the kiknos NSEs.
+* *deploy-istio*: Installs Istio. Used for the VPN client cluster.
+* *deploy-kiknos-clients*: Deploys worker pods as NSC in both clusters.
+    * When `DEPLOY_ISTIO=true` Deploys the Istio ingress gateway as a NSC in the VPN client cluster.
+    * When `DEPLOY_ISTIO=true` Deploys two pods that will be exposed through an Istio virtual service to the ingress gateway.
+* *deploy-kiknos-start-vpn*: Starts kiknos ipsec.
 >Note: Only the AWS target will perform the following steps
-* Deploys an ASAv and Ubuntu EC2 instances to act as Kiknos clients. The Ubuntu client needs to be manually configured.
+* *deploy-asa*: Deploys an ASAv and Ubuntu EC2 instances to act as Kiknos clients. The Ubuntu client needs to be manually configured.
 
 >Note: Make sure to check the deletion of items in AWS as they can sometimes be redeployed
 
-For more script options use `--help`:
-```bash
-./examples/ucnf-kiknos/scripts/kind_topo.sh --help
+Makefile options:
 
-kind_topo.sh - Deploy NSM Kiknos topology. All properties can also be provided through env variables
+- `CLUSTER` - Set the cluster name - (Default: `kiknos-demo-1`)
+- `ORG` - Set the org of new built image - (Default: `tiswanso`)
+- `TAG` - Set the tag of new built image - (Default: `kiknos`)
+- `AWS_KEY_PAIR` - AWS Key Pair for connecting over SSH - (Default: `kiknos-asa`)
+- `CLUSTER_REF` - Reference cluster required when deploying the second cluster in
+    order to be able to take some configurations such as remote IP address when configuring kiknos NSE or the AWS VPC - (Default: *None*)
+- `VPP_AGENT` - Parent image for the NSE - (Default: `ciscolabs/kiknos:latest`)
+- `FORWARDING_PLANE` - Set a default forwarding plane - (Default: `vpp`)
+- `NETWORK_SERVICE` - Set a default network service for Example clients - (Default: `hello-world`)
+- `BUILD_IMAGE` - Set whether to build the image or not - (Default: `true`)
+- `PROVISION_MODE` - Set the mode to provision the built image. Default "push"
+    one of "push" or "kind-load"
+    not relevant if $BUILD_IMAGE is not true - (Default: `push`)
+- `DEPLOY_ISTIO` - Set whether to deploy istio gateway or not - (Default: `true`)
+- `AWS` - Create aws cluster - (Default: `false`)
 
-NOTE: The defaults will change to the env values for the ones set.
 
-Usage: kind_topo.sh [options...]
-Options:
-  --cluster1            Name of Kind cluster one - Represents the client network            env var: CLUSTER1         - (Default: kind-cl1)
-  --cluster2            Name of Kind cluster two - Represents the VPN Gateway               env var: CLUSTER2         - (Default: kind-cl2)
-  --vpp_agent           Base docker image for NSE                                           env var: VPP_AGENT        - (Default: ciscolabs/kiknos:latest)
-  --org                 Organisation of NSE image                                           env var: NSE_ORG          - (Default: mmatache)
-  --tag                 NSE image tag                                                       env var: NSE_TAG          - (Default: kiknos)
-  --pull_policy         Pull policy for the NSE image                                       env var: PULL_POLICY      - (Default: IfNotPresent)
-  --service_name        NSM service                                                         env var: SERVICE_NAME     - (Default: icmp-responder)
-  --build_image         Indicates whether the NSE image should be built or just pulled
-                        from the image repository                                           env var: BUILD_IMAGE      - (Default: false)
-  --clusters_present    Set if you already have kind clusters present                       env var: CLUSTERS_PRESENT - (Default: false)
-  --nsm_installed       Set if the NSM is already installed on the clusters                 env var: NSM_INSTALLED    - (Default: false)
-  --no_istio            Set if you do not want the istio service mesh to be deployed        env var: NO_ISTIO         - (Default: )
-  --clean               Removes the NSEs and Clients from the clusters                      env var: CLEAN            - (Default: false)
-  --delete              Delete the Kind clusters                                            env var: DELETE           - (Default: false)
-```
 ## Check connectivity between workloads (Scenario 1)
 In order to check the connectivity between worker pods run the following make target:
 ```bash
-make kiknos-test-conn
-```
-Alternatively use the script:
-```
-./examples/ucnf-kiknos/scripts/test_vpn_conn.sh
+./examples/ucnf-kiknos/scripts/test_vpn_conn.sh --cluster1=kiknos-demo-1 --cluster2=kiknos-demo-2 
 ```
 This will attempt to perform `curl` commands from the workers in the VPN Gateway cluster to the workers in the VPN client cluster directly.
 
@@ -112,12 +104,8 @@ Hello version: v1, instance: helloworld-ucnf-client-7bd94648d-nksbm
 
 ## Check connectivity to workloads through the Istio gateway (Scenario 2)
 In order to check the connectivity to workloads through the Istio gateway run the following make target:
-```sh
-make kiknos-test-istio-conn
-```
-Alternatively use the script:
-```sh
-./examples/ucnf-kiknos/scripts/test_istio_vpn_conn.sh
+```bash
+./examples/ucnf-kiknos/scripts/test_istio_vpn_conn.sh --cluster1=kiknos-demo-1 --cluster2=kiknos-demo-2
 ```
 This will attempt to perform `curl` commands from the workers in the VPN Gateway cluster to the Istio ingress gateway.
 This allows a user to connect to different services by keeping the same IP address for each call and differentiating 
@@ -127,7 +115,7 @@ In our current example, we deploy 2 services, and expose each service twice. In 
 IP address of the Ingress gateway that was supplied by the NSE.
 
 Output:
-```sh
+```bash
 CLUSTER1=kiknos-demo-1 CLUSTER2=kiknos-demo-2 /home/mihai/go/src/github.com/networkservicemesh/examples/examples/ucnf-kiknos/scripts/test_istio_vpn_conn.sh
 Detected pod with nsm interface ip: 172.31.22.9
 ------------------------- Source pod/helloworld-ucnf-client-7bd94648d-2t7zj -------------------------
@@ -167,7 +155,7 @@ make kiknos-dump-clusters-state
 ```
 
 Alternatively run the script:
-```sh
+```bash
 ./examples/ucnf-kiknos/scripts/dump_clusters_state.sh
 ```
 
@@ -177,9 +165,19 @@ This will give you information regarding:
  
 
 # Cleanup
-The following command will delete the kind clusters.
+The following commands will delete the kind clusters.
 
-`./examples/ucnf-kiknos/scripts/start_topo.sh --delete`
+```bash
+make clean CLUSTER=kiknos-demo-1
+make clean CLUSTER=kiknos-demo-2
+```
+
+If on AWS:
+
+```bash
+make clean AWS=true CLUSTER=kiknos-demo-1
+make clean AWS=true CLUSTER=kiknos-demo-2
+```
 
 # Known issues
 These issues require further investigation:

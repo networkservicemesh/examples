@@ -1,69 +1,82 @@
 include $(TOP)/mk/targets.mk
 
+# Set the cluster name
 CLUSTER ?= kiknos-demo-1
+
+# Set the org of new built image
 ORG = vladcodaniel
+
+# Set the tag of new built image
 TAG = kiknos
-CLUSTER_REF ?=
+
+# AWS Key Pair for connecting over SSH
 AWS_KEY_PAIR ?= kiknos-asa
+
+# Reference cluster required when deploying the second cluster in order to be able to take some configurations
+# such as remote IP address when configuring kiknos NSE or the AWS VPC
+CLUSTER_REF ?=
+# Parent image for the NSE
 override VPP_AGENT = ciscolabs/kiknos:latest
 
-# BUILD_IMAGE sets whether to build the image or not
-BUILD_IMAGE = "true"
+# Set a default forwarding plane
+FORWARDING_PLANE ?= vpp
 
-# PROVISION_MODE the mode to provision the built image
+# Set a default network service for Example clients
+NETWORK_SERVICE ?= hello-world
+
+# Set whether to build the image or not
+BUILD_IMAGE ?= true
+
+# Set the mode to provision the built image. Default "push"
 # one of "push" or "kind-load"
 # not relevant if $BUILD_IMAGE is not true
-PROVISION_MODE = "push"
+PROVISION_MODE ?= push
 
-# DEPLOY_ISTIO sets whether to deploy istio gateway or not
-DEPLOY_ISTIO = "true"
+# Set whether to deploy istio gateway or not
+DEPLOY_ISTIO ?= true
 
-KIND_CLUSTER_NAME = $(CLUSTER)
+# Create aws cluster
+AWS ?= false
 
-DRY_RUN ?= false
-
-SPIRE_ENABLED ?= false
-INSECURE ?= true
-
-SERVICE_NAME ?= hello-world
-
-ifeq ($(DRY_RUN), true)
-with_dry_run=source $(TOP)/examples/ucnf-kiknos/scripts/dry_run.sh;
-endif
+NSM_NAMESPACE = nsm-system
+CONTAINER_REPO = networkservicemesh
+CONTAINER_TAG = master
+PROMETHEUS = true
+METRICS_COLLECTOR_ENABLED = true
+SPIRE_ENABLED = false
+INSECURE = true
 
 provide-image: k8s-universal-cnf-save
 
-ifeq ($(PROVISION_MODE), "push")
+ifeq ($(PROVISION_MODE),push)
 provide-image: docker-push
 endif
 
-ifeq ($(PROVISION_MODE), "kind-load")
+ifeq ($(PROVISION_MODE),kind-load)
 provide-image: k8s-universal-cnf-load-images
 endif
 
 
 docker-push:
-	@$(with_dry_run) docker push "$(ORG)/universal-cnf-vppagent:$(TAG)"
+	@docker push "$(ORG)/universal-cnf-vppagent:$(TAG)"
 
 create-kind:
 	@[[ -n `kind get clusters | grep $(CLUSTER)` ]] && echo "Cluster $(CLUSTER) already present, skipping create_kind rule" && exit 0;\
-	$(with_dry_run) \
 	kind create cluster --name $(CLUSTER);\
 	kubectl config rename-context "kind-$(CLUSTER)" $(CLUSTER)
 
 delete-kind:
-	-@$(with_dry_run) kind delete cluster --name $(CLUSTER)
+	-@kind delete cluster --name $(CLUSTER)
 
 create-aws:
 	@[[ -n `aws eks list-clusters --output=text | grep $(CLUSTER)` ]] && echo "Cluster $(CLUSTER) already present on aws, skipping create_aws rule" && exit 0;\
-	$(with_dry_run) \
-	python $(TOP)/examples/ucnf-kiknos/scripts/pyaws/create_cluster.py --name $(CLUSTER1) $(if $(F),--ref $(CLUSTER_REF)) --open-sg;\
-	aws eks update-kubeconfig --name="$(CLUSTER)" --alias "$(CLUSTER1)"
+	python $(TOP)/examples/ucnf-kiknos/scripts/pyaws/create_cluster.py --name $(CLUSTER) $(if $(CLUSTER_REF),--ref $(CLUSTER_REF)) --open-sg;\
+	aws eks update-kubeconfig --name="$(CLUSTER)" --alias "$(CLUSTER)"
 
 delete-aws:
-	-@$(with_dry_run) eksctl delete cluster --name="$(CLUSTER)"
+	-@eksctl delete cluster --name="$(CLUSTER)"
 
-ifeq ($(AWS), "true")
+ifeq ($(AWS),true)
 create-cluster: create-aws
 delete-cluster: delete-aws
 else
@@ -71,33 +84,55 @@ create-cluster: create-kind
 delete-cluster: delete-kind
 endif
 
-deploy-nsm: create-cluster helm-init helm-install-nsm
-	@$(with_dry_run) kubectl config use-context "$(CLUSTER)"
+helm-init: create-cluster
+	@kubectl config use-context "$(CLUSTER)"
+	@pushd $(NSM_PATH); ./scripts/helm-init-wrapper.sh; popd
 
-ifeq ($(BUILD_IMAGE), "true")
+helm-install-nsm: helm-init
+	@pushd $(NSM_PATH); ./scripts/helm-nsm-install.sh --chart nsm \
+		--container_repo ${CONTAINER_REPO} \
+		--container_tag ${CONTAINER_TAG} \
+		--forwarding_plane ${FORWARDING_PLANE} \
+		--insecure ${INSECURE} \
+		--networkservice "${NETWORK_SERVICE}" \
+		--enable_prometheus ${PROMETHEUS} \
+		--enable_metric_collection ${METRICS_COLLECTOR_ENABLED} \
+		--nsm_namespace ${NSM_NAMESPACE} \
+		--spire_enabled ${SPIRE_ENABLED}; popd
+
+ifeq ($(BUILD_IMAGE),true)
 deploy-kiknos: provide-image
 endif
 
-deploy-kiknos: deploy-nsm
-	@$(with_dry_run) $(TOP)/examples/ucnf-kiknos/scripts/deploy_kiknos.sh --cluster=$(CLUSTER)
+deploy-kiknos: helm-install-nsm
+	@$(TOP)/examples/ucnf-kiknos/scripts/deploy_kiknos.sh --cluster=$(CLUSTER)
 
-deploy-istio: deploy-kiknos
-	@$(with_dry_run) $(TOP)/examples/ucnf-kiknos/scripts/deploy_istio.sh --cluster=$(CLUSTER)
+deploy-istio:
+	@$(TOP)/examples/ucnf-kiknos/scripts/deploy_istio.sh --cluster=$(CLUSTER)
 
-ifeq ($(DEPLOY_ISTIO), "true")
-deploy-client: deploy-istio
+ifeq ($(DEPLOY_ISTIO),true)
+deploy-kiknos-clients: deploy-istio
+ISTIO_CLIENT_OPTION=--istio-client
 endif
 
-deploy-client: deploy-kiknos
-	@$(with_dry_run) $(TOP)/examples/ucnf-kiknos/scripts/deploy_clients.sh --cluster=$(CLUSTER) #--istio_client
+deploy-kiknos-clients: deploy-kiknos
+	@$(TOP)/examples/ucnf-kiknos/scripts/deploy_clients.sh \
+		--cluster=$(CLUSTER) \
+		--service-name=$(NETWORK_SERVICE) \
+		$(ISTIO_CLIENT_OPTION)
 
-start-vpn: deploy-client
-	@$(with_dry_run) $(TOP)/examples/ucnf-kiknos/scripts/start_vpn.sh --cluster=$(CLUSTER) --service_name=$(SERVICE_NAME)
+deploy-kiknos-start-vpn: deploy-kiknos-clients
+	@$(TOP)/examples/ucnf-kiknos/scripts/start_vpn.sh \
+		--cluster=$(CLUSTER) \
+		--service-name=$(NETWORK_SERVICE)
 
-deploy-asa: create-cluster
-	@$(with_dry_run) $(TOP)/examples/ucnf-kiknos/scripts/deploy_asa.sh --cluster=$(CLUSTER) --cluster-ref=$(CLUSTER_REF) --aws_key_pair=$(AWS_KEY_PAIR)
+deploy-asa: #create-aws
+	@$(TOP)/examples/ucnf-kiknos/scripts/deploy_asa.sh \
+		--cluster=$(CLUSTER) \
+		--cluster-ref=$(CLUSTER_REF) \
+		--aws-key-pair=$(AWS_KEY_PAIR)
 
 delete-context:
-	-@$(with_dry_run) kubectl config delete-context $(CLUSTER)
+	-@kubectl config delete-context $(CLUSTER)
 
-clear: delete-context delete-cluster
+clean: delete-context delete-cluster

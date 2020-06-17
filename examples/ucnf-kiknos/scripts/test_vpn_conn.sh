@@ -5,7 +5,7 @@ CLUSTER2=${CLUSTER2:-kiknos-demo-2}
 SERVICE=${SERVICE:-hello-world}
 
 print_usage() {
-  echo "$(basename "$0") - Deploy NSM Kiknos topology. All properties can also be provided through env variables
+  echo "$(basename "$0") - Test VPN connectivity. All properties can also be provided through env variables
 
 NOTE: The defaults will change to the env values for the ones set.
 

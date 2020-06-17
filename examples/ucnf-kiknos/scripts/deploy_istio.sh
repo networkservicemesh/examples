@@ -1,7 +1,16 @@
 #!/usr/bin/env bash
 
 function print_usage() {
-    echo "1"
+    echo "$(basename "$0") - Deploy istio Gateway. All properties can also be provided through env variables
+
+NOTE: The defaults will change to the env values for the ones set.
+
+Usage: $(basename "$0") [options...]
+Options:
+  --cluster     Cluster name            env var: CLUSTER    - (Default: $CLUSTER)
+  --help -h     Help
+" >&2
+
 }
 
 for i in "$@"; do

@@ -8,7 +8,21 @@ DELETE=${DELETE:-false}
 OPERATION=${OPERATION:-apply}
 
 function print_usage() {
-    echo "1"
+    echo "$(basename "$0") - Deploy NSM Kiknos topology. All properties can also be provided through env variables
+
+NOTE: The defaults will change to the env values for the ones set.
+
+Usage: $(basename "$0") [options...]
+Options:
+  --cluster             Cluster name                                                        env var: CLUSTER          - (Default: $CLUSTER)
+  --cluster-ref         Cluster reference                                                   env var: CLUSTER_REF      - (Default: $CLUSTER_REF)
+  --org                 Docker image org                                                    env var: NSE_ORG          - (Default: $NSE_ORG)
+  --tag                 Docker image tag                                                    env var: NSE_TAG          - (Default: $NSE_TAG)
+  --pull-policy         Pull policy for the NSE image                                       env var: PULL_POLICY      - (Default: $PULL_POLICY)
+  --service-name        NSM service                                                         env var: SERVICE_NAME     - (Default: $SERVICE_NAME)
+  --delete              Delete the Kind clusters                                            env var: DELETE           - (Default: $DELETE)
+  --help -h             Help
+" >&2
 }
 
 for i in "$@"; do
@@ -27,6 +41,9 @@ for i in "$@"; do
     ;;
   --pull-policy=*)
     PULL_POLICY="${i#*=}"
+    ;;
+  --service-name=*)
+    SERVICE_NAME="${i#*=}"
     ;;
   --delete)
     OPERATION=delete
