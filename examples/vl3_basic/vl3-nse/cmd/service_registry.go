@@ -10,13 +10,27 @@ import (
 	"strings"
 )
 
+const (
+	POD_NAME = "podName"
+	SERVICE_NAME = "service"
+	PORT = "port"
+	CLUSTER_NAME = "clusterName"
+)
+
+type validationErrors []error
+
 type ServiceRegistry interface {
 	RegisterWorkload(clusterName, podName, name, seviceName, connDom string, ipAddr []string, ports []int32) error
 	RemoveWorkload(clusterName, podName, name, seviceName, connDom string, ipAddr []string, ports []int32) error
 }
 
+type ServiceRegistryClient interface {
+	Stop()
+}
+
 type ServiceRegistryImpl struct {
 	registryClient serviceregistry.RegistryClient
+	connection *grpc.ClientConn
 }
 
 func (s *ServiceRegistryImpl) RegisterWorkload(clusterName, podName, name, seviceName, connDom string, ipAddr []string, ports []int32) error {
@@ -39,7 +53,7 @@ func (s *ServiceRegistryImpl) RegisterWorkload(clusterName, podName, name, sevic
 		Ports:               ports,
 	}
 
-	logrus.Infof("Sending workload register request: %v", serviceWorkload)
+	logrus.Infof("Sending workload register request: %d", serviceWorkload)
 	_, err := s.registryClient.RegisterWorkload(context.Background(), serviceWorkload)
 	if err != nil {
 		logrus.Errorf("service registration not successful: %v", err)
@@ -77,22 +91,26 @@ func (s *ServiceRegistryImpl) RemoveWorkload(clusterName, podName, name, seviceN
 	return err
 }
 
-func NewServiceRegistry(addr string) (ServiceRegistry, error) {
+func (s *ServiceRegistryImpl) Stop() {
+	s.connection.Close()
+}
+
+func NewServiceRegistry(addr string) (ServiceRegistry, ServiceRegistryClient, error) {
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
-		return &ServiceRegistryImpl{}, fmt.Errorf("unable to connect to ipam server: %v", err)
+		return nil, nil, fmt.Errorf("unable to connect to ipam server: %v", err)
 	}
 
 	registryClient := serviceregistry.NewRegistryClient(conn)
-	serviceRegistry := ServiceRegistryImpl{registryClient: registryClient}
+	serviceRegistry := ServiceRegistryImpl{registryClient: registryClient, connection: conn}
 
-	return &serviceRegistry, nil
+	return &serviceRegistry, &serviceRegistry, nil
 }
 
 func processPortsFromLabel(portLabel, separator string) ([]int32, error) {
 
 	ports := strings.Split(portLabel, separator)
-	var servicePorts = make([]int32, len(ports))
+	servicePorts := []int32{}
 	for _, port := range ports {
 		portToInt, err := strconv.ParseInt(port, 10, 32)
 		if err != nil {
@@ -107,10 +125,30 @@ func processPortsFromLabel(portLabel, separator string) ([]int32, error) {
 func processWorkloadIps(workloadIps, separator string) []string {
 
 	ips := strings.Split(workloadIps, separator)
-	var serviceIps = make([]string, len(ips))
+	serviceIps := []string{}
 	for _, ip := range ips {
 		serviceIps = append(serviceIps, ip)
 	}
 
 	return serviceIps
+}
+
+func ValidateLabels(labels map[string]string) validationErrors {
+	var errs validationErrors
+	if labels[CLUSTER_NAME] == "" {
+		errs = append(errs, fmt.Errorf("cluster name not found on labels"))
+	}
+	if labels[SERVICE_NAME] == "" {
+		errs = append(errs, fmt.Errorf("serviceName not found on labels"))
+	}
+	if labels[PORT] == "" {
+		errs = append(errs, fmt.Errorf("ports not found on labels"))
+	}
+	if labels[POD_NAME] == "" {
+		errs = append(errs, fmt.Errorf("pod name not found on labels"))
+	}
+	if len(errs) != 0 {
+		return errs
+	}
+	return nil
 }

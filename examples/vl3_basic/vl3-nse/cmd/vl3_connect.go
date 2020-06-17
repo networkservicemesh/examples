@@ -38,13 +38,6 @@ const (
 	PEER_STATE_CONN_RX
 )
 
-const (
-	POD_NAME = "podName"
-	SERVICE_NAME = "service"
-	PORT = "port"
-	CLUSTER_NAME = "clusterName"
-)
-
 type vL3NsePeer struct {
 	sync.RWMutex
 	endpointName              string
@@ -165,9 +158,10 @@ func (vxc *vL3ConnectComposite) processPeerRequest(vl3SrcEndpointName string, re
 func (vxc *vL3ConnectComposite) Request(ctx context.Context,
 	request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
 	logger := logrus.New() // endpoint.Log(ctx)
+	requestConnection := request.GetConnection()
 	logger.WithFields(logrus.Fields{
-		"endpointName":              request.GetConnection().GetNetworkServiceEndpointName(),
-		"networkServiceManagerName": request.GetConnection().GetSourceNetworkServiceManagerName(),
+		"endpointName":              requestConnection.GetNetworkServiceEndpointName(),
+		"networkServiceManagerName": requestConnection.GetSourceNetworkServiceManagerName(),
 	}).Infof("vL3ConnectComposite Request handler")
 	//var err error
 	/* NOTE: for IPAM we assume there's no IPAM endpoint in the composite endpoint list */
@@ -178,7 +172,7 @@ func (vxc *vL3ConnectComposite) Request(ctx context.Context,
 		return nil, err
 	}*/
 
-	if vl3SrcEndpointName, ok := request.GetConnection().GetLabels()[LABEL_NSESOURCE]; ok {
+	if vl3SrcEndpointName, ok := requestConnection.GetLabels()[LABEL_NSESOURCE]; ok {
 		// request is from another vl3 NSE
 		_ = vxc.processPeerRequest(vl3SrcEndpointName, request, request.Connection)
 
@@ -196,9 +190,9 @@ func (vxc *vL3ConnectComposite) Request(ctx context.Context,
 		} else {
 			/* Find all NSEs registered as the same type as this one */
 			req := &registry.FindNetworkServiceRequest{
-				NetworkServiceName: request.GetConnection().GetNetworkService(),
+				NetworkServiceName: requestConnection.GetNetworkService(),
 			}
-			logger.Infof("vL3ConnectComposite FindNetworkService for NS=%s", request.GetConnection().GetNetworkService())
+			logger.Infof("vL3ConnectComposite FindNetworkService for NS=%s", requestConnection.GetNetworkService())
 			response, err := vxc.nsDiscoveryClient.FindNetworkService(context.Background(), req)
 			if err != nil {
 				logger.Error(err)
@@ -222,20 +216,26 @@ func (vxc *vL3ConnectComposite) Request(ctx context.Context,
 		}
 	}
 
-	serviceRegistry, err := NewServiceRegistry(vxc.ipamAddr)
+	err := ValidateLabels(requestConnection.Labels)
 	if err != nil {
-		logrus.Error(err)
+		logger.Error(err)
 	} else {
-		ports, err := processPortsFromLabel(request.GetConnection().Labels[PORT], ";")
+		serviceRegistry, registryClient, err := NewServiceRegistry(vxc.ipamAddr)
 		if err != nil {
 			logger.Error(err)
-		}
+		} else {
+			ports, err := processPortsFromLabel(requestConnection.Labels[PORT], ";")
+			if err != nil {
+				logger.Error(err)
+			}
 
-		err = serviceRegistry.RegisterWorkload(request.GetConnection().Labels[CLUSTER_NAME], request.GetConnection().Labels[POD_NAME],
-			request.GetConnection().Labels[SERVICE_NAME], request.GetConnection().Labels[SERVICE_NAME], vxc.connDomain,
-			processWorkloadIps(request.GetConnection().Context.IpContext.SrcIpAddr, ";"), ports)
-		if err != nil {
-			logrus.Error(err)
+			err = serviceRegistry.RegisterWorkload(requestConnection.Labels[CLUSTER_NAME], requestConnection.Labels[POD_NAME],
+				requestConnection.Labels[SERVICE_NAME], requestConnection.Labels[SERVICE_NAME], vxc.connDomain,
+				processWorkloadIps(requestConnection.Context.IpContext.SrcIpAddr, ";"), ports)
+			if err != nil {
+				logger.Error(err)
+			}
+			registryClient.Stop()
 		}
 	}
 
@@ -244,7 +244,7 @@ func (vxc *vL3ConnectComposite) Request(ctx context.Context,
 	if endpoint.Next(ctx) != nil {
 		return endpoint.Next(ctx).Request(ctx, request)
 	}
-	return request.GetConnection(), nil
+	return requestConnection, nil
 }
 
 func (vxc *vL3ConnectComposite) Close(ctx context.Context, conn *connection.Connection) (*empty.Empty, error) {
