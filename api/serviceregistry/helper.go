@@ -62,7 +62,7 @@ func (m *Workload) Validate() error {
 	if err != nil {
 		errs = append(errs, err)
 	}
-	if len(m.IPAddress) > 1 {
+	if len(m.IPAddress) > 0 {
 		for _, s := range m.IPAddress {
 			_, err := toIpNet(s)
 			if err != nil {

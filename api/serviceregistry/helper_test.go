@@ -16,14 +16,14 @@ func Test(t *testing.T) {
 					PodName: "pod",
 					Name:    "workload",
 				},
-				IPAddress: []string{"127.0.0.1"},
+				IPAddress: []string{"172.100.220.1/24"},
 			},
 		},
 		Ports: []int32{1200, 1300},
 	}
 	err := svc.Validate()
 	if err != nil {
-		t.Fail()
 		fmt.Print(err)
+		t.Fail()
 	}
 }
