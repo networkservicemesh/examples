@@ -117,8 +117,8 @@ endif
 
 deploy-kiknos: helm-install-nsm
 	@$(TOP)/examples/ucnf-kiknos/scripts/deploy_kiknos.sh --cluster=$(CLUSTER) \
-		--subnet-ip=$(SUBNET_IP)
-	$(if $(CLUSTER_REF),--cluster-ref=$(CLUSTER_REF))
+		--subnet-ip=$(SUBNET_IP) \
+		$(if $(CLUSTER_REF),--cluster-ref=$(CLUSTER_REF))
 
 deploy-istio: deploy-kiknos
 	@$(TOP)/examples/ucnf-kiknos/scripts/deploy_istio.sh --cluster=$(CLUSTER)
@@ -139,7 +139,7 @@ deploy-kiknos-start-vpn: deploy-kiknos-clients
 		--cluster=$(CLUSTER) \
 		--service-name=$(NETWORK_SERVICE)
 
-deploy-asa: deploy-kiknos-clients
+deploy-asa: create-aws
 	@$(TOP)/examples/ucnf-kiknos/scripts/deploy_asa.sh \
 		--cluster-ref=$(CLUSTER) \
 		--subnet-ip=$(SUBNET_IP) \
