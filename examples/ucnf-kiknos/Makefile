@@ -15,6 +15,7 @@ AWS_KEY_PAIR ?= kiknos-asa
 # Reference cluster required when deploying the second cluster in order to be able to take some configurations
 # such as remote IP address when configuring kiknos NSE or the AWS VPC
 CLUSTER_REF ?=
+
 # Parent image for the NSE
 override VPP_AGENT = ciscolabs/kiknos:latest
 
@@ -37,6 +38,9 @@ DEPLOY_ISTIO ?= true
 
 # Create aws cluster
 AWS ?= false
+
+# IP for the remote ASA subnet (without the mask, ex: 192.168.254.0)
+SUBNET_IP = 192.168.254.0
 
 NSM_NAMESPACE = nsm-system
 CONTAINER_REPO = networkservicemesh
@@ -105,9 +109,11 @@ deploy-kiknos: provide-image
 endif
 
 deploy-kiknos: helm-install-nsm
-	@$(TOP)/examples/ucnf-kiknos/scripts/deploy_kiknos.sh --cluster=$(CLUSTER)
+	@$(TOP)/examples/ucnf-kiknos/scripts/deploy_kiknos.sh --cluster=$(CLUSTER) \
+		--subnet-ip=$(SUBNET_IP)
+	$(if $(CLUSTER_REF),--cluster-ref=$(CLUSTER_REF))
 
-deploy-istio:
+deploy-istio: deploy-kiknos
 	@$(TOP)/examples/ucnf-kiknos/scripts/deploy_istio.sh --cluster=$(CLUSTER)
 
 ifeq ($(DEPLOY_ISTIO),true)
@@ -126,10 +132,10 @@ deploy-kiknos-start-vpn: deploy-kiknos-clients
 		--cluster=$(CLUSTER) \
 		--service-name=$(NETWORK_SERVICE)
 
-deploy-asa: #create-aws
+deploy-asa: deploy-kiknos-clients
 	@$(TOP)/examples/ucnf-kiknos/scripts/deploy_asa.sh \
-		--cluster=$(CLUSTER) \
-		--cluster-ref=$(CLUSTER_REF) \
+		--cluster-ref=$(CLUSTER) \
+		--subnet-ip=$(SUBNET_IP) \
 		--aws-key-pair=$(AWS_KEY_PAIR)
 
 delete-context:

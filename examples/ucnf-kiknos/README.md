@@ -82,7 +82,7 @@ Makefile options:
     not relevant if $BUILD_IMAGE is not true - (Default: `push`)
 - `DEPLOY_ISTIO` - Set whether to deploy istio gateway or not - (Default: `true`)
 - `AWS` - Create aws cluster - (Default: `false`)
-
+- `SUBNET_IP` - IP for the remote ASA subnet (without the mask, ex: 192.168.254.0) - (Default: `192.168.254.0`)
 
 ## Check connectivity between workloads (Scenario 1)
 In order to check the connectivity between worker pods run the following make target:

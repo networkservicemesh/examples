@@ -6,6 +6,7 @@ PULL_POLICY=${PULL_POLICY:-IfNotPresent}
 SERVICE_NAME=${SERVICE_NAME:-hello-world}
 DELETE=${DELETE:-false}
 OPERATION=${OPERATION:-apply}
+SUBNET_IP=${SUBNET_IP:-192.168.254.0}
 
 function print_usage() {
     echo "$(basename "$0") - Deploy NSM Kiknos topology. All properties can also be provided through env variables
@@ -20,7 +21,8 @@ Options:
   --tag                 Docker image tag                                                    env var: NSE_TAG          - (Default: $NSE_TAG)
   --pull-policy         Pull policy for the NSE image                                       env var: PULL_POLICY      - (Default: $PULL_POLICY)
   --service-name        NSM service                                                         env var: SERVICE_NAME     - (Default: $SERVICE_NAME)
-  --delete              Delete the Kind clusters                                            env var: DELETE           - (Default: $DELETE)
+  --delete              Delete NSE                                                          env var: DELETE           - (Default: $DELETE)
+  --subnet-ip           IP for the remote ASA subnet (without the mask, ex: 192.168.254.0)  env var: SUBNET_IP        - (Default: $SUBNET_IP)
   --help -h             Help
 " >&2
 }
@@ -44,6 +46,9 @@ for i in "$@"; do
     ;;
   --service-name=*)
     SERVICE_NAME="${i#*=}"
+    ;;
+  --subnet-ip=*)
+    SUBNET_IP="${i#*=}"
     ;;
   --delete)
     OPERATION=delete
@@ -92,4 +97,4 @@ if [[ -n "$CLUSTER_REF" ]]; then
 fi
 
 performNSE "$CLUSTER" --set strongswan.network.localSubnet=172.31.22.0/24 \
-  --set strongswan.network.remoteSubnets="{172.31.23.0/24,192.168.254.0/24}"
+  --set strongswan.network.remoteSubnets="{172.31.23.0/24,$SUBNET_IP/24}"
