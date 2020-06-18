@@ -53,7 +53,7 @@ func (s *ServiceRegistryImpl) RegisterWorkload(clusterName, podName, name, sevic
 		Ports:               ports,
 	}
 
-	logrus.Infof("Sending workload register request: %d", serviceWorkload)
+	logrus.Infof("Sending workload register request: %v", serviceWorkload)
 	_, err := s.registryClient.RegisterWorkload(context.Background(), serviceWorkload)
 	if err != nil {
 		logrus.Errorf("service registration not successful: %v", err)
