@@ -29,7 +29,7 @@ spec:
           imagePullPolicy: {{ .Values.pullPolicy }}
           ports:
           - name: monitoring
-            containerPort: 9191
+            containerPort: {{ .Values.vppMetricsPort }}
           env:
             - name: ENDPOINT_NETWORK_SERVICE
               value: {{ .Values.nsm.serviceName | quote }}
