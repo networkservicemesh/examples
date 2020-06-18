@@ -1,13 +1,21 @@
-include $(TOP)/mk/targets.mk
+# Parent image for the NSE
+override VPP_AGENT = ciscolabs/kiknos:latest
+
+# Set the org of new built image
+override ORG = vladcodaniel
+
+# Set the tag of new built image
+override TAG = kiknos
 
 # Set the cluster name
 CLUSTER ?= kiknos-demo-1
 
-# Set the org of new built image
-ORG = vladcodaniel
+# Configure examples
+NAME = ucnf-kiknos
+CONTAINERS = vppagent
+KIND_CLUSTER_NAME = $(CLUSTER)
 
-# Set the tag of new built image
-TAG = kiknos
+include $(TOP)/mk/targets.mk
 
 # AWS Key Pair for connecting over SSH
 AWS_KEY_PAIR ?= kiknos-asa
@@ -15,9 +23,6 @@ AWS_KEY_PAIR ?= kiknos-asa
 # Reference cluster required when deploying the second cluster in order to be able to take some configurations
 # such as remote IP address when configuring kiknos NSE or the AWS VPC
 CLUSTER_REF ?=
-
-# Parent image for the NSE
-override VPP_AGENT = ciscolabs/kiknos:latest
 
 # Set a default forwarding plane
 FORWARDING_PLANE ?= vpp
@@ -50,19 +55,21 @@ METRICS_COLLECTOR_ENABLED = true
 SPIRE_ENABLED = false
 INSECURE = true
 
-provide-image: k8s-universal-cnf-save
+docker-push:
+	@docker push "$(ORG)/ucnf-kiknos-vppagent:$(TAG)"
+
+load-images:
+	kind load docker-image "$(ORG)/ucnf-kiknos-vppagent:$(TAG)" --name=$(CLUSTER)
+
+provide-image: k8s-ucnf-kiknos-save
 
 ifeq ($(PROVISION_MODE),push)
 provide-image: docker-push
 endif
 
 ifeq ($(PROVISION_MODE),kind-load)
-provide-image: k8s-universal-cnf-load-images
+provide-image: load-images
 endif
-
-
-docker-push:
-	@docker push "$(ORG)/universal-cnf-vppagent:$(TAG)"
 
 create-kind:
 	@[[ -n `kind get clusters | grep $(CLUSTER)` ]] && echo "Cluster $(CLUSTER) already present, skipping create_kind rule" && exit 0;\
