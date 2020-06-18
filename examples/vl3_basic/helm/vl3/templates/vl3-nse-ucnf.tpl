@@ -113,6 +113,6 @@ spec:
       cnns/nse.servicename: {{ .Values.nsm.serviceName | quote }}
   ports:
     - name: monitoring
-      port: 9191
+      port: {{ .Values.vppMetricsPort }}
       targetPort: monitoring
       protocol: TCP
