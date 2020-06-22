@@ -158,10 +158,10 @@ func (vxc *vL3ConnectComposite) processPeerRequest(vl3SrcEndpointName string, re
 func (vxc *vL3ConnectComposite) Request(ctx context.Context,
 	request *networkservice.NetworkServiceRequest) (*connection.Connection, error) {
 	logger := logrus.New() // endpoint.Log(ctx)
-	requestConnection := request.GetConnection()
+	conn := request.GetConnection()
 	logger.WithFields(logrus.Fields{
-		"endpointName":              requestConnection.GetNetworkServiceEndpointName(),
-		"networkServiceManagerName": requestConnection.GetSourceNetworkServiceManagerName(),
+		"endpointName":              conn.GetNetworkServiceEndpointName(),
+		"networkServiceManagerName": conn.GetSourceNetworkServiceManagerName(),
 	}).Infof("vL3ConnectComposite Request handler")
 	//var err error
 	/* NOTE: for IPAM we assume there's no IPAM endpoint in the composite endpoint list */
@@ -172,7 +172,7 @@ func (vxc *vL3ConnectComposite) Request(ctx context.Context,
 		return nil, err
 	}*/
 
-	if vl3SrcEndpointName, ok := requestConnection.GetLabels()[LABEL_NSESOURCE]; ok {
+	if vl3SrcEndpointName, ok := conn.GetLabels()[LABEL_NSESOURCE]; ok {
 		// request is from another vl3 NSE
 		_ = vxc.processPeerRequest(vl3SrcEndpointName, request, request.Connection)
 
@@ -190,9 +190,9 @@ func (vxc *vL3ConnectComposite) Request(ctx context.Context,
 		} else {
 			/* Find all NSEs registered as the same type as this one */
 			req := &registry.FindNetworkServiceRequest{
-				NetworkServiceName: requestConnection.GetNetworkService(),
+				NetworkServiceName: conn.GetNetworkService(),
 			}
-			logger.Infof("vL3ConnectComposite FindNetworkService for NS=%s", requestConnection.GetNetworkService())
+			logger.Infof("vL3ConnectComposite FindNetworkService for NS=%s", conn.GetNetworkService())
 			response, err := vxc.nsDiscoveryClient.FindNetworkService(context.Background(), req)
 			if err != nil {
 				logger.Error(err)
@@ -216,7 +216,7 @@ func (vxc *vL3ConnectComposite) Request(ctx context.Context,
 		}
 	}
 
-	err := ValidateLabels(requestConnection.Labels)
+	err := ValidateInLabels(conn.Labels)
 	if err != nil {
 		logger.Error(err)
 	} else {
@@ -224,14 +224,14 @@ func (vxc *vL3ConnectComposite) Request(ctx context.Context,
 		if err != nil {
 			logger.Error(err)
 		} else {
-			ports, err := processPortsFromLabel(requestConnection.Labels[PORT], ";")
+			ports, err := processPortsFromLabel(conn.Labels[PORT], ";")
 			if err != nil {
 				logger.Error(err)
 			}
 
-			err = serviceRegistry.RegisterWorkload(requestConnection.Labels[CLUSTER_NAME], requestConnection.Labels[POD_NAME],
-				requestConnection.Labels[SERVICE_NAME], requestConnection.Labels[SERVICE_NAME], vxc.connDomain,
-				processWorkloadIps(requestConnection.Context.IpContext.SrcIpAddr, ";"), ports)
+			err = serviceRegistry.RegisterWorkload(conn.Labels[CLUSTER_NAME], conn.Labels[POD_NAME],
+				conn.Labels[SERVICE_NAME], conn.Labels[SERVICE_NAME], vxc.connDomain,
+				processWorkloadIps(conn.Context.IpContext.SrcIpAddr, ";"), ports)
 			if err != nil {
 				logger.Error(err)
 			}
@@ -244,7 +244,7 @@ func (vxc *vL3ConnectComposite) Request(ctx context.Context,
 	if endpoint.Next(ctx) != nil {
 		return endpoint.Next(ctx).Request(ctx, request)
 	}
-	return requestConnection, nil
+	return conn, nil
 }
 
 func (vxc *vL3ConnectComposite) Close(ctx context.Context, conn *connection.Connection) (*empty.Empty, error) {
@@ -416,7 +416,7 @@ func removeDuplicates(elements []string) []string {
 	return result
 }
 
-// NewVppAgentComposite creates a new VPP Agent composite
+// newVL3ConnectComposite creates a new VL3 composite
 func newVL3ConnectComposite(configuration *common.NSConfiguration, ipamCidr string, backend config.UniversalCNFBackend, remoteIpList []string, getNseName fnGetNseName, defaultCdPrefix, ipamAddr, connDomain string) *vL3ConnectComposite {
 	nsRegAddr, ok := os.LookupEnv("NSREGISTRY_ADDR")
 	if !ok {

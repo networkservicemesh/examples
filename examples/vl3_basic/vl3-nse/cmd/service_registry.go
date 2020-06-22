@@ -83,7 +83,7 @@ func (s *ServiceRegistryImpl) RemoveWorkload(clusterName, podName, name, seviceN
 	}
 
 	logrus.Infof("Sending workload remove request: %v", serviceWorkload)
-	_, err := s.registryClient.RegisterWorkload(context.Background(), serviceWorkload)
+	_, err := s.registryClient.RemoveWorkload(context.Background(), serviceWorkload)
 	if err != nil {
 		logrus.Errorf("service removal not successful: %v", err)
 	}
@@ -126,14 +126,12 @@ func processWorkloadIps(workloadIps, separator string) []string {
 
 	ips := strings.Split(workloadIps, separator)
 	serviceIps := []string{}
-	for _, ip := range ips {
-		serviceIps = append(serviceIps, ip)
-	}
+	serviceIps = append(serviceIps, ips...)
 
 	return serviceIps
 }
 
-func ValidateLabels(labels map[string]string) validationErrors {
+func ValidateInLabels(labels map[string]string) validationErrors {
 	var errs validationErrors
 	if labels[CLUSTER_NAME] == "" {
 		errs = append(errs, fmt.Errorf("cluster name not found on labels"))
