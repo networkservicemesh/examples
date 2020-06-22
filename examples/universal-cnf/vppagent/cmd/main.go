@@ -16,16 +16,18 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
 
-	"github.com/tiswanso/examples/examples/universal-cnf/vppagent/pkg/ucnf"
-	"github.com/tiswanso/examples/examples/universal-cnf/vppagent/pkg/vppagent"
-	"github.com/networkservicemesh/networkservicemesh/sdk/endpoint"
-
+	"github.com/danielvladco/k8s-vnet/pkg/nseconfig"
+	"github.com/networkservicemesh/networkservicemesh/controlplane/api/networkservice"
 	"github.com/networkservicemesh/networkservicemesh/pkg/tools"
 	"github.com/networkservicemesh/networkservicemesh/sdk/common"
 	"github.com/sirupsen/logrus"
+
+	"github.com/tiswanso/examples/examples/universal-cnf/vppagent/pkg/ucnf"
+	"github.com/tiswanso/examples/examples/universal-cnf/vppagent/pkg/vppagent"
 )
 
 const (
@@ -48,7 +50,7 @@ func (mf *Flags) Process() {
 
 type defaultCompositeEndpointAddon string
 
-func (dcea defaultCompositeEndpointAddon) AddCompositeEndpoints(nsConfig *common.NSConfiguration) *[]endpoint.ChainedEndpoint {
+func (dcea defaultCompositeEndpointAddon) AddCompositeEndpoints(*common.NSConfiguration, *nseconfig.Endpoint) *[]networkservice.NetworkServiceServer {
 	return nil
 }
 
@@ -63,7 +65,7 @@ func main() {
 	mainFlags.Process()
 
 	var defCEAddon defaultCompositeEndpointAddon
-	ucnfNse := ucnf.NewUcnfNse(mainFlags.ConfigPath, mainFlags.Verify, &vppagent.UniversalCNFVPPAgentBackend{}, defCEAddon)
+	ucnfNse := ucnf.NewUcnfNse(mainFlags.ConfigPath, mainFlags.Verify, &vppagent.UniversalCNFVPPAgentBackend{}, defCEAddon, context.Background())
 	defer ucnfNse.Cleanup()
 	<-c
 }
