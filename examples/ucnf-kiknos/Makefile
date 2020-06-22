@@ -55,6 +55,10 @@ METRICS_COLLECTOR_ENABLED = true
 SPIRE_ENABLED = false
 INSECURE = true
 
+.PHONY: docker-push load-images provide-image provide-image provide-image create-kind delete-kind create-aws delete-aws \
+		create-cluster delete-cluster create-cluster delete-cluster helm-init helm-install-nsm deploy-kiknos deploy-kiknos \
+		deploy-istio deploy-kiknos-clients deploy-kiknos-clients deploy-kiknos-start-vpn deploy-asa delete-context clean
+
 docker-push:
 	@docker push "$(ORG)/ucnf-kiknos-vppagent:$(TAG)"
 
@@ -139,11 +143,12 @@ deploy-kiknos-start-vpn: deploy-kiknos-clients
 		--cluster=$(CLUSTER) \
 		--service-name=$(NETWORK_SERVICE)
 
-deploy-asa: create-aws
+deploy-asa: deploy-istio
 	@$(TOP)/examples/ucnf-kiknos/scripts/deploy_asa.sh \
 		--cluster-ref=$(CLUSTER) \
 		--subnet-ip=$(SUBNET_IP) \
 		--aws-key-pair=$(AWS_KEY_PAIR)
+
 
 delete-context:
 	-@kubectl config delete-context $(CLUSTER)

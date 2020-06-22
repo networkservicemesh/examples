@@ -49,7 +49,6 @@ IP_ADDR=$(kubectl --context "$CLUSTER_REF" exec -it "$POD_NAME" -- ip addr | gre
 
 # Update ASA config file
 day0=$(sed -e "s/<PEER_CONNECT_IP>/${IP_ADDR}/g" -e "s/<HOST_NETWORK>/$SUBNET_IP/g" "examples/ucnf-kiknos/scripts/day0.txt")
-echo "_SUBNET_IP $SUBNET_IP"
 
 # Deploy ASA
 python  examples/ucnf-kiknos/scripts/pyaws/create_ec2.py --name kiknos-asa --key-pair "$AWS_KEY_PAIR" \
