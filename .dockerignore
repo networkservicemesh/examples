@@ -3,5 +3,6 @@
 
 # ... except these
 !examples
+!api
 !go.mod
 !go.sum
