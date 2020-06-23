@@ -143,7 +143,11 @@ deploy-kiknos-start-vpn: deploy-kiknos-clients
 		--cluster=$(CLUSTER) \
 		--service-name=$(NETWORK_SERVICE)
 
+ifeq ($(DEPLOY_ISTIO),true)
 deploy-asa: deploy-istio
+endif
+
+deploy-asa: deploy-kiknos
 	@$(TOP)/examples/ucnf-kiknos/scripts/deploy_asa.sh \
 		--cluster-ref=$(CLUSTER) \
 		--subnet-ip=$(SUBNET_IP) \

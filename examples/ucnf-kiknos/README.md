@@ -48,6 +48,11 @@ make deploy-kiknos-clients AWS=true CLUSTER=kiknos-demo-1
 make deploy-kiknos-start-vpn AWS=true BUILD_IMAGE=false DEPLOY_ISTIO=false CLUSTER=kiknos-demo-2 CLUSTER_REF=kiknos-demo-1
 ```
 
+* Deploy ASAv with istio
+```bash
+make deploy-asa AWS=true CLUSTER=kiknos-demo-asa
+```
+
 Makefile consists of the following rules: 
 * *provide-image*: Builds docker image and pushes or executes a `kind-load`.
 * *docker-push*: Pushes the docker image to the registry specified in `ORG`. 
