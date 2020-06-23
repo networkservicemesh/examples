@@ -224,14 +224,8 @@ func (vxc *vL3ConnectComposite) Request(ctx context.Context,
 		if err != nil {
 			logger.Error(err)
 		} else {
-			ports, err := processPortsFromLabel(conn.Labels[PORT], ";")
-			if err != nil {
-				logger.Error(err)
-			}
-
-			err = serviceRegistry.RegisterWorkload(conn.Labels[CLUSTER_NAME], conn.Labels[POD_NAME],
-				conn.Labels[SERVICE_NAME], conn.Labels[SERVICE_NAME], vxc.connDomain,
-				processWorkloadIps(conn.Context.IpContext.SrcIpAddr, ";"), ports)
+			err = serviceRegistry.RegisterWorkload(ctx, conn.Labels, vxc.connDomain,
+				processWorkloadIps(conn.Context.IpContext.SrcIpAddr, ";"))
 			if err != nil {
 				logger.Error(err)
 			}

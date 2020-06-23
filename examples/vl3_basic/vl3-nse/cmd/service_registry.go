@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/tiswanso/examples/api/serviceregistry"
-	"google.golang.org/grpc"
 	"strconv"
 	"strings"
+
+	"github.com/sirupsen/logrus"
+	"github.com/tiswanso/examples/api/serviceregistry"
+
+	"google.golang.org/grpc"
 )
 
 const (
@@ -19,25 +21,43 @@ const (
 
 type validationErrors []error
 
+func NewServiceRegistry(addr string) (ServiceRegistry, ServiceRegistryClient, error) {
+	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to connect to ipam server: %w", err)
+	}
+
+	registryClient := serviceregistry.NewRegistryClient(conn)
+	serviceRegistry := serviceRegistry{registryClient: registryClient, connection: conn}
+
+	return &serviceRegistry, &serviceRegistry, nil
+}
+
+
 type ServiceRegistry interface {
-	RegisterWorkload(clusterName, podName, name, seviceName, connDom string, ipAddr []string, ports []int32) error
-	RemoveWorkload(clusterName, podName, name, seviceName, connDom string, ipAddr []string, ports []int32) error
+	RegisterWorkload(ctx context.Context, workloadLabels map[string]string, connDom string, ipAddr []string) error
+	RemoveWorkload(ctx context.Context, workloadLabels map[string]string, connDom string, ipAddr []string) error
 }
 
 type ServiceRegistryClient interface {
 	Stop()
 }
 
-type ServiceRegistryImpl struct {
+type serviceRegistry struct {
 	registryClient serviceregistry.RegistryClient
 	connection *grpc.ClientConn
 }
 
-func (s *ServiceRegistryImpl) RegisterWorkload(clusterName, podName, name, seviceName, connDom string, ipAddr []string, ports []int32) error {
+func (s *serviceRegistry) RegisterWorkload(ctx context.Context, workloadLabels map[string]string, connDom string, ipAddr []string) error {
+	ports, err := processPortsFromLabel(workloadLabels[PORT], ";")
+	if err != nil {
+		logrus.Error(err)
+	}
+
 	workloadIdentifier := &serviceregistry.WorkloadIdentifier{
-		Cluster:             clusterName,
-		PodName:             podName,
-		Name:                name,
+		Cluster:             workloadLabels[CLUSTER_NAME],
+		PodName:             workloadLabels[POD_NAME],
+		Name:                workloadLabels[SERVICE_NAME],
 	}
 
 	workload := &serviceregistry.Workload{
@@ -47,26 +67,31 @@ func (s *ServiceRegistryImpl) RegisterWorkload(clusterName, podName, name, sevic
 
 	workloads := []*serviceregistry.Workload{workload}
 	serviceWorkload := &serviceregistry.ServiceWorkload{
-		ServiceName:         seviceName,
+		ServiceName:         workloadLabels[SERVICE_NAME],
 		ConnectivityDomain:  connDom,
 		Workloads:           workloads,
 		Ports:               ports,
 	}
 
 	logrus.Infof("Sending workload register request: %v", serviceWorkload)
-	_, err := s.registryClient.RegisterWorkload(context.Background(), serviceWorkload)
+	_, err = s.registryClient.RegisterWorkload(ctx, serviceWorkload)
 	if err != nil {
-		logrus.Errorf("service registration not successful: %v", err)
+		logrus.Errorf("service registration not successful: %w", err)
 	}
 
 	return err
 }
 
-func (s *ServiceRegistryImpl) RemoveWorkload(clusterName, podName, name, seviceName, connDom string, ipAddr []string, ports []int32) error {
+func (s *serviceRegistry) RemoveWorkload(ctx context.Context, workloadLabels map[string]string, connDom string, ipAddr []string) error {
+	ports, err := processPortsFromLabel(workloadLabels[PORT], ";")
+	if err != nil {
+		logrus.Error(err)
+	}
+
 	workloadIdentifier := &serviceregistry.WorkloadIdentifier{
-		Cluster:             clusterName,
-		PodName:             podName,
-		Name:                name,
+		Cluster:             workloadLabels[CLUSTER_NAME],
+		PodName:             workloadLabels[POD_NAME],
+		Name:                workloadLabels[SERVICE_NAME],
 	}
 
 	workload := &serviceregistry.Workload{
@@ -76,39 +101,26 @@ func (s *ServiceRegistryImpl) RemoveWorkload(clusterName, podName, name, seviceN
 
 	workloads := []*serviceregistry.Workload{workload}
 	serviceWorkload := &serviceregistry.ServiceWorkload{
-		ServiceName:         seviceName,
+		ServiceName:         workloadLabels[SERVICE_NAME],
 		ConnectivityDomain:  connDom,
 		Workloads:           workloads,
 		Ports:               ports,
 	}
 
 	logrus.Infof("Sending workload remove request: %v", serviceWorkload)
-	_, err := s.registryClient.RemoveWorkload(context.Background(), serviceWorkload)
+	_, err = s.registryClient.RemoveWorkload(ctx, serviceWorkload)
 	if err != nil {
-		logrus.Errorf("service removal not successful: %v", err)
+		logrus.Errorf("service removal not successful: %w", err)
 	}
 
 	return err
 }
 
-func (s *ServiceRegistryImpl) Stop() {
+func (s *serviceRegistry) Stop() {
 	s.connection.Close()
 }
 
-func NewServiceRegistry(addr string) (ServiceRegistry, ServiceRegistryClient, error) {
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
-	if err != nil {
-		return nil, nil, fmt.Errorf("unable to connect to ipam server: %v", err)
-	}
-
-	registryClient := serviceregistry.NewRegistryClient(conn)
-	serviceRegistry := ServiceRegistryImpl{registryClient: registryClient, connection: conn}
-
-	return &serviceRegistry, &serviceRegistry, nil
-}
-
 func processPortsFromLabel(portLabel, separator string) ([]int32, error) {
-
 	ports := strings.Split(portLabel, separator)
 	servicePorts := []int32{}
 	for _, port := range ports {
@@ -123,7 +135,6 @@ func processPortsFromLabel(portLabel, separator string) ([]int32, error) {
 }
 
 func processWorkloadIps(workloadIps, separator string) []string {
-
 	ips := strings.Split(workloadIps, separator)
 	serviceIps := []string{}
 	serviceIps = append(serviceIps, ips...)
