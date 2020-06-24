@@ -4,8 +4,6 @@ PODS = simple-client vl3-nse
 CHECK = export ITERATIONS=10 && export BATCHES=1 && scripts/check_vl3.sh
 
 VPP_AGENT_BASE_IMAGE = ligato/vpp-agent:v3.1.0
-ORG = tiswanso
-TAG = latest
 
 include $(TOP)/mk/targets.mk
 

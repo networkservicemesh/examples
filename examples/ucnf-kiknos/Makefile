@@ -1,10 +1,5 @@
 # Parent image for the NSE
 VPP_AGENT = ciscolabs/kiknos:latest
-# Set the org of new built image
-ORG = tiswanso
-
-# Set the tag of new built image
-TAG = kiknos
 
 # Set the cluster name
 CLUSTER ?= kiknos-demo-1
