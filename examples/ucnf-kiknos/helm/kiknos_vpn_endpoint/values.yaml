@@ -12,7 +12,7 @@ cnns:
 #  domain: nsr.foo.com
 
 nsm:
-  serviceName: icmp-responder
+  serviceName: hello-world
   sourceApp: ucnf-client
   destinationApp: vpn-endpoint
 

@@ -1,4 +1,4 @@
 
 nsm:
-  serviceName: icmp-responder
+  serviceName: hello-world
 

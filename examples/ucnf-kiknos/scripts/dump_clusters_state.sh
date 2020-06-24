@@ -3,7 +3,7 @@
 # Topology information
 CLUSTER1=${CLUSTER1:-kiknos-demo-1}
 CLUSTER2=${CLUSTER2:-kiknos-demo-2}
-
+SERVICE_NAME=${SERVICE_NAME:-hello-world}
 
 pushd "$(dirname "$0")/../../../"
 
@@ -16,6 +16,7 @@ Usage: $(basename "$0") [options...]
 Options:
   --cluster1            Name of Kind cluster one - Represents the client network            env var: CLUSTER1         - (Default: $CLUSTER1)
   --cluster2            Name of Kind cluster two - Represents the VPN Gateway               env var: CLUSTER2         - (Default: $CLUSTER2)
+  --service-name        NSM service                                                         env var: SERVICE_NAME     - (Default: $SERVICE_NAME)
 " >&2
 
 }
@@ -27,6 +28,9 @@ for i in "$@"; do
     ;;
   --cluster2=*)
     CLUSTER2="${i#*=}"
+    ;;
+  --service-name=*)
+    SERVICE_NAME="${i#*=}"
     ;;
   -h | --help)
     print_usage
@@ -90,7 +94,7 @@ function dump_addresses_of_clients() {
     kubectl --context "$cluster" -n istio-system exec "$NSC" -c istio-proxy -- ip addr show dev nsm0
   done
 
-  for NSC2 in $(kubectl --context "$cluster" get pods -l app=icmp-responder -o=name); do
+  for NSC2 in $(kubectl --context "$cluster" get pods -l app=${SERVICE_NAME} -o=name); do
     echo "--------------------------------------- NSC $NSC2 interfaces --------------------------------------------------"
     kubectl --context "$cluster" exec "$NSC2" -c helloworld -- ip addr show dev nsm0
   done

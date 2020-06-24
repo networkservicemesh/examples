@@ -38,7 +38,7 @@ def generate_cluster_cfg(name, region, cidr, vpcid, private, public):
 
         'nodeGroups': [
             {
-                'name': 'cnns-member-ng',
+                'name': 'member-ng',
                 'minSize': 2,
                 'maxSize': 2,
                 'instancesDistribution': {

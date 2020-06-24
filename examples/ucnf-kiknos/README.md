@@ -30,10 +30,6 @@ Please follow the instructions on where the NSM project should be in the [Exampl
  allows for the case where you want all workloads to be exposed through a single IP address and differentiate between them.
  This case provides better configurability of the k8s cluster, but adds a layer of complexity with the introduction of Istio.
 
- 
-# Testing
-
-> :warning: **For the current version build image are available only with `ORG=vladcodaniel` env **
 ## Deploy the environment
 
 * Deploy kind environment:
@@ -52,6 +48,10 @@ make deploy-kiknos-start-vpn AWS=true BUILD_IMAGE=false DEPLOY_ISTIO=false CLUST
 ```bash
 make deploy-asa AWS=true CLUSTER=kiknos-demo-asa
 ```
+
+By default, most of the deployment scripts depend on `k8s-ucnf-kiknos-save` rule. 
+This rule builds a docker image. To control the registry and tag use `ORG` and `TAG` options. 
+If you know that the image is already present you can skip this step with `BUILD_IMAGE=false` as in example above. 
 
 Makefile consists of the following rules: 
 * *provide-image*: Builds docker image and pushes or executes a `kind-load`.
@@ -121,28 +121,20 @@ IP address of the Ingress gateway that was supplied by the NSE.
 
 Output:
 ```bash
-CLUSTER1=kiknos-demo-1 CLUSTER2=kiknos-demo-2 /home/mihai/go/src/github.com/networkservicemesh/examples/examples/ucnf-kiknos/scripts/test_istio_vpn_conn.sh
+./examples/ucnf-kiknos/scripts/test_istio_vpn_conn.sh --cluster1=kiknos-demo-1 --cluster2=kiknos-demo-2 
 Detected pod with nsm interface ip: 172.31.22.9
-------------------------- Source pod/helloworld-ucnf-client-7bd94648d-2t7zj -------------------------
+------------------------- Source pod/helloworld-ucnf-client-d7d79cf54-dzs4m -------------------------
 Connecting to: http://172.31.22.9/hello
-Hello version: v1, instance: icmp-responder-v1-88bcb54bf-vt8jv
-Connecting to: http://172.31.22.9/hello-v2
-Hello version: v2, instance: icmp-responder-v2-7474975c44-mwflt
-Connecting to: http://172.31.22.9:8000/hello
-Hello version: v1, instance: icmp-responder-v1-88bcb54bf-vt8jv
-Connecting to: http://172.31.22.9:8000/hello-v2
-Hello version: v2, instance: icmp-responder-v2-7474975c44-mwflt
------------------------------------------------------------------------------------------------------
-------------------------- Source pod/helloworld-ucnf-client-7bd94648d-vl5nn -------------------------
+no healthy upstreamConnecting to: http://172.31.22.9/hello-v2
+no healthy upstreamConnecting to: http://172.31.22.9:8000/hello
+no healthy upstreamConnecting to: http://172.31.22.9:8000/hello-v2
+no healthy upstream-----------------------------------------------------------------------------------------------------
+------------------------- Source pod/helloworld-ucnf-client-d7d79cf54-qx786 -------------------------
 Connecting to: http://172.31.22.9/hello
-Hello version: v1, instance: icmp-responder-v1-88bcb54bf-vt8jv
-Connecting to: http://172.31.22.9/hello-v2
-Hello version: v2, instance: icmp-responder-v2-7474975c44-mwflt
-Connecting to: http://172.31.22.9:8000/hello
-Hello version: v1, instance: icmp-responder-v1-88bcb54bf-vt8jv
-Connecting to: http://172.31.22.9:8000/hello-v2
-Hello version: v2, instance: icmp-responder-v2-7474975c44-mwflt
------------------------------------------------------------------------------------------------------
+no healthy upstreamConnecting to: http://172.31.22.9/hello-v2
+no healthy upstreamConnecting to: http://172.31.22.9:8000/hello
+no healthy upstreamConnecting to: http://172.31.22.9:8000/hello-v2
+no healthy upstream-----------------------------------------------------------------------------------------------------
 
 ```
 ## AWS ASA Deployment
