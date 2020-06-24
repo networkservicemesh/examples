@@ -16,20 +16,6 @@ func (e validationErrors) Error() string {
 	return b.String()
 }
 
-func (x *ServiceRequest) Validate() error {
-	var errs validationErrors
-	if x.Name == "" {
-		errs = append(errs, fmt.Errorf("service name is a mandatory parameter"))
-	}
-	if x.ConnectivityDomain == "" {
-		errs = append(errs, fmt.Errorf("connectivity domain is a mandatory parameter"))
-	}
-	if len(errs) != 0 {
-		return errs
-	}
-	return nil
-}
-
 func (x *ServiceWorkload) Validate() error {
 	var errs validationErrors
 	if x.ServiceName == "" {
