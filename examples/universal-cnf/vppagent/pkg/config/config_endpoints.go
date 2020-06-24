@@ -30,7 +30,7 @@ import (
 // SingleEndpoint keeps the state of a single endpoint instance
 type SingleEndpoint struct {
 	NSConfiguration *common.NSConfiguration
-	NSComposite     *networkservice.NetworkServiceServer
+	NSComposite     networkservice.NetworkServiceServer
 	Endpoint        *nseconfig.Endpoint
 	Cleanup         func()
 }
@@ -85,6 +85,21 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*nseconfig.End
 			compositeEndpoints = append(compositeEndpoints, *addCompositeEndpoints...)
 		}
 
+		if e.VL3.IPAM.DefaultPrefixPool != "" {
+			compositeEndpoints = append(compositeEndpoints, endpoint.NewIpamEndpoint(&common.NSConfiguration{
+				NsmServerSocket:        nsconfig.NsmServerSocket,
+				NsmClientSocket:        nsconfig.NsmClientSocket,
+				Workspace:              nsconfig.Workspace,
+				EndpointNetworkService: nsconfig.EndpointNetworkService,
+				ClientNetworkService:   nsconfig.ClientNetworkService,
+				EndpointLabels:         nsconfig.EndpointLabels,
+				ClientLabels:           nsconfig.ClientLabels,
+				MechanismType:          nsconfig.MechanismType,
+				IPAddress:              e.VL3.IPAM.DefaultPrefixPool,
+				Routes:                 nil,
+			}))
+		}
+
 		if len(e.VL3.IPAM.Routes) > 0 {
 			routeAddr := makeRouteMutator(e.VL3.IPAM.Routes)
 			compositeEndpoints = append(compositeEndpoints, endpoint.NewCustomFuncEndpoint("route", routeAddr))
@@ -96,7 +111,7 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*nseconfig.End
 
 		result.Endpoints = append(result.Endpoints, &SingleEndpoint{
 			NSConfiguration: configuration,
-			NSComposite:     &composite,
+			NSComposite:     composite,
 			Endpoint:        e,
 		})
 	}
@@ -107,7 +122,7 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*nseconfig.End
 // Process iterates over the init commands and applies them
 func (pe *ProcessEndpoints) Process() error {
 	for _, e := range pe.Endpoints {
-		nsEndpoint, err := endpoint.NewNSMEndpoint(context.TODO(), e.NSConfiguration, *e.NSComposite)
+		nsEndpoint, err := endpoint.NewNSMEndpoint(context.TODO(), e.NSConfiguration, e.NSComposite)
 		if err != nil {
 			logrus.Fatalf("%v", err)
 			return err

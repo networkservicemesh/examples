@@ -4,8 +4,7 @@ go 1.14
 
 require (
 	github.com/Nordix/simple-ipam v1.0.0
-	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
-	github.com/danielvladco/k8s-vnet v0.3.0
+	github.com/danielvladco/k8s-vnet v0.3.3
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gofrs/uuid v3.2.0+incompatible
@@ -19,7 +18,6 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/viper v1.5.0
 	go.ligato.io/vpp-agent/v3 v3.1.0
-	golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58
 	google.golang.org/grpc v1.27.1
 	gopkg.in/yaml.v2 v2.2.8

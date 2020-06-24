@@ -1,11 +1,10 @@
 # Parent image for the NSE
-override VPP_AGENT = ciscolabs/kiknos:latest
-
+VPP_AGENT = ciscolabs/kiknos:latest
 # Set the org of new built image
-override ORG = vladcodaniel
+ORG = vladcodaniel
 
 # Set the tag of new built image
-override TAG = kiknos
+TAG = kiknos
 
 # Set the cluster name
 CLUSTER ?= kiknos-demo-1
@@ -122,6 +121,8 @@ endif
 deploy-kiknos: helm-install-nsm
 	@$(TOP)/examples/ucnf-kiknos/scripts/deploy_kiknos.sh --cluster=$(CLUSTER) \
 		--subnet-ip=$(SUBNET_IP) \
+		--org=$(ORG) \
+		--tag=$(TAG)
 		$(if $(CLUSTER_REF),--cluster-ref=$(CLUSTER_REF))
 
 deploy-istio: deploy-kiknos

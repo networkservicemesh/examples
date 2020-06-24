@@ -20,7 +20,7 @@ spec:
       hostNetwork: true
       initContainers:
           - name: af-packet-init
-            image: {{ .Values.registry }}/{{ .Values.org }}/universal-cnf-vppagent:{{ .Values.tag }}
+            image: "{{ .Values.registry }}/{{ .Values.org }}/ucnf-kiknos-vppagent:{{ .Values.tag }}"
             imagePullPolicy: {{ .Values.pullPolicy }}
             command: ["/usr/bin/af-packet-init"]
             env:
@@ -33,7 +33,7 @@ spec:
                 mountPath: /opt/kiknos
       containers:
         - name: ucnf-kiknos-vpn-nse
-          image: {{ .Values.registry }}/{{ .Values.org }}/universal-cnf-vppagent:{{ .Values.tag }}
+          image: "{{ .Values.registry }}/{{ .Values.org }}/ucnf-kiknos-vppagent:{{ .Values.tag }}"
           imagePullPolicy: {{ .Values.pullPolicy }}
           env:
             - name: ADVERTISE_NSE_NAME
@@ -192,10 +192,11 @@ data:
     - name: {{ .Values.nsm.serviceName | quote }}
       labels:
         app: "vl3-nse-{{ .Values.nsm.serviceName }}"
-      ipam:
-        prefixpool: {{ .Values.strongswan.network.localSubnet | quote }}
-        routes: {{ .Values.strongswan.network.remoteSubnets | toJson }}
-      ifname: "endpoint0"
+      vl3:
+        ipam:
+          defaultPrefixPool: {{ .Values.strongswan.network.localSubnet | quote }}
+          routes: {{ .Values.strongswan.network.remoteSubnets | toJson }}
+        ifName: "endpoint0"
 
 ---
 apiVersion: v1
