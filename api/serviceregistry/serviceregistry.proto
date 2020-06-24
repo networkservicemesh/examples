@@ -7,16 +7,20 @@ option go_package = "serviceregistry";
 
 service Registry{
   rpc RegisterWorkload (ServiceWorkload) returns (Empty) {} // Request register of a new service
-  rpc QueryService (ServiceRequest) returns (ServiceWorkload) {} // Request workload of a service
+  rpc GetServices (Empty) returns (stream WorkloadEvent) {} // Get serviceWorkloads
   rpc RemoveWorkload (ServiceWorkload) returns (Empty) {} // Remove service from list
 }
 
 message Empty {}
 
-//Request used to query
-message ServiceRequest {
-  string name = 1;
-  string connectivityDomain = 2;
+message WorkloadEvent {
+  EventType eventType = 1;
+  ServiceWorkload serviceWorkload = 2;
+}
+
+enum EventType {
+  Register = 0;
+  Remove = 1;
 }
 
 //The request used to register a new service or update the existing ones
