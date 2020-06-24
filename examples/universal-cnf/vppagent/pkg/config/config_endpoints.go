@@ -85,7 +85,8 @@ func NewProcessEndpoints(backend UniversalCNFBackend, endpoints []*nseconfig.End
 			compositeEndpoints = append(compositeEndpoints, *addCompositeEndpoints...)
 		}
 
-		if e.VL3.IPAM.DefaultPrefixPool != "" {
+		// if the default DefaultPrefixPool is set and central ipam server address is not set then use a ipam endpoint
+		if e.VL3.IPAM.DefaultPrefixPool != "" && e.VL3.IPAM.ServerAddress == "" {
 			compositeEndpoints = append(compositeEndpoints, endpoint.NewIpamEndpoint(&common.NSConfiguration{
 				NsmServerSocket:        nsconfig.NsmServerSocket,
 				NsmClientSocket:        nsconfig.NsmClientSocket,
