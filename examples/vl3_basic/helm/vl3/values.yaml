@@ -6,6 +6,7 @@ registry: docker.io
 org: tiswanso
 tag: unified_api_ipam
 pullPolicy: Always
+vppMetricsPort: 9191
 
 cnns:
   nsr:
