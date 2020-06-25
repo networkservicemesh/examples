@@ -78,12 +78,20 @@ function performNSE() {
     --set tag="$NSE_TAG" \
     --set pullPolicy="$PULL_POLICY" \
     --set nsm.serviceName="$SERVICE_NAME" $opts | kubectl --context "$cluster" $OPERATION -f -
-  if [[ "$OPERATION" == "delete" ]]; then
-    exit 0
+
+  CONDITION="condition=Ready"
+  if [[ ${OPERATION} = delete ]]; then
+    CONDITION="delete"
   fi
 
-  kubectl --context "$cluster" wait -n default --timeout=150s --for condition=Ready --all pods -l k8s-app
-  kubectl --context "$cluster" wait -n default --timeout=150s --for condition=Ready --all pods -l networkservicemesh.io/app
+  echo "Waiting for kiknos pods condition to be '$CONDITION'"
+  kubectl --context "$cluster" wait -n default --timeout=150s --for ${CONDITION} --all pods -l k8s-app=kiknos-etcd
+  kubectl --context "$cluster" wait -n default --timeout=150s --for ${CONDITION} --all pods -l networkservicemesh.io/app=${SERVICE_NAME}
+
+  if [[ ${OPERATION} = delete ]]; then
+    echo "Delete '${SERVICE_NAME}' network service if exists"
+    kubectl --context "$cluster" delete networkservices.networkservicemesh.io ${SERVICE_NAME}
+  fi
 }
 
 if [[ -n "$CLUSTER_REF" ]]; then

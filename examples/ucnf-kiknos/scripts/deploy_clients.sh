@@ -60,5 +60,10 @@ if [[ "$ISTIO_CLIENT" == "true" ]]; then
   helm template ./examples/ucnf-kiknos/helm/istio_clients --set app=${SERVICE_NAME} | kubectl --context "$CLUSTER" "$OPERATION" -f -
 fi
 
-echo "Waiting for client pods to be ready"
-kubectl --context "$CLUSTER" wait -n default --timeout=150s --for condition=Ready --all pods -l "app=$SERVICE_NAME"
+CONDITION="condition=Ready"
+if [[ ${OPERATION} = delete ]]; then
+    CONDITION="delete"
+fi
+
+echo "Waiting for client pods condition to be '$CONDITION'"
+kubectl --context "$CLUSTER" wait -n default --timeout=150s --for ${CONDITION} --all pods -l "app=$SERVICE_NAME"
