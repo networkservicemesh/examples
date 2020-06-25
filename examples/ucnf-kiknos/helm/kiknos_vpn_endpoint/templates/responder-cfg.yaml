@@ -1,0 +1,142 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: responder-cfg
+data:
+  responder.conf: |
+    connections {
+      kiknos {
+        version = 2
+        mobike = no
+        proposals = aes256-sha1-modp2048
+        {{- if .Values.strongswan.network.remoteAddr }}
+        remote_addrs = {{ .Values.strongswan.network.remoteAddr }}
+        auto = start
+        {{- end }}
+        encap = yes
+        local-1 {
+          auth = psk
+        }
+        remote-1 {
+          auth = psk
+        }
+        children {
+          responder {
+            local_ts = {{ .Values.strongswan.network.localSubnet }}
+            remote_ts = {{ join "," .Values.strongswan.network.remoteSubnets }}
+            mode = tunnel
+            esp_proposals = aes128-sha1
+          }
+        }
+      }
+    }
+    secrets {
+      ike-one {
+        secret = {{ .Values.strongswan.secrets.ikePreSharedKey }}
+      }
+    }
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: responder-cfg-job
+spec:
+  template:
+    spec:
+      containers:
+        - name: responder-config
+        {{- if eq .Values.scenario "aio" }}
+          {{- if .Values.development.useDevImages }}
+          image: {{ .Values.aio.image.devRepository }}:{{ .Values.aio.image.tag }}
+          {{- else }}
+          image: {{ .Values.aio.image.repository }}:{{ .Values.aio.image.tag }}
+          {{- end }}
+        {{- else }}
+          {{- if .Values.development.useDevImages }}
+          image: {{ .Values.ike.image.devRepository }}:{{ .Values.ike.image.tag }}
+          {{- else }}
+          image: {{ .Values.ike.image.repository }}:{{ .Values.ike.image.tag }}
+          {{- end }}
+        {{- end }}
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              {{if $.Values.development.useDevImages}}/go/bin/{{else}}/usr/bin/{{end}}kiknosctl \
+                --config-dir=/var/kiknosctl \
+                --service-label={{ $.Values.aio.serviceLabel }} \
+                ssconfig \
+                {{- if $.Values.strongswan.secrets.encryption.enabled }}
+                --public-key=/var/strongswan/secrets/{{ $.Values.strongswan.secrets.encryption.publicKeyFile }} \
+                {{- end }}
+                /var/cfg/responder.conf
+          volumeMounts:
+            - name: kiknosctl-config
+              mountPath: /var/kiknosctl
+            - name: responder-config
+              mountPath: /var/cfg
+            {{- if .Values.etcd.secureTransport }}
+            - name: etcd-secrets
+              mountPath: /var/etcd/secrets
+            {{- end }}
+            {{- if .Values.strongswan.secrets.encryption.enabled }}
+            - name: strongswan-secrets
+              mountPath: /var/strongswan/secrets
+            {{- end }}
+      volumes:
+        - name: kiknosctl-config
+          configMap:
+            name: kiknosctl-job-cfg
+        - name: responder-config
+          configMap:
+            name: responder-cfg
+        {{- if .Values.etcd.secureTransport }}
+        - name: etcd-secrets
+          secret:
+            secretName: {{ .Values.etcd.secrets.secretName }}
+        {{- end }}
+        {{- if .Values.strongswan.secrets.encryption.enabled }}
+        - name: strongswan-secrets
+          secret:
+            secretName: {{ .Values.strongswan.secrets.encryption.keysSecretName }}
+        {{- end }}
+      restartPolicy: OnFailure
+  backoffLimit: 10
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kiknosctl-job-cfg
+data:
+  config.yml: |
+    etcd-endpoints:
+    {{- if .Values.etcd.useExternalEtcd }}
+      - "{{ .Values.etcd.externalEtcdEndpoint }}"
+    {{- else }}
+      - {{ .Values.etcd.serviceName }}:2379
+    {{- end }}
+    etcd-dial-timeout: 20000000000
+    {{- if .Values.etcd.secureTransport }}
+    kvdb-tls:
+      cert-file: /var/etcd/secrets/{{ .Values.etcd.secrets.clientCertFile }}
+      key-file: /var/etcd/secrets/{{ .Values.etcd.secrets.clientKeyFile }}
+      ca-file: /var/etcd/secrets/{{ .Values.etcd.secrets.caCertFile }}
+    {{- end }}
+
+{{- if and .Values.strongswan.secrets.encryption.enabled .Values.strongswan.secrets.encryption.loadKeysFromFiles }}
+---
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: {{ .Values.strongswan.secrets.encryption.keysSecretName }}
+data:
+  {{ .Values.strongswan.secrets.encryption.privateKeyFile }}: |-
+    {{ .Files.Get (printf "secrets/%s" .Values.strongswan.secrets.encryption.privateKeyFile) | b64enc }}
+  {{ .Values.strongswan.secrets.encryption.publicKeyFile }}: |-
+    {{ .Files.Get (printf "secrets/%s" .Values.strongswan.secrets.encryption.publicKeyFile) | b64enc }}
+{{- end }}

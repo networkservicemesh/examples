@@ -1,0 +1,49 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: {{.Values.app}}-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+  - port:
+      number: 8000
+      name: http-2
+      protocol: HTTP
+    hosts:
+      - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{.Values.app}}-virtual-service
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - {{.Values.app}}-gateway
+  http:
+  - match:
+    - uri:
+        exact: /hello
+    route:
+    - destination:
+        host: {{.Values.app}}-v1-service
+        port:
+          number: 5000
+  - match:
+    - uri:
+         exact: /hello-v2
+    rewrite:
+      uri: "/hello"
+    route:
+      - destination:
+          host: {{.Values.app}}-v2-service
+          port:
+            number: 5000

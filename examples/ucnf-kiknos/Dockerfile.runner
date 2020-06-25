@@ -1,0 +1,13 @@
+FROM mmatache/kind_runner:latest as build
+
+ARG  nsm_repo=https://github.com/networkservicemesh/networkservicemesh.git
+
+RUN  git clone $nsm_repo /go/src/github.com/networkservicemesh/networkservicemesh
+
+# Add examples code contents
+RUN mkdir -p /go/src/github.com/networkservicemesh/examples
+COPY examples  /go/src/github.com/networkservicemesh/examples
+
+COPY examples/kubeconfigs/config /go/src/kubeconfigs/config
+
+ENV KUBECONFIG=/go/src/kubeconfigs/config

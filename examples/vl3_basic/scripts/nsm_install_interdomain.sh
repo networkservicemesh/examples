@@ -8,7 +8,7 @@ Options:
                             (default=\"tiswanso\", environment variable: NSM_HUB) 
   --nsm-tag=STRING          Tag for NSM images
                             (default=\"vl3_api_rebase\", environment variable: NSM_TAG)
-
+  --spire-disabled          Disable spire
 " >&2
 }
 
@@ -24,6 +24,9 @@ case $i in
     ;;
     --nsm-tag=*)
     NSM_TAG="${i#*=}"
+    ;;
+    --spire-disabled)
+    SPIRE_DISABLED="true"
     ;;
     -h|--help)
       print_usage
@@ -59,7 +62,7 @@ helm template ${NSMDIR}/deployments/helm/skydive --namespace nsm-system --set in
 #kinddnsip=$(kubectl get svc ${KCONF:+--kubeconfig $KCONF} | grep kind-dns | awk '{ print $3 }')
 
 echo "------------Installing NSM-----------"
-helm template ${NSMDIR}/deployments/helm/nsm --namespace nsm-system --set org=${NSM_HUB},tag=${NSM_TAG} --set pullPolicy=Always --set insecure="true" --set global.JaegerTracing="true" | kubectl ${INSTALL_OP} ${KCONF:+--kubeconfig $KCONF} -f -
+helm template ${NSMDIR}/deployments/helm/nsm --namespace nsm-system --set org=${NSM_HUB},tag=${NSM_TAG} --set pullPolicy=Always --set insecure="true" --set global.JaegerTracing="true" ${SPIRE_DISABLED:+--set spire.enabled=false} | kubectl ${INSTALL_OP} ${KCONF:+--kubeconfig $KCONF} -f -
 
 echo "------------Installing NSM-addons -----------"
 helm template ${VL3DIR}/helm/nsm-addons --namespace nsm-system --set global.NSRegistrySvc=true  | kubectl ${INSTALL_OP} ${KCONF:+--kubeconfig $KCONF} -f -

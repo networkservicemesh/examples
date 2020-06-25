@@ -3,7 +3,7 @@ CONTAINERS = vl3-nse
 PODS = simple-client vl3-nse
 CHECK = export ITERATIONS=10 && export BATCHES=1 && scripts/check_vl3.sh
 
-#export VPP_AGENT=ligato/vpp-agent:v2.1.1
+VPP_AGENT_BASE_IMAGE = ligato/vpp-agent:v3.1.0
 
 include $(TOP)/mk/targets.mk
 
@@ -26,4 +26,4 @@ docker-vl3: build-vl3
 	cp -p ./examples/vl3_basic/vl3-nse/Dockerfile.no_go_build_ucnf ${DOCKER_BUILD_TOP}/vl3/
 	cp -p ${GOPATH}/bin/linux_amd64/vl3_nse ${DOCKER_BUILD_TOP}/vl3/
 	cp -pr ./examples/universal-cnf/vppagent/etc/* ${DOCKER_BUILD_TOP}/vl3/etc/
-	cd ${DOCKER_BUILD_TOP}/vl3 && docker build -t ${ORG}/vl3_ucnf-vl3-nse:${TAG} --build-arg VPP_AGENT=${VPP_AGENT} -f Dockerfile.no_go_build_ucnf .
+	cd ${DOCKER_BUILD_TOP}/vl3 && docker build -t ${ORG}/vl3_ucnf-vl3-nse:${TAG} --build-arg VPP_AGENT=${VPP_AGENT_BASE_IMAGE} -f Dockerfile.no_go_build_ucnf .
