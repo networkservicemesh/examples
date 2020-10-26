@@ -94,7 +94,7 @@ $(NAME)-list:
 
 .PHONY: $(NAME)-describe
 $(NAME)-describe:
-	@if [ -x $(which consolemd) ]; then \
+	@if command -v consolemd >/dev/null; then \
 		consolemd examples/$(NAME)/README.md; \
 	else \
 		more examples/$(NAME)/README.md; \
