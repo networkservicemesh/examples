@@ -1,0 +1,29 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      networkservicemesh.io/app: "enb-sim"
+  template:
+    metadata:
+      labels:
+        networkservicemesh.io/app: "enb-sim"
+        networkservicemesh.io/impl: "4g-network"
+    spec:
+      containers:
+        - name: enb-sim
+          image: networkservicemesh/4g-spgw-enb-sim:latest
+          command: ['tail', '-f', '/dev/null']
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+            privileged: true
+metadata:
+  name: enb-sim
+  namespace: default
+  annotations:
+    ns.networkservicemesh.io: 4g-network/s1u?name=s1u

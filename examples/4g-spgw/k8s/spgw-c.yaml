@@ -1,0 +1,47 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      networkservicemesh.io/app: "spgw-c"
+  template:
+    metadata:
+      labels:
+        networkservicemesh.io/app: "spgw-c"
+    spec:
+      containers:
+      - name: cp
+        image: "networkservicemesh/4g-spgw-ngic-cp:latest"
+        imagePullPolicy: IfNotPresent
+        stdin: true
+        tty: true
+        command: ["/opt/cp/config/run.sh"]
+        env:
+        - name: MEM_LIMIT
+          valueFrom:
+            resourceFieldRef:
+              containerName: cp
+              resource: limits.memory
+              divisor: 1Mi
+        volumeMounts:
+        #- name: hugepage
+        #  mountPath: /dev/hugepages
+        resources:
+          limits:
+            #hugepages-2Mi: 2Gi
+            cpu: 2
+            memory: 200Mi #3Gi
+      volumes:
+      - name: shared-data
+        emptyDir: {}
+        #- name: hugepage
+        #  emptyDir:
+        #    medium: HugePages
+metadata:
+  name: "spgw-c"
+  namespace: default
+  annotations:
+    ns.networkservicemesh.io: 4g-network/sx?name=sx
+

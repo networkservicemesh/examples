@@ -1,0 +1,35 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  selector:
+    matchLabels:
+      networkservicemesh.io/app: "rtr"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        networkservicemesh.io/app: "rtr"
+    spec:
+      containers:
+        - name: sidecar-nse
+          image: networkservicemesh/4g-spgw-sidecar-nse:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ENDPOINT_NETWORK_SERVICE
+              value: "4g-network"
+            - name: ENDPOINT_LABELS
+              value: "app=rtr"
+            - name: TRACER_ENABLED
+              value: "true"
+            - name: IP_ADDRESS
+              value: "10.60.2.0/24"
+          resources:
+            limits:
+              networkservicemesh.io/socket: 1
+        - name: rtr
+          image: alpine:latest
+          command: ['tail', '-f', '/dev/null']
+metadata:
+  name: "rtr"
+  namespace: default

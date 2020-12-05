@@ -1,0 +1,29 @@
+---
+apiVersion: networkservicemesh.io/v1alpha1
+kind: NetworkService
+metadata:
+  name: 4g-network
+spec:
+  payload: IP
+  matches:
+    - match:
+      sourceSelector:
+        name: sx
+      route:
+        - destination:
+          destinationSelector:
+            app: spgw-u
+    - match:
+      sourceSelector:
+        name: s1u
+      route:
+        - destination:
+          destinationSelector:
+            app: spgw-u
+    - match:
+      sourceSelector:
+        name: sgi
+      route:
+        - destination:
+          destinationSelector:
+            app: rtr

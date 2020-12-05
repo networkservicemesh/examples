@@ -1,0 +1,71 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      networkservicemesh.io/app: "spgw-u"
+  template:
+    metadata:
+      labels:
+        networkservicemesh.io/app: "spgw-u"
+        networkservicemesh.io/impl: "4g-network"
+    spec:
+      initContainers:
+      - name: dp-init-container
+        image: networkservicemesh/4g-spgw-dp-init:latest
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          capabilities:
+            add:
+              - NET_ADMIN
+      containers:
+      - name: sidecar-nse
+        image: networkservicemesh/4g-spgw-sidecar-nse:latest
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: NS_NETWORKSERVICEMESH_IO
+            value: "4g-network/sgi?name=sgi"
+          - name: ENDPOINT_NETWORK_SERVICE
+            value: "4g-network"
+          - name: ENDPOINT_LABELS
+            value: "app=spgw-u"
+          - name: TRACER_ENABLED
+            value: "true"
+          - name: IP_ADDRESS
+            value: "10.60.3.0/24"
+        resources:
+          limits:
+            networkservicemesh.io/socket: "1"
+      - name: dp
+        image: "networkservicemesh/4g-spgw-ngic-dp:latest"
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          capabilities:
+            add:
+              - NET_ADMIN
+          privileged: true
+        env:
+        command: ['tail', '-f', '/dev/null']
+        volumeMounts:
+        #- name: hugepage
+        #  mountPath: /dev/hugepages
+        resources:
+          limits:
+            #hugepages-2Mi: 4Gi
+            cpu: 2
+            memory: 200Mi #5Gi
+        # securityContext:
+        #   capabilities:
+        #     add:
+        #       - IPC_LOCK
+      volumes:
+      #- name: hugepage
+      #  emptyDir:
+      #    medium: HugePages
+metadata:
+  name: spgw-u
+  namespace: default
+  annotations:
+    ns.networkservicemesh.io: 4g-network/sgi?name=sgi
