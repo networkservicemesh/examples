@@ -14,6 +14,7 @@ ADD [".","/root/networkservicemesh"]
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags '-extldflags "-static"' -o /go/bin/bridge-domain ./examples/load-balancer/image/cmd/
 
 FROM ${VPP_AGENT} as runtime
+RUN apt update && apt install -y netcat-openbsd && rm -rf /var/lib/apt/lists/*
 COPY --from=build /go/bin/bridge-domain /bin/bridge-domain
 COPY ./examples/load-balancer/image/bin/ /bin/
 COPY ./examples/load-balancer/image/etc/ /etc/
