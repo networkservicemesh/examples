@@ -19,4 +19,4 @@ metadata:
   name: "hss"
   namespace: default
   annotations:
-    ns.networkservicemesh.io: 4g-network?app=s6a
+    ns.networkservicemesh.io: 4g-network?link=s6a
