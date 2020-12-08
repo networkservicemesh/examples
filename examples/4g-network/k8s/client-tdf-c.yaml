@@ -19,4 +19,4 @@ metadata:
   name: "tdf-c"
   namespace: default
   annotations:
-    ns.networkservicemesh.io: 4g-network?app=sxc
+    ns.networkservicemesh.io: 4g-network?link=sxc

@@ -8,77 +8,77 @@ spec:
   matches:
     - match:
       sourceSelector:
-        app: s1-mme
+        link: s1-mme
       route:
         - destination:
           destinationSelector:
             app: mme
     - match:
       sourceSelector:
-        app: s6a
+        link: s6a
       route:
         - destination:
           destinationSelector:
             app: mme
     - match:
       sourceSelector:
-        app: s11
+        link: s11
       route:
         - destination:
           destinationSelector:
             app: mme
     - match:
       sourceSelector:
-        app: s5s8-c
+        link: s5s8-c
       route:
         - destination:
           destinationSelector:
             app: p-gw-c
     - match:
       sourceSelector:
-        app: gx
+        link: gx
       route:
         - destination:
           destinationSelector:
             app: p-gw-c
     - match:
       sourceSelector:
-        app: sxb
+        link: sxb
       route:
         - destination:
           destinationSelector:
             app: p-gw-c
     - match:
       sourceSelector:
-        app: s1-u
+        link: s1-u
       route:
         - destination:
           destinationSelector:
             app: s-gw-u
     - match:
       sourceSelector:
-        app: sxa
+        link: sxa
       route:
         - destination:
           destinationSelector:
             app: s-gw-u
     - match:
       sourceSelector:
-        app: s5s8-u
+        link: s5s8-u
       route:
         - destination:
           destinationSelector:
             app: s-gw-u
     - match:
       sourceSelector:
-        app: sgi
+        link: sgi
       route:
         - destination:
           destinationSelector:
             app: tdf-u
     - match:
       sourceSelector:
-        app: sxc
+        link: sxc
       route:
         - destination:
           destinationSelector:

@@ -8,6 +8,17 @@ spec:
       networkservicemesh.io/app: "p-gw-c"
   template:
     metadata:
+      annotations:
+        ns.networkservicemesh.io/endpoints: |
+          {
+            "name": "4g-network",
+            "tracerEnabled": true,
+            "networkServices": [
+              {"link": "s5s8-c", "labels": "app=p-gw-c", "ipAddress": "10.60.4.0/24"},
+              {"link": "gx", "labels": "app=p-gw-c", "ipAddress": "10.60.5.0/24"},
+              {"link": "sxb", "labels": "app=p-gw-c", "ipAddress": "10.60.6.0/24"}
+            ]
+          }
       labels:
         networkservicemesh.io/app: "p-gw-c"
         networkservicemesh.io/impl: "4g-network"
@@ -16,22 +27,23 @@ spec:
         - name: sidecar-nse
           image: networkservicemesh/4g-network-sidecar-nse:latest
           imagePullPolicy: IfNotPresent
-          env:
-            - name: ENDPOINT_NETWORK_SERVICE
-              value: "4g-network"
-            - name: ENDPOINT_LABELS
-              value: "app=p-gw-c"
-            - name: TRACER_ENABLED
-              value: "true"
-            - name: IP_ADDRESS
-              value: "10.60.2.0/24"
           resources:
             limits:
               networkservicemesh.io/socket: 1
+          volumeMounts:
+            - name: nsm-endpoints
+              mountPath: /etc/nsminfo
         - name: p-gw-c
           image: alpine:latest
           command: ["tail", "-f", "/dev/null"]
           imagePullPolicy: IfNotPresent
+      volumes:
+        - name: nsm-endpoints
+          downwardAPI:
+            items:
+              - path: endpoints
+                fieldRef:
+                  fieldPath: metadata.annotations['ns.networkservicemesh.io/endpoints']
 metadata:
   name: p-gw-c
   namespace: default
