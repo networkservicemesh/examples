@@ -8,6 +8,16 @@ spec:
       networkservicemesh.io/app: "tdf-u"
   template:
     metadata:
+      annotations:
+        ns.networkservicemesh.io/endpoints: |
+          {
+            "name": "4g-network",
+            "tracerEnabled": true,
+            "networkServices": [
+              {"link": "sgi", "labels": "app=tdf-u", "ipAddress": "10.60.10.0/24"},
+              {"link": "sxc", "labels": "app=tdf-u", "ipAddress": "10.60.11.0/24"}
+            ]
+          }
       labels:
         networkservicemesh.io/app: "tdf-u"
         networkservicemesh.io/impl: "4g-network"
@@ -16,22 +26,23 @@ spec:
         - name: sidecar-nse
           image: networkservicemesh/4g-network-sidecar-nse:latest
           imagePullPolicy: IfNotPresent
-          env:
-            - name: ENDPOINT_NETWORK_SERVICE
-              value: "4g-network"
-            - name: ENDPOINT_LABELS
-              value: "app=tdf-u"
-            - name: TRACER_ENABLED
-              value: "true"
-            - name: IP_ADDRESS
-              value: "10.60.4.0/24"
           resources:
             limits:
               networkservicemesh.io/socket: 1
+          volumeMounts:
+            - name: nsm-endpoints
+              mountPath: /etc/nsminfo
         - name: tdf-u
           image: alpine:latest
           command: ["tail", "-f", "/dev/null"]
           imagePullPolicy: IfNotPresent
+      volumes:
+        - name: nsm-endpoints
+          downwardAPI:
+            items:
+              - path: endpoints
+                fieldRef:
+                  fieldPath: metadata.annotations['ns.networkservicemesh.io/endpoints']
 metadata:
   name: tdf-u
   namespace: default

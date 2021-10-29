@@ -19,4 +19,4 @@ metadata:
   name: "pcrf"
   namespace: default
   annotations:
-    ns.networkservicemesh.io: 4g-network?app=gx
+    ns.networkservicemesh.io: 4g-network?link=gx
